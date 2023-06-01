@@ -4,7 +4,6 @@ import sys
 import requests
 import json
 from bilix.sites.bilibili import DownloaderBilibili
-from bilibili_api import video, sync
 from internetarchive import get_item
 
 

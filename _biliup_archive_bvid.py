@@ -36,17 +36,17 @@ async def new_get_subtitle_info(client: httpx.AsyncClient, bvid, cid):
 api.get_subtitle_info = new_get_subtitle_info
 
 
-async def archive_bvid(bvid: str, sess_data: str):
+async def archive_bvid(d: DownloaderBilibili, bvid: str):
     if not os.path.exists('biliup.home'):
         raise Exception('先创建 biliup.home 文件')
     # 需要先实例化一个用来进行http请求的client
-    d = DownloaderBilibili(video_concurrency=5, part_concurrency=10, hierarchy=True, sess_data=sess_data)
+    # d = DownloaderBilibili(video_concurrency=5, part_concurrency=10, hierarchy=True, sess_data=sess_data)
     # first we should initialize a http client
     url = f'https://www.bilibili.com/video/{bvid}/'
     # data = await api.get_video_info(client, "https://www.bilibili.com/video/BV1jK4y1N7ST?p=5")
 
     # d.update_cookies_from_browser('firefox')
-    d.update_cookies_from_browser
+
     videos_basepath = f'biliup/videos/{bvid}'
     videos_info = await api.get_video_info(d.client, url)
     os.makedirs(videos_basepath, exist_ok=True)
@@ -56,7 +56,6 @@ async def archive_bvid(bvid: str, sess_data: str):
         await f.write(json.dumps(videos_info.dict(), ensure_ascii=False, indent=4))
 
     pid = 0
-    d.progress.start()
     for page in videos_info.pages:
         pid += 1
 
@@ -88,8 +87,7 @@ async def archive_bvid(bvid: str, sess_data: str):
         async with aiofiles.open(f'{video_basepath}/_downloaded.mark', 'w', encoding='utf-8') as f:
             await f.write('')
 
-    await d.aclose()
-    d.progress.stop()
+    
 
 
 async def download_bilibili_video_detail(client, bvid, filename):

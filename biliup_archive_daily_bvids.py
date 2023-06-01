@@ -1,5 +1,8 @@
 import asyncio
 import datetime
+import os
+import sys
+from bilix.sites.bilibili.downloader import DownloaderBilibili
 from _biliup_archive_bvid import archive_bvid
 import argparse
 
@@ -15,8 +18,19 @@ def main():
     args = parse_args()
     with open(args.bvids, 'r', encoding='utf-8') as f:
         bvids = f.read().splitlines()
-    for bvid in bvids:
-        asyncio.run(archive_bvid(bvid=bvid, sess_data=args.sess_data))
+    d = DownloaderBilibili(video_concurrency=5, part_concurrency=1, hierarchy=True, sess_data=args.sess_data)
+    d.progress.start()
+    async def do():
+        cors = []
+        for bvid in bvids:
+            if sys.version_info <= (3, 10):
+                cor = asyncio.ensure_future(archive_bvid(d=d, bvid=bvid))
+            else:
+                cor = asyncio.create_task(archive_bvid(d=d, bvid=bvid))
+            cors.append(cor)
+        await asyncio.gather(*cors)
+    asyncio.run(do())
+    d.progress.stop()
 
 
 def get_sess_data():

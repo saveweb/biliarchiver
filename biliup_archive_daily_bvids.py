@@ -5,6 +5,9 @@ import sys
 from bilix.sites.bilibili.downloader import DownloaderBilibili
 from _biliup_archive_bvid import archive_bvid
 import argparse
+import uvloop
+
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -23,10 +26,7 @@ def main():
     async def do():
         cors = []
         for bvid in bvids:
-            if sys.version_info <= (3, 10):
-                cor = asyncio.ensure_future(archive_bvid(d=d, bvid=bvid))
-            else:
-                cor = asyncio.create_task(archive_bvid(d=d, bvid=bvid))
+            cor = asyncio.create_task(archive_bvid(d=d, bvid=bvid))
             cors.append(cor)
         await asyncio.gather(*cors)
     asyncio.run(do())

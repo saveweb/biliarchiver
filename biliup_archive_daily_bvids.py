@@ -21,17 +21,24 @@ def main():
     args = parse_args()
     with open(args.bvids, 'r', encoding='utf-8') as f:
         bvids = f.read().splitlines()
-    d = DownloaderBilibili(video_concurrency=5, part_concurrency=1, hierarchy=True, sess_data=args.sess_data)
-    d.progress.start()
     async def do():
-        cors = []
+        d = DownloaderBilibili(video_concurrency=6, part_concurrency=1, hierarchy=True, sess_data=args.sess_data)
+        d.progress.start()
+        futs = []
         for bvid in bvids:
             cor = asyncio.create_task(archive_bvid(d=d, bvid=bvid))
-            cors.append(cor)
-        await asyncio.gather(*cors)
+            fut = asyncio.gather(cor)
+            futs.append(fut)
+            if len(futs) == 6:
+                await asyncio.gather(*futs)
+                futs = []
+        if len(futs) > 0:
+                await asyncio.gather(*futs)
+                futs = []
+        d.progress.stop()
     asyncio.run(do())
-    d.progress.stop()
-
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(do())
 
 def get_sess_data():
     with open('sess_data.txt', 'r', encoding='utf-8') as f:

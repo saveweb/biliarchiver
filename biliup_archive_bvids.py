@@ -15,27 +15,28 @@ install()
 def parse_args():
     parser = argparse.ArgumentParser()
     today = datetime.date.today()
-    parser.add_argument('--sess-data', type=str, default=get_sess_data())
-    parser.add_argument('--bvids', type=str, default=f'bvids/bvids-{today.isoformat()}.txt')
+    parser.add_argument('--sess-data', type=str, default=get_sess_data(),
+        help='cookie SESSDATA。不指定则会从 ~/.sess_data.txt 读取，指定则直接使用提供的字符串')
+    parser.add_argument('--bvids', type=str, help='bvids 列表的文件路径')
     args = parser.parse_args()
     return args
 
 def main():
     args = parse_args()
-    print(args.sess_data)
+
+    assert args.bvids is not None, '必须指定 bvids 列表的文件路径'
     with open(args.bvids, 'r', encoding='utf-8') as f:
         bvids = f.read().splitlines()
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    from tasks_limit import tasks_limit
+    from config import tasks_limit
 
     d = DownloaderBilibili(video_concurrency=tasks_limit, part_concurrency=1, hierarchy=True, sess_data=args.sess_data,
     )
     d.progress.start()
     for bvid in bvids:
-        # 限制同时下载的数量
         while len(asyncio.all_tasks(loop)) > tasks_limit:
             loop.run_until_complete(asyncio.sleep(0.01))
         task = loop.create_task(archive_bvid(d, bvid))

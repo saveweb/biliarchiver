@@ -30,7 +30,7 @@ def upload_bvid(bvid):
         pid = identifier.split('_')[-1][1:]
         file_basename = identifier[len(identifier_perfix)+1:]
     
-        print(f'开始上传 {identifier}')
+        print(f'==== 开始上传 {identifier} ====')
         item = get_item(identifier)
         if item.exists:
             print(f'item {identifier} 已存在(item.exists)')
@@ -96,8 +96,7 @@ def upload_bvid(bvid):
             ),  # Keywords should be separated by ; but it doesn't matter much; the alternative is to set one per field with subject[0], subject[1], ...
             "upload-state": "uploading",
             'originalurl': f'https://www.bilibili.com/video/{bvid}/?p={pid}',
-            'project': 'bilibili top100 daily archive',
-            'scanner': 'biliup v2233.0.2 (dev)',
+            'scanner': 'biliup v2233.0.3 (dev)',
         }        
         print(filedict)
         print(md)
@@ -136,7 +135,7 @@ def upload_bvid(bvid):
             r.raise_for_status()
         with open(f'{videos_basepath}/{identifier}/_uploaded.mark', 'w', encoding='utf-8') as f:
             f.write('')
-        print(f'{identifier} 上传完成')
+        print(f'==== {identifier} 上传完成 ====')
 
 def read_ia_keys(keysfile):
     ''' Return: tuple(`access_key`, `secret_key`) '''

@@ -6,6 +6,7 @@ import json
 import os
 import time
 from internetarchive import get_item
+from rich import print
 def upload_bvid(bvid):
     if not os.path.exists('biliup.home'):
         raise Exception('先创建 biliup.home 文件')

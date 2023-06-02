@@ -1,15 +1,12 @@
 import asyncio
 import datetime
-import logging
 import os
-import sys
 import argparse
 
 from _biliup_archive_bvid import archive_bvid
 
 from bilix.sites.bilibili.downloader import DownloaderBilibili
 from rich.console import Console
-import uvloop
 
 from rich.traceback import install
 install()

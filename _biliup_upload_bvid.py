@@ -105,6 +105,7 @@ def upload_bvid(bvid):
             secret_key=secret_key,
             verbose=True,
             queue_derive=True,
+            retries=5,
         )
 
         tries = 30

@@ -1,4 +1,6 @@
-# 基于 bilix 的 BiliBili 存档工具
+# biliup
+
+## 基于 bilix 的 BiliBili 存档工具
 
 IA iteam identifier 格式兼容 tubeup 。（不过并不推荐用 tubeup 直接做 BiliBili 存档）
 

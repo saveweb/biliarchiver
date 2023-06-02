@@ -14,9 +14,9 @@ def upload_bvid(bvid):
     # sample: BiliBili-BV1Zh4y1x7RL_p3
     videos_basepath = f'biliarchiver/videos/{bvid}'
     for identifier in os.listdir(videos_basepath):
-        if os.path.exists(f'{videos_basepath}/{identifier}/_uploaded.mark'):
-            print(f'{identifier} 已经上传过了(_uploaded.mark)')
-            continue
+        # if os.path.exists(f'{videos_basepath}/{identifier}/_uploaded.mark'):
+        #     print(f'{identifier} 已经上传过了(_uploaded.mark)')
+        #     continue
         if identifier.startswith('_') :
             print(f'跳过 {identifier}')
             continue
@@ -96,20 +96,21 @@ def upload_bvid(bvid):
             ),  # Keywords should be separated by ; but it doesn't matter much; the alternative is to set one per field with subject[0], subject[1], ...
             "upload-state": "uploading",
             'originalurl': f'https://www.bilibili.com/video/{bvid}/?p={pid}',
-            'scanner': 'biliarchiver v2233.0.4 (dev)',
+            'scanner': 'biliarchiver v0.0.4 (dev)',
         }        
         print(filedict)
         print(md)
 
-        r = item.upload(
-            files=filedict,
-            metadata=md,
-            access_key=access_key,
-            secret_key=secret_key,
-            verbose=True,
-            queue_derive=True,
-            retries=5,
-        )
+        if filedict:
+            r = item.upload(
+                files=filedict,
+                metadata=md,
+                access_key=access_key,
+                secret_key=secret_key,
+                verbose=True,
+                queue_derive=True,
+                retries=5,
+            )
 
         tries = 30
         item = get_item(identifier) # refresh item
@@ -124,6 +125,8 @@ def upload_bvid(bvid):
             new_md.update({"upload-state": "uploaded"})
         if item.metadata.get("description") != bv_info['data']['View']['desc']:
             new_md.update({"description": bv_info['data']['View']['desc']})
+        if item.metadata.get("scanner") != md['scanner']:
+            new_md.update({"scanner": md['scanner']})
         if new_md:
             print(f"Updating metadata:")
             print(new_md)

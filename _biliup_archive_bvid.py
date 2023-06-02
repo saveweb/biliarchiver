@@ -78,16 +78,30 @@ async def archive_bvid(d: DownloaderBilibili, bvid: str):
     
         video_info.pages[video_info.p].p_name = file_basename
         video_info.h1_title = 'tttttt' * 50 # 假装超长标题，强制 bilix fallback 到 file_basename 作为文件名
+
+        # 选择编码，优先 hevc
+        codec = None
+        for media in video_info.dash.videos:
+            if media.codec.startswith('hev'):
+                codec = media.codec
+                break
+        if codec is None:
+            for media in video_info.dash.videos:
+                if media.codec.startswith('avc'):
+                    codec = media.codec
+                    break
+        assert codec is not None, f'{bvid}_{pid}p: 没有 avc 或 hevc 编码的视频'
+        print(f'{bvid}_{pid}p: "{media.codec}" "{media.quality}" ...')
+
         cor1 = d.get_video(page.p_url ,video_info=video_info, path=video_basepath,
-                    # hevc 优先
-                    quality=0, codec='hev',
+                    quality=0, codec=codec, # 选择最高画质
                     # 下载 ass 弹幕(bilix 会自动调用 danmukuC 将 pb 弹幕转为 ass)、封面、字幕
                     # 他们会被放进 extra 子目录里
                     dm=True, image=True, subtitle=True
                     )
         # 下载原始的 pb 弹幕
         cor2 = d.get_dm(page.p_url, video_info=video_info, path=video_extrapath)
-        # 获取视频详细信息
+        # 下载视频详细信息
         cor3 = download_bilibili_video_detail(d.client, bvid, f'{video_extrapath}/{file_basename}.info.json')
         await asyncio.gather(cor1, cor2, cor3)
 

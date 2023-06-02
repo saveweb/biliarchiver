@@ -58,6 +58,9 @@ async def archive_bvid(d: DownloaderBilibili, bvid: str):
     pid = 0
     for page in videos_info.pages:
         pid += 1
+        if not page.p_name.startswith(f'P{pid}-'):
+            print(f'{bvid} 的第 {pid}P 不存在')
+            continue
 
         file_basename = f'{bvid}_p{pid}'
         video_basepath = f'{videos_basepath}/{identifier_perfix}-{file_basename}'
@@ -103,6 +106,7 @@ async def download_bilibili_video_detail(client, bvid, filename):
         # f.write(json.dumps(r.json(), indent=4, ensure_ascii=False))
         await f.write(r.text)
 
-
-# asyncio.run(archive_bvid(bvid=bvid))
-
+# d = DownloaderBilibili(video_concurrency=2, part_concurrency=1, hierarchy=True, sess_data=None)
+# d.progress.start()
+# asyncio.run(archive_bvid(d=d, bvid='BV1Zh4y1x7RL'))
+# d.progress.stop()

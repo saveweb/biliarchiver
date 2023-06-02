@@ -60,20 +60,32 @@ def upload_bvid(bvid):
         tags = ['BiliBili', 'video']
         for tag in bv_info['data']['Tags']:
             tags.append(tag['tag_name'])
-
+        pubdate = bv_info['data']['View']['pubdate']
+        for page in bv_info['data']['View']['pages']:
+            if page['page'] == int(pid):
+                cid = page['cid']
+                part = page['part']
+                break
+        
         md = {
             "mediatype": "web",
-            "collection": 'movies',
-            "title": bv_info['data']['View']['title'] + ' ' +videos_info['pages'][int(pid) - 1]['p_name'],
+            "collection": 'opensource_movies',
+            "title": bv_info['data']['View']['title'] + f' P{pid} ' + part ,
             "description": bv_info['data']['View']['desc'],
-            # "last-updated-date": time.strftime("%Y-%m-%d"),
-            'creator': bv_info['data']['View']['owner']['name'],
-            # 'year': 
+            'creator': bv_info['data']['View']['owner']['name'], # UP 主
+            # UTC time
+            'date': time.strftime("%Y-%m-%d", time.gmtime(pubdate)),
+            'year': time.strftime("%Y", time.gmtime(pubdate)),
+            'bvid': bvid,
+            'aid': bv_info['data']['View']['aid'],
+            'cid': cid,
             "subject": "; ".join(
                 tags
             ),  # Keywords should be separated by ; but it doesn't matter much; the alternative is to set one per field with subject[0], subject[1], ...
             "upload-state": "uploading",
             'originalurl': f'https://www.bilibili.com/video/{bvid}?p={pid}',
+            # 每日top100
+            'scanner': 'bilibili top100 daily archive',
         }        
         print(filedict)
         print(md)

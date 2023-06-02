@@ -7,7 +7,6 @@ from _biliup_archive_bvid import archive_bvid
 import argparse
 import uvloop
 
-asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -22,22 +21,24 @@ def main():
     with open(args.bvids, 'r', encoding='utf-8') as f:
         bvids = f.read().splitlines()
     async def do():
-        d = DownloaderBilibili(video_concurrency=6, part_concurrency=1, hierarchy=True, sess_data=args.sess_data)
+        d = DownloaderBilibili(video_concurrency=2, part_concurrency=1, hierarchy=True, sess_data=args.sess_data)
         d.progress.start()
         futs = []
         for bvid in bvids:
             cor = asyncio.create_task(archive_bvid(d=d, bvid=bvid))
             fut = asyncio.gather(cor)
             futs.append(fut)
-            if len(futs) == 6:
+            if len(futs) == 2:
                 await asyncio.gather(*futs)
                 futs = []
         if len(futs) > 0:
                 await asyncio.gather(*futs)
                 futs = []
         d.progress.stop()
-    asyncio.run(do())
-    loop = asyncio.get_event_loop()
+        await d.aclose()
+    # asyncio.run(do())
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+    loop = asyncio.get_event_loop_policy().get_event_loop()
     loop.run_until_complete(do())
 
 def get_sess_data():

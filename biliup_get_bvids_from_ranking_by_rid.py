@@ -42,7 +42,7 @@ def main():
     with open(bvids_filepath, 'w', encoding='utf-8') as f:
         for bvid in bvids:
             f.write(f'{bvid}' + '\n')
-    print(f'已保存 {len(bvids)} 个 bvid 到 bvids/bvids-{today.isoformat()}.txt')
+    print(f'已保存 {len(bvids)} 个 bvid 到 {bvids_filepath}')
 
 if __name__ == '__main__':
     main()

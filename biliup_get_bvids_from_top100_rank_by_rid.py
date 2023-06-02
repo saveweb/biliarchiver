@@ -41,3 +41,6 @@ def main():
         for bvid in bvids:
             f.write(f'{bvid}' + '\n')
     print(f'已保存 {len(bvids)} 个 bvid 到 bvids/bvids-{today.isoformat()}.txt')
+
+if __name__ == '__main__':
+    main()

@@ -47,6 +47,9 @@ async def archive_bvid(d: DownloaderBilibili, bvid: str):
     # d.update_cookies_from_browser('firefox')
 
     videos_basepath = f'biliup/videos/{bvid}'
+    if os.path.exists(f'{videos_basepath}/_all_downloaded.mark'):
+        print(f'{bvid} 所有分p都已下载过了')
+        return
     videos_info = await api.get_video_info(d.client, url)
     os.makedirs(videos_basepath, exist_ok=True)
 
@@ -109,6 +112,8 @@ async def archive_bvid(d: DownloaderBilibili, bvid: str):
         video_info.h1_title = old_h1_title
 
         async with aiofiles.open(f'{video_basepath}/_downloaded.mark', 'w', encoding='utf-8') as f:
+            await f.write('')
+    async with aiofiles.open(f'{videos_basepath}/_all_downloaded.mark', 'w', encoding='utf-8') as f:
             await f.write('')
 
     

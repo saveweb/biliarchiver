@@ -83,7 +83,7 @@ def upload_bvid(bvid):
             "mediatype": "movies",
             "collection": 'opensource_movies',
             "title": bv_info['data']['View']['title'] + f' P{pid} ' + part ,
-            "description": identifier + 'uploading...',
+            "description": identifier + ' uploading...',
             'creator': bv_info['data']['View']['owner']['name'], # UP 主
             # UTC time
             'date': time.strftime("%Y-%m-%d", time.gmtime(pubdate)),
@@ -126,6 +126,8 @@ def upload_bvid(bvid):
         if item.metadata.get("description") != bv_info['data']['View']['desc']:
             new_md.update({"description": bv_info['data']['View']['desc']})
         if new_md:
+            print(f"Updating metadata:")
+            print(new_md)
             r = item.modify_metadata(
                 metadata=new_md,
                 access_key=access_key,

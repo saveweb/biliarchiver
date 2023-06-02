@@ -14,9 +14,9 @@ def upload_bvid(bvid):
     # sample: BiliBili-BV1Zh4y1x7RL_p3
     videos_basepath = f'biliarchiver/videos/{bvid}'
     for identifier in os.listdir(videos_basepath):
-        # if os.path.exists(f'{videos_basepath}/{identifier}/_uploaded.mark'):
-        #     print(f'{identifier} 已经上传过了(_uploaded.mark)')
-        #     continue
+        if os.path.exists(f'{videos_basepath}/{identifier}/_uploaded.mark'):
+            print(f'{identifier} 已经上传过了(_uploaded.mark)')
+            continue
         if identifier.startswith('_') :
             print(f'跳过 {identifier}')
             continue
@@ -34,11 +34,11 @@ def upload_bvid(bvid):
         item = get_item(identifier)
         if item.exists:
             print(f'item {identifier} 已存在(item.exists)')
-            # if item.metadata.get("upload-state") == "uploaded":
-            #     print(f'{identifier} 已经上传过了，跳过(item.metadata.uploaded)')
-            #     with open(f'{videos_basepath}/{identifier}/_uploaded.mark', 'w', encoding='utf-8') as f:
-            #         f.write('')
-            #     continue
+            if item.metadata.get("upload-state") == "uploaded":
+                print(f'{identifier} 已经上传过了，跳过(item.metadata.uploaded)')
+                with open(f'{videos_basepath}/{identifier}/_uploaded.mark', 'w', encoding='utf-8') as f:
+                    f.write('')
+                continue
         filedict = {} # "remote filename": "local filename"
         for filename in os.listdir(f'{videos_basepath}/{identifier}/extra'):
             file = f'{videos_basepath}/{identifier}/extra/{filename}'

@@ -1,5 +1,4 @@
 import asyncio
-import datetime
 import os
 import argparse
 
@@ -14,7 +13,6 @@ install()
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    today = datetime.date.today()
     parser.add_argument('--sess-data', type=str, default=get_sess_data(),
         help='cookie SESSDATA。不指定则会从 ~/.sess_data.txt 读取，指定则直接使用提供的字符串')
     parser.add_argument('--bvids', type=str, help='bvids 列表的文件路径', required=True)

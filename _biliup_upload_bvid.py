@@ -1,12 +1,12 @@
-identifier_perfix = 'BiliBili'
-
-
-
 import json
 import os
 import time
 from internetarchive import get_item
 from rich import print
+
+from _biliup_archive_bvid import BILIBILI_IDENTIFIER_PERFIX
+
+
 def upload_bvid(bvid):
     if not os.path.exists('biliup.home'):
         raise Exception('先创建 biliup.home 文件')
@@ -20,15 +20,15 @@ def upload_bvid(bvid):
         if identifier.startswith('_') :
             print(f'跳过 {identifier}')
             continue
-        if not identifier.startswith(identifier_perfix):
-            print(f'{identifier} 不是以 {identifier_perfix} 开头的正确 identifier')
+        if not identifier.startswith(BILIBILI_IDENTIFIER_PERFIX):
+            print(f'{identifier} 不是以 {BILIBILI_IDENTIFIER_PERFIX} 开头的正确 identifier')
             continue
         if not os.path.exists(f'{videos_basepath}/{identifier}/_downloaded.mark'):
             print(f'{identifier} 没有下载完成')
             continue
 
         pid = identifier.split('_')[-1][1:]
-        file_basename = identifier[len(identifier_perfix)+1:]
+        file_basename = identifier[len(BILIBILI_IDENTIFIER_PERFIX)+1:]
     
         print(f'==== 开始上传 {identifier} ====')
         item = get_item(identifier)

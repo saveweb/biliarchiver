@@ -2,7 +2,7 @@ import asyncio
 import os
 import argparse
 
-from _biliup_archive_bvid import archive_bvid
+from _biliarchiver_archive_bvid import archive_bvid
 
 from bilix.sites.bilibili.downloader import DownloaderBilibili
 from rich.console import Console

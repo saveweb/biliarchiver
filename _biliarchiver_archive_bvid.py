@@ -37,9 +37,9 @@ api.get_subtitle_info = new_get_subtitle_info
 async def archive_bvid(d: DownloaderBilibili, bvid: str):
     assert d.hierarchy is True, 'hierarchy 必须为 True' # 为保持后续目录结构、文件命名的一致性
     assert d.client.cookies.get('SESSDATA') is not None, 'sess_data 不能为空' # 开个大会员呗，能下 4k 呢。
-    assert os.path.exists('biliup.home'), '先创建 biliup.home 文件' # 防误操作
+    assert os.path.exists('biliarchiver.home'), '先创建 biliarchiver.home 文件' # 防误操作
 
-    videos_basepath = f'biliup/videos/{bvid}'
+    videos_basepath = f'biliarchiver/videos/{bvid}'
     if os.path.exists(f'{videos_basepath}/_all_downloaded.mark'):
         print(f'{bvid} 所有分p都已下载过了')
         return

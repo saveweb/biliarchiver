@@ -4,15 +4,15 @@ import time
 from internetarchive import get_item
 from rich import print
 
-from _biliup_archive_bvid import BILIBILI_IDENTIFIER_PERFIX
+from _biliarchiver_archive_bvid import BILIBILI_IDENTIFIER_PERFIX
 
 
 def upload_bvid(bvid):
-    if not os.path.exists('biliup.home'):
-        raise Exception('先创建 biliup.home 文件')
+    if not os.path.exists('biliarchiver.home'):
+        raise Exception('先创建 biliarchiver.home 文件')
     access_key, secret_key = read_ia_keys(os.path.expanduser('~/.bili_ia_keys.txt'))
     # sample: BiliBili-BV1Zh4y1x7RL_p3
-    videos_basepath = f'biliup/videos/{bvid}'
+    videos_basepath = f'biliarchiver/videos/{bvid}'
     for identifier in os.listdir(videos_basepath):
         if os.path.exists(f'{videos_basepath}/{identifier}/_uploaded.mark'):
             print(f'{identifier} 已经上传过了(_uploaded.mark)')
@@ -96,7 +96,7 @@ def upload_bvid(bvid):
             ),  # Keywords should be separated by ; but it doesn't matter much; the alternative is to set one per field with subject[0], subject[1], ...
             "upload-state": "uploading",
             'originalurl': f'https://www.bilibili.com/video/{bvid}/?p={pid}',
-            'scanner': 'biliup v2233.0.4 (dev)',
+            'scanner': 'biliarchiver v2233.0.4 (dev)',
         }        
         print(filedict)
         print(md)

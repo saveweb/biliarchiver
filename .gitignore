@@ -1,7 +1,7 @@
-biliup/
+biliarchiver/
 bvids/
 sess_data.txt
-biliup.home
+biliarchiver.home
 .venv/
 __pycache__/
 videos/

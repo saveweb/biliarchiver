@@ -1,11 +1,18 @@
 import asyncio
 import datetime
+import logging
 import os
 import sys
-from bilix.sites.bilibili.downloader import DownloaderBilibili
-from _biliup_archive_bvid import archive_bvid
 import argparse
+
+from _biliup_archive_bvid import archive_bvid
+
+from bilix.sites.bilibili.downloader import DownloaderBilibili
+from rich.console import Console
 import uvloop
+
+from rich.traceback import install
+install()
 
 
 def parse_args():
@@ -18,34 +25,40 @@ def parse_args():
 
 def main():
     args = parse_args()
+    print(args.sess_data)
     with open(args.bvids, 'r', encoding='utf-8') as f:
         bvids = f.read().splitlines()
-    async def do():
-        d = DownloaderBilibili(video_concurrency=2, part_concurrency=1, hierarchy=True, sess_data=args.sess_data)
-        d.progress.start()
-        futs = []
-        for bvid in bvids:
-            cor = asyncio.create_task(archive_bvid(d=d, bvid=bvid))
-            fut = asyncio.gather(cor)
-            futs.append(fut)
-            if len(futs) == 2:
-                await asyncio.gather(*futs)
-                futs = []
-        if len(futs) > 0:
-                await asyncio.gather(*futs)
-                futs = []
-        d.progress.stop()
-        await d.aclose()
-    # asyncio.run(do())
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-    loop = asyncio.get_event_loop_policy().get_event_loop()
-    loop.run_until_complete(do())
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    from tasks_limit import tasks_limit
+
+    d = DownloaderBilibili(video_concurrency=tasks_limit, part_concurrency=1, hierarchy=True, sess_data=args.sess_data,
+    )
+    d.progress.start()
+    for bvid in bvids:
+        # 限制同时下载的数量
+        while len(asyncio.all_tasks(loop)) > tasks_limit:
+            loop.run_until_complete(asyncio.sleep(5))
+        task = loop.create_task(archive_bvid(d, bvid))
+    
+    loop.run_until_complete(asyncio.sleep(5))
+    loop.close()
+
 
 def get_sess_data():
-    with open('sess_data.txt', 'r', encoding='utf-8') as f:
+    with open(os.path.expanduser('~/.sess_data.txt'), 'r', encoding='utf-8') as f:
         sess_data = f.read().strip()
     return sess_data
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('KeyboardInterrupt')
+    finally:
+        # 显示终端光标
+        console = Console()
+        console.show_cursor()

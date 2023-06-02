@@ -17,8 +17,9 @@ def upload_bvid(bvid):
         if os.path.exists(f'{videos_basepath}/{identifier}/_uploaded.mark'):
             print(f'{identifier} 已经上传过了(_uploaded.mark)')
             continue
-        pid = identifier.split('_')[-1][1:]
-        file_basename = identifier[len(identifier_perfix)+1:]
+        if identifier.startswith('_') :
+            print(f'跳过 {identifier}')
+            continue
         if not identifier.startswith(identifier_perfix):
             print(f'{identifier} 不是以 {identifier_perfix} 开头的正确 identifier')
             continue
@@ -26,6 +27,9 @@ def upload_bvid(bvid):
             print(f'{identifier} 没有下载完成')
             continue
 
+        pid = identifier.split('_')[-1][1:]
+        file_basename = identifier[len(identifier_perfix)+1:]
+    
         print(f'开始上传 {identifier}')
         item = get_item(identifier)
         if item.exists:
@@ -58,8 +62,8 @@ def upload_bvid(bvid):
 
         with open(f'{videos_basepath}/{identifier}/extra/{file_basename}.info.json', 'r', encoding='utf-8') as f:
             bv_info = json.load(f)
-        with open(f'{videos_basepath}/videos_info.json', 'r', encoding='utf-8') as f:
-            videos_info = json.load(f)
+        # with open(f'{videos_basepath}/_videos_info.json', 'r', encoding='utf-8') as f:
+        #     videos_info = json.load(f)
 
         tags = ['BiliBili', 'video']
         for tag in bv_info['data']['Tags']:
@@ -72,7 +76,7 @@ def upload_bvid(bvid):
                 break
         
         md = {
-            "mediatype": "web",
+            "mediatype": "movies",
             "collection": 'opensource_movies',
             "title": bv_info['data']['View']['title'] + f' P{pid} ' + part ,
             "description": bv_info['data']['View']['desc'],

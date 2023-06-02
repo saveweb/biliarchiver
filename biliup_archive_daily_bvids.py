@@ -37,7 +37,7 @@ def main():
     for bvid in bvids:
         # 限制同时下载的数量
         while len(asyncio.all_tasks(loop)) > tasks_limit:
-            loop.run_until_complete(asyncio.sleep(0.1))
+            loop.run_until_complete(asyncio.sleep(0.01))
         task = loop.create_task(archive_bvid(d, bvid))
     
 

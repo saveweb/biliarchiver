@@ -40,6 +40,13 @@ def upload_bvid(bvid):
                     f.write('')
                 continue
         filedict = {} # "remote filename": "local filename"
+        for filename in os.listdir(f'{videos_basepath}/{identifier}/extra'):
+            file = f'{videos_basepath}/{identifier}/extra/{filename}'
+            if os.path.isfile(file):
+                if file.startswith('_'):
+                    continue
+                filedict[filename] = file
+
         for filename in os.listdir(f'{videos_basepath}/{identifier}'):
             file = f'{videos_basepath}/{identifier}/{filename}'
             if os.path.isfile(file):
@@ -49,13 +56,8 @@ def upload_bvid(bvid):
                     continue
                 filedict[filename] = file
         
-        for filename in os.listdir(f'{videos_basepath}/{identifier}/extra'):
-            file = f'{videos_basepath}/{identifier}/extra/{filename}'
-            if os.path.isfile(file):
-                if file.startswith('_'):
-                    continue
-                filedict[filename] = file
 
+        # IA 去重
         for file_in_item in item.files:
             if file_in_item["name"] in filedict:
                 filedict.pop(file_in_item["name"])

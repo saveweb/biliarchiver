@@ -34,11 +34,11 @@ def upload_bvid(bvid):
         item = get_item(identifier)
         if item.exists:
             print(f'item {identifier} 已存在(item.exists)')
-            if item.metadata.get("upload-state") == "uploaded":
-                print(f'{identifier} 已经上传过了，跳过(item.metadata.uploaded)')
-                with open(f'{videos_basepath}/{identifier}/_uploaded.mark', 'w', encoding='utf-8') as f:
-                    f.write('')
-                continue
+            # if item.metadata.get("upload-state") == "uploaded":
+            #     print(f'{identifier} 已经上传过了，跳过(item.metadata.uploaded)')
+            #     with open(f'{videos_basepath}/{identifier}/_uploaded.mark', 'w', encoding='utf-8') as f:
+            #         f.write('')
+            #     continue
         filedict = {} # "remote filename": "local filename"
         for filename in os.listdir(f'{videos_basepath}/{identifier}/extra'):
             file = f'{videos_basepath}/{identifier}/extra/{filename}'

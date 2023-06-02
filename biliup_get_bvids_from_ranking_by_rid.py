@@ -37,7 +37,9 @@ def main():
     today = datetime.date.today()
     os.makedirs('bvids', exist_ok=True)
 
-    with open(f'bvids/rank/by-rid/rid-{rid}-{int(time.time())}.txt', 'w', encoding='utf-8') as f:
+    bvids_filepath = f'bvids/by-ranking/rid-{rid}/rid-{rid}-{int(time.time())}.txt'
+    os.makedirs(os.path.dirname(bvids_filepath), exist_ok=True)
+    with open(bvids_filepath, 'w', encoding='utf-8') as f:
         for bvid in bvids:
             f.write(f'{bvid}' + '\n')
     print(f'已保存 {len(bvids)} 个 bvid 到 bvids/bvids-{today.isoformat()}.txt')

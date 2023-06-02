@@ -15,12 +15,12 @@ def upload_bvid(bvid):
     videos_basepath = f'biliup/videos/{bvid}'
     for identifier in os.listdir(videos_basepath):
         if os.path.exists(f'{videos_basepath}/{identifier}/_uploaded.mark'):
-            print(f'{identifier} 已经上传过了')
+            print(f'{identifier} 已经上传过了(_uploaded.mark)')
             continue
         pid = identifier.split('_')[-1][1:]
         file_basename = identifier[len(identifier_perfix)+1:]
         if not identifier.startswith(identifier_perfix):
-            print(f'{identifier} 不是 {identifier_perfix} 的视频')
+            print(f'{identifier} 不是以 {identifier_perfix} 开头的正确 identifier')
             continue
         if not os.path.exists(f'{videos_basepath}/{identifier}/_downloaded.mark'):
             print(f'{identifier} 没有下载完成')
@@ -29,7 +29,10 @@ def upload_bvid(bvid):
         print(f'开始上传 {identifier}')
         item = get_item(identifier)
         if item.exists:
-            print(f'{identifier} 已经存在')
+            print(f'item {identifier} 已存在(item.exists)')
+            if item.metadata.get("upload-state") == "uploaded":
+                print(f'{identifier} 已经上传过了，跳过(item.metadata.uploaded)')
+                continue
         filedict = {} # "remote filename": "local filename"
         for filename in os.listdir(f'{videos_basepath}/{identifier}'):
             file = f'{videos_basepath}/{identifier}/{filename}'
@@ -86,7 +89,8 @@ def upload_bvid(bvid):
             "upload-state": "uploading",
             'originalurl': f'https://www.bilibili.com/video/{bvid}?p={pid}',
             # 每日top100
-            'scanner': 'bilibili top100 daily archive',
+            'project': 'bilibili top100 daily archive',
+            'scanner': 'biliup v2233.0.1 (dev)',
         }        
         print(filedict)
         print(md)

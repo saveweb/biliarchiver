@@ -48,9 +48,12 @@ def main():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    from config import video_concurrency, part_concurrency
+    from config import video_concurrency, part_concurrency, stream_retry
 
-    d = DownloaderBilibili(video_concurrency=video_concurrency, part_concurrency=part_concurrency, hierarchy=True, sess_data=args.sess_data,
+    d = DownloaderBilibili(hierarchy=True, sess_data=args.sess_data,
+        video_concurrency=video_concurrency,
+        part_concurrency=part_concurrency,
+        stream_retry=stream_retry,
     )
     client = Client(cookies=d.client.cookies, headers=d.client.headers)
     logined = is_login(client)

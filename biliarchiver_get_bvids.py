@@ -23,7 +23,7 @@ def arg_parse():
     up_videos_group = parser.add_argument_group()
     up_videos_group.title = 'by up videos'
     up_videos_group.add_argument('--by-up_videos', action='store_true', help='从 up 主用户页获取全部的投稿的 bvids')
-    up_videos_group.add_argument('--up_videos-mid', type=int, help='目标 up 主的 mid (也可以是用户页的 URL)')
+    up_videos_group.add_argument('--up_videos-mid', type=str, help='目标 up 主的 mid (也可以是用户页的 URL)')
 
     args = parser.parse_args()
     return args

@@ -25,11 +25,11 @@ class UploadLock_Basic:
         else:
             with open(self.lock_file, 'w', encoding='utf-8') as f:
                 f.write(f'PID: {os.getpid()}: Running')
-            print("Acquired lock, continuing.")
+            # print("Acquired lock, continuing.")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         os.remove(self.lock_file)
-        print("Released lock.")
+        # print("Released lock.")
 
     # decorator
     def __call__(self, func):
@@ -57,7 +57,7 @@ class UploadLock_Fcntl():
         self.lock_file_fd = open(self.lock_file, 'w')
         try:
             self.fcntl.lockf(self.lock_file_fd, self.fcntl.LOCK_EX | self.fcntl.LOCK_NB)
-            print("Acquired lock, continuing.")
+            # print("Acquired lock, continuing.")
         except IOError:
             raise AlreadyRunningError("Another instance is already running.")
             
@@ -68,7 +68,7 @@ class UploadLock_Fcntl():
         self.fcntl.lockf(self.lock_file_fd, self.fcntl.LOCK_UN)
         self.lock_file_fd.close()
         os.remove(self.lock_file)
-        print("Released lock.")
+        # print("Released lock.")
 
     # decorator
     def __call__(self, func):

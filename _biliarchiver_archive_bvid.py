@@ -66,6 +66,7 @@ async def archive_bvid(d: DownloaderBilibili, bvid: str, logined: bool=False):
             continue
 
         video_info = await api.get_video_info(d.client, page.p_url)
+        print(f'{file_basename}: {video_info.title}...')
         os.makedirs(video_basepath, exist_ok=True)
         os.makedirs(video_extrapath, exist_ok=True)
 

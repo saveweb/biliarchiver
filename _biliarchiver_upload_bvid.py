@@ -88,9 +88,10 @@ def upload_bvid(bvid):
             # UTC time
             'date': time.strftime("%Y-%m-%d", time.gmtime(pubdate)),
             'year': time.strftime("%Y", time.gmtime(pubdate)),
-            'bvid': bvid,
             'aid': bv_info['data']['View']['aid'],
+            'bvid': bvid,
             'cid': cid,
+            'mid': bv_info['data']['View']['owner']['mid'],
             "subject": "; ".join(
                 tags
             ),  # Keywords should be separated by ; but it doesn't matter much; the alternative is to set one per field with subject[0], subject[1], ...

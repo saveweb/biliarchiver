@@ -6,7 +6,7 @@ from _biliarchiver_archive_bvid import archive_bvid
 
 from bilix.sites.bilibili.downloader import DownloaderBilibili
 from rich.console import Console
-
+from httpx import Client
 from rich.traceback import install
 install()
 
@@ -33,11 +33,16 @@ def main():
 
     d = DownloaderBilibili(video_concurrency=tasks_limit, part_concurrency=1, hierarchy=True, sess_data=args.sess_data,
     )
+
+    logined = is_login(Client(cookies=d.client.cookies, headers=d.client.headers))
+    if not logined:
+        return
+
     d.progress.start()
     for bvid in bvids:
         while len(asyncio.all_tasks(loop)) > tasks_limit:
             loop.run_until_complete(asyncio.sleep(0.01))
-        task = loop.create_task(archive_bvid(d, bvid))
+        task = loop.create_task(archive_bvid(d, bvid, logined=logined))
     
 
 
@@ -46,6 +51,15 @@ def get_sess_data():
         sess_data = f.read().strip()
     return sess_data
 
+def is_login(cilent: Client) -> bool:
+    r = cilent.get('https://api.bilibili.com/x/member/web/account')
+    r.raise_for_status()
+    nav_json = r.json()
+    if nav_json['code'] == 0:
+        print('用户登录成功')
+        return True
+    print('未登录/SESSDATA无效/过期')
+    return False
 
 if __name__ == '__main__':
     try:

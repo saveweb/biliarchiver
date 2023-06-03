@@ -61,7 +61,7 @@ def main():
         return
 
     d.progress.start()
-    for bvid in bvids:
+    for index, bvid in enumerate(bvids):
         if args.skip_exist:
             identifier = f'{BILIBILI_IDENTIFIER_PERFIX}-{bvid}_p1'
             if check_ia_item_exist(client, identifier):
@@ -71,7 +71,7 @@ def main():
         while len(asyncio.all_tasks(loop)) > video_concurrency:
             loop.run_until_complete(asyncio.sleep(0.01))
 
-        print(f'=== {bvid} ===')
+        print(f'=== {bvid} ({index+1}/{len(bvids)}) ===')
 
         task = loop.create_task(archive_bvid(d, bvid, logined=logined))
     

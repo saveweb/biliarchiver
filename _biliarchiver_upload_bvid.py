@@ -3,11 +3,24 @@ import os
 import time
 from internetarchive import get_item
 from rich import print
+from glob import glob
 
 from _biliarchiver_archive_bvid import BILIBILI_IDENTIFIER_PERFIX
-
+from _uploadingLock import UploadLock, AlreadyRunningError
 
 def upload_bvid(bvid):
+    try:
+        lock_dir = f'biliarchiver/.locks/{bvid}/'
+        os.makedirs(lock_dir, exist_ok=True)
+        with UploadLock(lock_dir):
+            _upload_bvid(bvid)
+    except AlreadyRunningError:
+        print(f'已经有一个上传 {bvid} 的进程在运行，跳过')
+    except Exception as e:
+        print(f'上传 {bvid} 时出错：')
+        raise e
+
+def _upload_bvid(bvid):
     if not os.path.exists('biliarchiver.home'):
         raise Exception('先创建 biliarchiver.home 文件')
     access_key, secret_key = read_ia_keys(os.path.expanduser('~/.bili_ia_keys.txt'))

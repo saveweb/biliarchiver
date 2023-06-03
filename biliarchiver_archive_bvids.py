@@ -42,7 +42,11 @@ def main():
     for bvid in bvids:
         while len(asyncio.all_tasks(loop)) > tasks_limit:
             loop.run_until_complete(asyncio.sleep(0.01))
+        print(f'=== {bvid} ===')
         task = loop.create_task(archive_bvid(d, bvid, logined=logined))
+    
+    while len(asyncio.all_tasks(loop)) > 0:
+        loop.run_until_complete(asyncio.sleep(1))
     
 
 

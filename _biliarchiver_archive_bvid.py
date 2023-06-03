@@ -133,6 +133,8 @@ async def download_bilibili_video_detail(client, bvid, filename):
     params = {'bvid': bvid}
     r = await req_retry(client, url, params=params ,follow_redirects=True)
     r.raise_for_status()
+    r_json = r.json()
+    assert r_json['code'] == 0, f'{bvid} 视频详情获取失败'
 
     async with aiofiles.open(filename, 'w', encoding='utf-8') as f:
         # f.write(json.dumps(r.json(), indent=4, ensure_ascii=False))

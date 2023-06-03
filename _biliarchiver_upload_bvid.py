@@ -97,7 +97,7 @@ def upload_bvid(bvid):
             ),  # Keywords should be separated by ; but it doesn't matter much; the alternative is to set one per field with subject[0], subject[1], ...
             "upload-state": "uploading",
             'originalurl': f'https://www.bilibili.com/video/{bvid}/?p={pid}',
-            'scanner': 'biliarchiver v0.0.4 (dev)',
+            'scanner': 'biliarchiver v0.0.5 (dev)',
         }        
         print(filedict)
         print(md)

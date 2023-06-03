@@ -1,1 +1,2 @@
-tasks_limit = 2
+video_concurrency = 3
+part_concurrency = 10

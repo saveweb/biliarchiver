@@ -48,9 +48,9 @@ def main():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    from config import tasks_limit
+    from config import video_concurrency, part_concurrency
 
-    d = DownloaderBilibili(video_concurrency=tasks_limit, part_concurrency=1, hierarchy=True, sess_data=args.sess_data,
+    d = DownloaderBilibili(video_concurrency=video_concurrency, part_concurrency=part_concurrency, hierarchy=True, sess_data=args.sess_data,
     )
     client = Client(cookies=d.client.cookies, headers=d.client.headers)
     logined = is_login(client)
@@ -65,7 +65,7 @@ def main():
                 print(f'IA 上已存在 {identifier} ，跳过')
                 continue
 
-        while len(asyncio.all_tasks(loop)) > tasks_limit:
+        while len(asyncio.all_tasks(loop)) > video_concurrency:
             loop.run_until_complete(asyncio.sleep(0.01))
 
         print(f'=== {bvid} ===')

@@ -86,10 +86,20 @@ def update_cookies_from_file(client: Client, cookies_path: str):
     from http.cookiejar import MozillaCookieJar
     cj = MozillaCookieJar()
     cj.load(cookies_path, ignore_discard=True, ignore_expires=True)
-    client.cookies.update(cj)
+    loadded_cookies = 0
+    for cookie in cj:
+        # only load bilibili cookies
+        if 'bilibili' in cookie.domain:
+            client.cookies.set(
+                cookie.name, cookie.value, domain=cookie.domain, path=cookie.path
+                )
+            loadded_cookies += 1
+    print(f'从 {cookies_path} 加载了 {loadded_cookies} 个 cookies')
+    if loadded_cookies > 100:
+        print('可能加载了过多的 cookies，可能导致 httpx.Client 响应非常慢')
 
     assert client.cookies.get('SESSDATA') is not None, 'SESSDATA 不存在'
-    print(f'SESS_DATA: {client.cookies.get("SESSDATA")}')
+    # print(f'SESS_DATA: {client.cookies.get("SESSDATA")}')
 
 def is_login(cilent: Client) -> bool:
     r = cilent.get('https://api.bilibili.com/x/member/web/account')

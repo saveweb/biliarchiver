@@ -14,8 +14,7 @@ from _biliarchiver_archive_bvid import BILIBILI_IDENTIFIER_PERFIX
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--sess-data', type=str, default=get_sess_data(),
-        help='cookie SESSDATA。不指定则会从 ~/.sess_data.txt 读取，指定则直接使用提供的字符串')
+    parser.add_argument('--cookies', type=str, default='~/.cookies.txt')
     parser.add_argument('--bvids', type=str, help='bvids 列表的文件路径', required=True)
     parser.add_argument('--skip-exist', action='store_true',
                         help='跳过 IA 上已存在的 item （只检查 p1 是否存在）')
@@ -50,11 +49,12 @@ def main():
 
     from config import video_concurrency, part_concurrency, stream_retry
 
-    d = DownloaderBilibili(hierarchy=True, sess_data=args.sess_data,
+    d = DownloaderBilibili(hierarchy=True, sess_data=None,
         video_concurrency=video_concurrency,
         part_concurrency=part_concurrency,
         stream_retry=stream_retry,
     )
+    update_cookies_from_file(d.client, args.cookies)
     client = Client(cookies=d.client.cookies, headers=d.client.headers)
     logined = is_login(client)
     if not logined:
@@ -80,10 +80,16 @@ def main():
     
 
 
-def get_sess_data():
-    with open(os.path.expanduser('~/.sess_data.txt'), 'r', encoding='utf-8') as f:
-        sess_data = f.read().strip()
-    return sess_data
+def update_cookies_from_file(client: Client, cookies_path: str):
+    cookies_path = os.path.expanduser(cookies_path)
+    assert os.path.exists(cookies_path), f'cookies 文件不存在: {cookies_path}'
+    from http.cookiejar import MozillaCookieJar
+    cj = MozillaCookieJar()
+    cj.load(cookies_path, ignore_discard=True, ignore_expires=True)
+    client.cookies.update(cj)
+
+    assert client.cookies.get('SESSDATA') is not None, 'SESSDATA 不存在'
+    print(f'SESS_DATA: {client.cookies.get("SESSDATA")}')
 
 def is_login(cilent: Client) -> bool:
     r = cilent.get('https://api.bilibili.com/x/member/web/account')

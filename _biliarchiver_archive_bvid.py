@@ -85,17 +85,25 @@ async def archive_bvid(d: DownloaderBilibili, bvid: str, logined: bool=False):
         # 选择编码，优先 hevc，没有的话就 avc
         # 不选 av0 ，毕竟目前没几个设备能拖得动
         codec = None
-        for media in video_info.dash.videos:
-            if media.codec.startswith('hev'):
-                codec = media.codec
-                break
-        if codec is None:
+        if video_info.dash:
             for media in video_info.dash.videos:
-                if media.codec.startswith('avc'):
+                if media.codec.startswith('hev'):
                     codec = media.codec
                     break
-        assert codec is not None, f'{file_basename}: 没有 avc 或 hevc 编码的视频'
-        print(f'{file_basename}: "{media.codec}" "{media.quality}" ...')
+            if codec is None:
+                for media in video_info.dash.videos:
+                    if media.codec.startswith('avc'):
+                        codec = media.codec
+                        break
+            assert codec is not None, f'{file_basename}: 没有 avc 或 hevc 编码的视频'
+            print(f'{file_basename}: "{media.codec}" "{media.quality}" ...')
+        elif video_info.other:
+            print(f'{file_basename}: 未解析到dash资源，交给 bilix 处理 ...')
+            codec = ''
+        else:
+            raise APIError(f'{file_basename}: 未解析到视频资源', page.p_url)
+
+        assert codec is not None
 
         cor1 = d.get_video(page.p_url ,video_info=video_info, path=video_basepath,
                     quality=0, # 选择最高画质

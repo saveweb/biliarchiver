@@ -8,6 +8,8 @@ packages = [{include = "biliarchiver"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
+bilix = "0.18.3"
+internetarchive = "^3.5.0"
 
 [tool.poetry.scripts]
 bili_archive_bvids = "biliarchiver:bili_archive_bvids.main"

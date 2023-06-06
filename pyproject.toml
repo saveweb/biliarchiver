@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "bilibili-archiver"
+version = "0.1.0"
+description = ""
+authors = ["yzqzss <yzqzss@yandex.com>"]
+readme = "README.md"
+packages = [{include = "biliarchiver"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+[tool.poetry.scripts]
+bili_archive_bvids = "biliarchiver:bili_archive_bvids.main"
+bili_uploade = "biliarchiver:bili_uploade.main"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -54,6 +54,7 @@ class UploadLock_Fcntl():
         self.lock_file_fd = None
 
     def __enter__(self):
+        assert self.fcntl is not None
         self.lock_file_fd = open(self.lock_file, 'w')
         try:
             self.fcntl.lockf(self.lock_file_fd, self.fcntl.LOCK_EX | self.fcntl.LOCK_NB)
@@ -63,6 +64,7 @@ class UploadLock_Fcntl():
             
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        assert self.fcntl is not None
         if self.lock_file_fd is None:
             raise IOError("Lock file not opened.")
         self.fcntl.lockf(self.lock_file_fd, self.fcntl.LOCK_UN)

@@ -1,5 +1,6 @@
 import asyncio
 import os
+from pathlib import Path
 
 import aiofiles
 import httpx
@@ -12,9 +13,9 @@ from rich import print
 import json
 
 from bilix.sites.bilibili.downloader import DownloaderBilibili
-
-
-BILIBILI_IDENTIFIER_PERFIX = 'BiliBili' # IA identifier 前缀，千万不要改。能与 tubeup 兼容。
+from biliarchiver.config import BILIBILI_IDENTIFIER_PERFIX
+from biliarchiver.config import config
+from biliarchiver.utils.string import human_readable_upper_part_map
 
 @raise_api_error
 async def new_get_subtitle_info(client: httpx.AsyncClient, bvid, cid):
@@ -38,10 +39,17 @@ async def archive_bvid(d: DownloaderBilibili, bvid: str, logined: bool=False):
     assert d.hierarchy is True, 'hierarchy 必须为 True' # 为保持后续目录结构、文件命名的一致性
     assert d.client.cookies.get('SESSDATA') is not None, 'sess_data 不能为空' # 开个大会员呗，能下 4k 呢。
     assert logined is True, '请先检查 SESSDATA 是否过期，再将 logined 设置为 True' # 防误操作
-    assert os.path.exists('biliarchiver.home'), '先创建 biliarchiver.home 文件' # 防误操作
 
-    videos_basepath = f'biliarchiver/videos/{bvid}'
-    if os.path.exists(f'{videos_basepath}/_all_downloaded.mark'):
+    upper_part = human_readable_upper_part_map(string=bvid, backward=True)
+    OLD_videos_basepath: Path = config.storage_home_dir / 'videos' / bvid
+    videos_basepath: Path = config.storage_home_dir / 'videos' / f'{bvid}-{upper_part}'
+
+    if os.path.exists(OLD_videos_basepath):
+        print(f'检测到旧的视频目录 {OLD_videos_basepath}，将其重命名为 {videos_basepath}...')
+        os.rename(OLD_videos_basepath, videos_basepath)
+
+
+    if os.path.exists(videos_basepath / '_all_downloaded.mark'):
         print(f'{bvid} 所有分p都已下载过了')
         return
 
@@ -59,8 +67,8 @@ async def archive_bvid(d: DownloaderBilibili, bvid: str, logined: bool=False):
             continue
 
         file_basename = f'{bvid}_p{pid}'
-        video_basepath = f'{videos_basepath}/{BILIBILI_IDENTIFIER_PERFIX}-{file_basename}'
-        video_extrapath = f'{video_basepath}/extra'
+        video_basepath = videos_basepath / f'{BILIBILI_IDENTIFIER_PERFIX}-{file_basename}'
+        video_extrapath = video_basepath / 'extra'
         if os.path.exists(f'{video_basepath}/_downloaded.mark'):
             print(f'{file_basename}: 已经下载过了')
             continue
@@ -89,14 +97,15 @@ async def archive_bvid(d: DownloaderBilibili, bvid: str, logined: bool=False):
             for media in video_info.dash.videos:
                 if media.codec.startswith('hev'):
                     codec = media.codec
+                    print(f'{file_basename}: "{codec}" "{media.quality}" ...')
                     break
             if codec is None:
                 for media in video_info.dash.videos:
                     if media.codec.startswith('avc'):
                         codec = media.codec
+                        print(f'{file_basename}: "{codec}" "{media.quality}" ...')
                         break
             assert codec is not None, f'{file_basename}: 没有 avc 或 hevc 编码的视频'
-            print(f'{file_basename}: "{media.codec}" "{media.quality}" ...')
         elif video_info.other:
             print(f'{file_basename}: 未解析到dash资源，交给 bilix 处理 ...')
             codec = ''

@@ -1,7 +1,7 @@
-biliarchiver/
 bvids/
-sess_data.txt
 biliarchiver.home
 .venv/
 __pycache__/
 videos/
+.vscode/
+bilibili_archive_dir/

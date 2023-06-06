@@ -2,23 +2,37 @@ import asyncio
 import os
 import argparse
 
-from _biliarchiver_archive_bvid import archive_bvid
+from biliarchiver.archive_bvid import archive_bvid
+from biliarchiver.config import Config
 
 from bilix.sites.bilibili.downloader import DownloaderBilibili
 from rich.console import Console
-from httpx import Client
+from httpx import AsyncClient, Client
 from rich.traceback import install
+
+from biliarchiver.utils.string import human_readable_upper_part_map
 install()
 
-from _biliarchiver_archive_bvid import BILIBILI_IDENTIFIER_PERFIX
+from biliarchiver.config import BILIBILI_IDENTIFIER_PERFIX
+
+from dataclasses import dataclass
+
+@dataclass
+class Args:
+    cookies: str
+    bvids: str
+    skip_ia: bool
 
 def parse_args():
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cookies', type=str, default='~/.cookies.txt')
-    parser.add_argument('--bvids', type=str, help='bvids 列表的文件路径', required=True)
-    parser.add_argument('--skip-exist', action='store_true',
-                        help='跳过 IA 上已存在的 item （只检查 p1 是否存在）')
-    args = parser.parse_args()
+    parser.add_argument('--cookies', dest='cookies', type=str, default='~/.cookies.txt')
+    parser.add_argument('--bvids', dest='bvids', type=str, help='bvids 列表的文件路径', required=True)
+    parser.add_argument('-s', '--skip-ia-check', dest='skip_ia', action='store_true',
+                        help='不检查 IA 上是否已存在对应 BVID 的 item ，直接开始下载')
+    parser.parse_args()
+    args = Args(**vars(parser.parse_args()))
+
     return args
 
 def check_ia_item_exist(client: Client, identifier: str) -> bool:
@@ -37,22 +51,22 @@ def check_ia_item_exist(client: Client, identifier: str) -> bool:
     else:
         raise ValueError(f'Unexpected code: {r_json["code"]}')
 
-def main():
+def _main():
     args = parse_args()
 
     assert args.bvids is not None, '必须指定 bvids 列表的文件路径'
     with open(args.bvids, 'r', encoding='utf-8') as f:
-        bvids = f.read().splitlines()
+        bvids_from_file = f.read().splitlines()
+
+    config = Config()
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    from config import video_concurrency, part_concurrency, stream_retry
-
-    d = DownloaderBilibili(hierarchy=True, sess_data=None,
-        video_concurrency=video_concurrency,
-        part_concurrency=part_concurrency,
-        stream_retry=stream_retry,
+    d = DownloaderBilibili(hierarchy=True, sess_data=None, # sess_data 将在后面装载 cookies 时装载 # type: ignore
+        video_concurrency=config.video_concurrency,
+        part_concurrency=config.part_concurrency,
+        stream_retry=config.stream_retry,
     )
     update_cookies_from_file(d.client, args.cookies)
     client = Client(cookies=d.client.cookies, headers=d.client.headers)
@@ -61,17 +75,18 @@ def main():
         return
 
     d.progress.start()
-    for index, bvid in enumerate(bvids):
-        if args.skip_exist:
-            identifier = f'{BILIBILI_IDENTIFIER_PERFIX}-{bvid}_p1'
-            if check_ia_item_exist(client, identifier):
-                print(f'IA 上已存在 {identifier} ，跳过')
+    for index, bvid in enumerate(bvids_from_file):
+        if not args.skip_ia:
+            upper_part = human_readable_upper_part_map(string=bvid, backward=True)
+            remote_identifier = f'{BILIBILI_IDENTIFIER_PERFIX}-{bvid}_p1-{upper_part}'
+            if check_ia_item_exist(client, remote_identifier):
+                print(f'IA 上已存在 {remote_identifier} ，跳过')
                 continue
 
-        while len(asyncio.all_tasks(loop)) > video_concurrency:
-            loop.run_until_complete(asyncio.sleep(0.01))
+        while len(asyncio.all_tasks(loop)) > config.video_concurrency:
+            loop.run_until_complete(asyncio.sleep(0.008))
 
-        print(f'=== {bvid} ({index+1}/{len(bvids)}) ===')
+        print(f'=== {bvid} ({index+1}/{len(bvids_from_file)}) ===')
 
         task = loop.create_task(archive_bvid(d, bvid, logined=logined))
     
@@ -80,7 +95,7 @@ def main():
     
 
 
-def update_cookies_from_file(client: Client, cookies_path: str):
+def update_cookies_from_file(client: AsyncClient, cookies_path: str):
     cookies_path = os.path.expanduser(cookies_path)
     assert os.path.exists(cookies_path), f'cookies 文件不存在: {cookies_path}'
     from http.cookiejar import MozillaCookieJar
@@ -90,11 +105,12 @@ def update_cookies_from_file(client: Client, cookies_path: str):
     for cookie in cj:
         # only load bilibili cookies
         if 'bilibili' in cookie.domain:
+            assert cookie.value is not None
             client.cookies.set(
                 cookie.name, cookie.value, domain=cookie.domain, path=cookie.path
                 )
             loadded_cookies += 1
-    print(f'从 {cookies_path} 加载了 {loadded_cookies} 个 cookies')
+    print(f'从 {cookies_path} 加载了 {loadded_cookies} 块 cookies')
     if loadded_cookies > 100:
         print('可能加载了过多的 cookies，可能导致 httpx.Client 响应非常慢')
 
@@ -111,12 +127,15 @@ def is_login(cilent: Client) -> bool:
     print('未登录/SESSDATA无效/过期')
     return False
 
-if __name__ == '__main__':
+def main():
     try:
-        main()
+        _main()
     except KeyboardInterrupt:
         print('KeyboardInterrupt')
     finally:
         # 显示终端光标
         console = Console()
         console.show_cursor()
+
+if __name__ == '__main__':
+    main()

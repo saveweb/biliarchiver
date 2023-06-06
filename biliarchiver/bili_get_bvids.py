@@ -103,7 +103,7 @@ async def by_up_videos(url_or_mid: str) -> Path:
     return Path(abs_filepath)
 
 
-async def main():
+async def _main():
     args = arg_parse()
     if args.by_ranking:
         by_raning(args.ranking_rid)
@@ -111,5 +111,8 @@ async def main():
         assert args.up_videos_mid is not None, 'up_videos_mid 不能为空'
         await by_up_videos(args.up_videos_mid)
 
+def main():
+    asyncio.run(_main())
+
 if __name__ == '__main__':
-    asyncio.run(main())
+    main()

@@ -34,8 +34,9 @@ def _upload_bvid(bvid: str):
         print(f'检测到旧的视频主目录 {OLD_videos_basepath}，将其重命名为 {videos_basepath}...')
         os.rename(OLD_videos_basepath, videos_basepath)
     for local_identifier in os.listdir(videos_basepath):
+        remote_identifier = f'{local_identifier}-{upper_part}'
         if os.path.exists(f'{videos_basepath}/{local_identifier}/_uploaded.mark'):
-            print(f'{local_identifier} 已经上传过了(_uploaded.mark)')
+            print(f'{local_identifier} => {remote_identifier} 已经上传过了(_uploaded.mark)')
             continue
         if local_identifier.startswith('_') :
             print(f'跳过 {local_identifier}')
@@ -49,9 +50,6 @@ def _upload_bvid(bvid: str):
 
         pid = local_identifier.split('_')[-1][1:]
         file_basename = local_identifier[len(BILIBILI_IDENTIFIER_PERFIX)+1:]
-    
-
-        remote_identifier = f'{local_identifier}-{upper_part}'
 
         print(f'=== 开始上传 {local_identifier} => {remote_identifier} ===')
         item = get_item(remote_identifier)

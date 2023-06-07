@@ -28,7 +28,9 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest poetry
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        # if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        poetry install
+        pip install -e .
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -37,9 +39,9 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: run biliarchiver tools
       run: |
-        bili_archive_bvids -h
-        bili_uploade -h
-        bili_get_bvids -h
+        python -m biliarchiver.bili_archive_bvids -h
+        python -m biliarchiver.bili_get_bvids -h
+        python -m biliarchiver.bili_upload -h
     # - name: Test with pytest
       # run: |
         # pytest

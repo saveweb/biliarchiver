@@ -30,14 +30,15 @@ def parse_args():
 def main():
     args = parse_args()
     if args.by_storage_home_dir:
-        for bvid_with_upper_part in os.listdir(config.storage_home_dir / 'videos'):
-            bvid = bvid_with_upper_part
-            if '-' in bvid_with_upper_part:
-                bvid = bvid_with_upper_part.split('-')[0]
-                create_redirect_item = True
-            else:
-                print('Skipping', bvid)
+        for bvid_raw in os.listdir(config.storage_home_dir / 'videos'):
+            if '-' in bvid_raw:
+                bvid_with_upper_part = bvid_raw.split('-')[0]
+                print('Skipping', bvid_with_upper_part)
+                bvid = bvid_with_upper_part
                 continue
+            else:
+                bvid = bvid_raw
+                create_redirect_item = True
 
             upload_bvid(bvid, create_redirect_item)
     

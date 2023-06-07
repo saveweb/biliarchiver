@@ -69,16 +69,16 @@ def _upload_bvid(bvid: str, create_redirect_item: bool=False):
                 if file.startswith('_'):
                     continue
                 filedict[filename] = file
-
-        for filename in os.listdir(f'{OLD_videos_basepath}/{local_identifier}'):
-            file = f'{OLD_videos_basepath}/{local_identifier}/{filename}'
-            if os.path.isfile(file):
-                if os.path.basename(file).startswith('_'):
-                    continue
-                if not os.path.isfile(file):
-                    continue
-                filedict[filename] = file
                 break
+
+        # for filename in os.listdir(f'{OLD_videos_basepath}/{local_identifier}'):
+        #     file = f'{OLD_videos_basepath}/{local_identifier}/{filename}'
+        #     if os.path.isfile(file):
+        #         if os.path.basename(file).startswith('_'):
+        #             continue
+        #         if not os.path.isfile(file):
+        #             continue
+        #         filedict[filename] = file
         
 
         # IA 去重

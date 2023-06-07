@@ -9,9 +9,10 @@ from bilix.sites.bilibili.downloader import DownloaderBilibili
 from rich.console import Console
 from httpx import AsyncClient, Client
 from rich.traceback import install
+install()
 
 from biliarchiver.utils.string import human_readable_upper_part_map
-install()
+from biliarchiver.utils.ffmpeg import check_ffmpeg
 
 from biliarchiver.config import BILIBILI_IDENTIFIER_PERFIX
 
@@ -52,6 +53,7 @@ def check_ia_item_exist(client: Client, identifier: str) -> bool:
         raise ValueError(f'Unexpected code: {r_json["code"]}')
 
 def _main():
+    assert check_ffmpeg() is True, 'ffmpeg 未安装'
     args = parse_args()
 
     assert args.bvids is not None, '必须指定 bvids 列表的文件路径'

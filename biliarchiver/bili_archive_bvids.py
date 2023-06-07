@@ -30,7 +30,7 @@ def parse_args():
     parser.add_argument('--bvids', dest='bvids', type=str, help='bvids 列表的文件路径', required=True)
     parser.add_argument('-s', '--skip-ia-check', dest='skip_ia', action='store_true',
                         help='不检查 IA 上是否已存在对应 BVID 的 item ，直接开始下载')
-    parser.parse_args()
+    
     args = Args(**vars(parser.parse_args()))
 
     return args

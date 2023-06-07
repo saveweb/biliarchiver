@@ -6,3 +6,4 @@ __pycache__/
 videos/
 .vscode/
 bilibili_archive_dir/
+dist/

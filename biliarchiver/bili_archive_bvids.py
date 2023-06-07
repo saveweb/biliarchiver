@@ -53,8 +53,8 @@ def check_ia_item_exist(client: Client, identifier: str) -> bool:
         raise ValueError(f'Unexpected code: {r_json["code"]}')
 
 def _main():
-    assert check_ffmpeg() is True, 'ffmpeg 未安装'
     args = parse_args()
+    assert check_ffmpeg() is True, 'ffmpeg 未安装'
 
     assert args.bvids is not None, '必须指定 bvids 列表的文件路径'
     with open(args.bvids, 'r', encoding='utf-8') as f:

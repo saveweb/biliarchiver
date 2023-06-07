@@ -34,8 +34,12 @@ def main():
             bvid = bvid_with_upper_part
             if '-' in bvid_with_upper_part:
                 bvid = bvid_with_upper_part.split('-')[0]
+                create_redirect_item = True
+            else:
+                print('Skipping', bvid)
+                continue
 
-            upload_bvid(bvid)
+            upload_bvid(bvid, create_redirect_item)
     
     if args.bvids:
         with open(args.bvids, 'r', encoding='utf-8') as f:

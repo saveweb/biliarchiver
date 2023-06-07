@@ -11,40 +11,42 @@ from biliarchiver.config import BILIBILI_IDENTIFIER_PERFIX, config
 from biliarchiver.utils.dirLock import UploadLock, AlreadyRunningError
 from biliarchiver.version import BILI_ARCHIVER_VERSION
 
-def upload_bvid(bvid):
+def upload_bvid(bvid, create_redirect_item: bool=False):
     try:
         lock_dir = config.storage_home_dir / '.locks' / bvid
         os.makedirs(lock_dir, exist_ok=True)
         with UploadLock(lock_dir): # type: ignore
-            _upload_bvid(bvid)
+            _upload_bvid(bvid, create_redirect_item)
     except AlreadyRunningError:
         print(f'已经有一个上传 {bvid} 的进程在运行，跳过')
     except Exception as e:
         print(f'上传 {bvid} 时出错：')
         raise e
 
-def _upload_bvid(bvid: str):
+def _upload_bvid(bvid: str, create_redirect_item: bool=False):
     access_key, secret_key = read_ia_keys(config.ia_key_file)
+    assert create_redirect_item is True
 
     # identifier format: BiliBili-{bvid}_p{pid}-{upper_part} 
     upper_part = human_readable_upper_part_map(string=bvid, backward=True)
     OLD_videos_basepath: Path = config.storage_home_dir / 'videos' / bvid
     videos_basepath: Path = config.storage_home_dir / 'videos' / f'{bvid}-{upper_part}'
-    if os.path.exists(OLD_videos_basepath):
-        print(f'检测到旧的视频主目录 {OLD_videos_basepath}，将其重命名为 {videos_basepath}...')
-        os.rename(OLD_videos_basepath, videos_basepath)
-    for local_identifier in os.listdir(videos_basepath):
+    # if os.path.exists(OLD_videos_basepath):
+    #     print(f'检测到旧的视频主目录 {OLD_videos_basepath}，将其重命名为 {videos_basepath}...')
+    #     os.rename(OLD_videos_basepath, videos_basepath)
+
+    for local_identifier in os.listdir(OLD_videos_basepath):
         remote_identifier = f'{local_identifier}-{upper_part}'
-        if os.path.exists(f'{videos_basepath}/{local_identifier}/_uploaded.mark'):
-            print(f'{local_identifier} => {remote_identifier} 已经上传过了(_uploaded.mark)')
-            continue
+        # if os.path.exists(f'{videos_basepath}/{local_identifier}/_uploaded.mark'):
+        #     print(f'{local_identifier} => {remote_identifier} 已经上传过了(_uploaded.mark)')
+        #     continue
         if local_identifier.startswith('_') :
             print(f'跳过 {local_identifier}')
             continue
         if not local_identifier.startswith(BILIBILI_IDENTIFIER_PERFIX):
             print(f'{local_identifier} 不是以 {BILIBILI_IDENTIFIER_PERFIX} 开头的正确 local_identifier')
             continue
-        if not os.path.exists(f'{videos_basepath}/{local_identifier}/_downloaded.mark'):
+        if not os.path.exists(f'{OLD_videos_basepath}/{local_identifier}/_downloaded.mark'):
             print(f'{local_identifier} 没有下载完成')
             continue
 
@@ -57,25 +59,26 @@ def _upload_bvid(bvid: str):
             print(f'item {remote_identifier} 已存在(item.exists)')
             if item.metadata.get("upload-state") == "uploaded":
                 print(f'{remote_identifier} 已经上传过了，跳过(item.metadata.uploaded)')
-                with open(f'{videos_basepath}/{local_identifier}/_uploaded.mark', 'w', encoding='utf-8') as f:
+                with open(f'{OLD_videos_basepath}/{local_identifier}/_uploaded.mark', 'w', encoding='utf-8') as f:
                     f.write('')
                 continue
         filedict = {} # "remote filename": "local filename"
-        for filename in os.listdir(f'{videos_basepath}/{local_identifier}/extra'):
-            file = f'{videos_basepath}/{local_identifier}/extra/{filename}'
+        for filename in os.listdir(f'{OLD_videos_basepath}/{local_identifier}/extra'):
+            file = f'{OLD_videos_basepath}/{local_identifier}/extra/{filename}'
             if os.path.isfile(file):
                 if file.startswith('_'):
                     continue
                 filedict[filename] = file
 
-        for filename in os.listdir(f'{videos_basepath}/{local_identifier}'):
-            file = f'{videos_basepath}/{local_identifier}/{filename}'
+        for filename in os.listdir(f'{OLD_videos_basepath}/{local_identifier}'):
+            file = f'{OLD_videos_basepath}/{local_identifier}/{filename}'
             if os.path.isfile(file):
                 if os.path.basename(file).startswith('_'):
                     continue
                 if not os.path.isfile(file):
                     continue
                 filedict[filename] = file
+                break
         
 
         # IA 去重
@@ -85,9 +88,9 @@ def _upload_bvid(bvid: str):
                 print(f"File {file_in_item['name']} already exists in {remote_identifier}.")
 
 
-        with open(f'{videos_basepath}/{local_identifier}/extra/{file_basename}.info.json', 'r', encoding='utf-8') as f:
+        with open(f'{OLD_videos_basepath}/{local_identifier}/extra/{file_basename}.info.json', 'r', encoding='utf-8') as f:
             bv_info = json.load(f)
-        # with open(f'{videos_basepath}/_videos_info.json', 'r', encoding='utf-8') as f:
+        # with open(f'{OLD_videos_basepath}/_videos_info.json', 'r', encoding='utf-8') as f:
         #     videos_info = json.load(f)
 
         tags = ['BiliBili', 'video']
@@ -108,7 +111,7 @@ def _upload_bvid(bvid: str):
         md = {
             "mediatype": "movies",
             "collection": 'opensource_movies',
-            "title": bv_info['data']['View']['title'] + f' P{pid} ' + p_part ,
+            "title": '[redirect]: ' + bv_info['data']['View']['title'] + f' P{pid} ' + p_part ,
             "description": remote_identifier + ' uploading...',
             'creator': bv_info['data']['View']['owner']['name'], # UP 主
             # UTC time
@@ -123,6 +126,7 @@ def _upload_bvid(bvid: str):
             ),  # Keywords should be separated by ; but it doesn't matter much; the alternative is to set one per field with subject[0], subject[1], ...
             "upload-state": "uploading",
             'originalurl': f'https://www.bilibili.com/video/{bvid}/?p={pid}',
+            'redirect': f'https://archive.org/details/{local_identifier}',
             'scanner': f'biliarchiver v{BILI_ARCHIVER_VERSION} (dev)',
         }
         print(filedict)
@@ -151,7 +155,10 @@ def _upload_bvid(bvid: str):
         if item.metadata.get("upload-state") != "uploaded":
             new_md.update({"upload-state": "uploaded"})
         if item.metadata.get("description") != bv_info['data']['View']['desc']:
-            new_md.update({"description": bv_info['data']['View']['desc']})
+            new_md.update({"description": 
+                           "This empty item is uploaded for de-duplication purpose, original item is at "
+                           f'<a href="https://archive.org/details/{local_identifier}" rel="nofollow">https://archive.org/details/{local_identifier}</a>'
+                           })
         if item.metadata.get("scanner") != md['scanner']:
             new_md.update({"scanner": md['scanner']})
         if new_md:
@@ -164,9 +171,12 @@ def _upload_bvid(bvid: str):
             )
             assert isinstance(r, Response)
             r.raise_for_status()
-        with open(f'{videos_basepath}/{local_identifier}/_uploaded.mark', 'w', encoding='utf-8') as f:
+        with open(f'{OLD_videos_basepath}/{local_identifier}/_uploaded.mark', 'w', encoding='utf-8') as f:
             f.write('')
         print(f'==== {remote_identifier} 上传完成 ====')
+    
+    os.rename(OLD_videos_basepath, videos_basepath)
+    print(f'Rename {OLD_videos_basepath} to {videos_basepath}')
 
 def read_ia_keys(keysfile):
     ''' Return: tuple(`access_key`, `secret_key`) '''

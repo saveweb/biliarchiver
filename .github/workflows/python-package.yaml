@@ -39,6 +39,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: run biliarchiver tools
       run: |
+        touch biliarchiver.home
         python -m biliarchiver.bili_archive_bvids -h
         python -m biliarchiver.bili_get_bvids -h
         python -m biliarchiver.bili_upload -h

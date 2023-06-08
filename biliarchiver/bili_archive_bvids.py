@@ -1,9 +1,13 @@
 import asyncio
 import os
 import argparse
+from pathlib import Path
+from typing import Union
+
+from internetarchive import get_item
 
 from biliarchiver.archive_bvid import archive_bvid
-from biliarchiver.config import Config
+from biliarchiver.config import config
 
 from bilix.sites.bilibili.downloader import DownloaderBilibili
 from rich.console import Console
@@ -20,14 +24,12 @@ from dataclasses import dataclass
 
 @dataclass
 class Args:
-    cookies: str
     bvids: str
     skip_ia: bool
 
 def parse_args():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cookies', dest='cookies', type=str, default='~/.cookies.txt')
     parser.add_argument('--bvids', dest='bvids', type=str, help='bvids 列表的文件路径', required=True)
     parser.add_argument('-s', '--skip-ia-check', dest='skip_ia', action='store_true',
                         help='不检查 IA 上是否已存在对应 BVID 的 item ，直接开始下载')
@@ -37,20 +39,25 @@ def parse_args():
     return args
 
 def check_ia_item_exist(client: Client, identifier: str) -> bool:
-    params = {
-        'identifier': identifier,
-        'output': 'json',
-    }
-    r = client.get('https://archive.org/services/check_identifier.php' ,params=params)
-    r.raise_for_status()
-    r_json = r.json()
-    assert r_json['type'] =='success'
-    if r_json['code'] == 'available':
-        return False
-    elif r_json['code'] == 'not_available':
+    # params = {
+    #     'identifier': identifier,
+    #     'output': 'json',
+    # }
+    # r = client.get('https://archive.org/services/check_identifier.php' ,params=params)
+    # r.raise_for_status()
+    # r_json = r.json()
+    # assert r_json['type'] =='success'
+    # if r_json['code'] == 'available':
+    #     return False
+    # elif r_json['code'] == 'not_available':
+    #     return True
+    # else:
+    #     raise ValueError(f'Unexpected code: {r_json["code"]}')
+    item = get_item(identifier)
+    if item.exists:
         return True
-    else:
-        raise ValueError(f'Unexpected code: {r_json["code"]}')
+
+    return False
 
 def _main():
     args = parse_args()
@@ -60,8 +67,6 @@ def _main():
     with open(args.bvids, 'r', encoding='utf-8') as f:
         bvids_from_file = f.read().splitlines()
 
-    config = Config()
-
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
@@ -70,7 +75,7 @@ def _main():
         part_concurrency=config.part_concurrency,
         stream_retry=config.stream_retry,
     )
-    update_cookies_from_file(d.client, args.cookies)
+    update_cookies_from_file(d.client, config.cookies_file)
     client = Client(cookies=d.client.cookies, headers=d.client.headers)
     logined = is_login(client)
     if not logined:
@@ -97,12 +102,18 @@ def _main():
     
 
 
-def update_cookies_from_file(client: AsyncClient, cookies_path: str):
-    cookies_path = os.path.expanduser(cookies_path)
+def update_cookies_from_file(client: AsyncClient, cookies_path: Union[str, Path]):
+    if isinstance(cookies_path, Path):
+        cookies_path = cookies_path.expanduser()
+    elif isinstance(cookies_path, str):
+        cookies_path = Path(cookies_path).expanduser()
+    else:
+        raise TypeError(f'cookies_path: {type(cookies_path)}')
+
     assert os.path.exists(cookies_path), f'cookies 文件不存在: {cookies_path}'
     from http.cookiejar import MozillaCookieJar
     cj = MozillaCookieJar()
-    cj.load(cookies_path, ignore_discard=True, ignore_expires=True)
+    cj.load(f'{cookies_path}', ignore_discard=True, ignore_expires=True)
     loadded_cookies = 0
     for cookie in cj:
         # only load bilibili cookies
@@ -112,9 +123,9 @@ def update_cookies_from_file(client: AsyncClient, cookies_path: str):
                 cookie.name, cookie.value, domain=cookie.domain, path=cookie.path
                 )
             loadded_cookies += 1
-    print(f'从 {cookies_path} 加载了 {loadded_cookies} 块 cookies')
+    print(f'从 {cookies_path} 品尝了 {loadded_cookies} 块 cookies')
     if loadded_cookies > 100:
-        print('可能加载了过多的 cookies，可能导致 httpx.Client 响应非常慢')
+        print('吃了过多的 cookies，可能导致 httpx.Client 怠工，响应非常缓慢')
 
     assert client.cookies.get('SESSDATA') is not None, 'SESSDATA 不存在'
     # print(f'SESS_DATA: {client.cookies.get("SESSDATA")}')

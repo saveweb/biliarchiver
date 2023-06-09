@@ -39,6 +39,19 @@ def parse_args():
     return args
 
 def check_ia_item_exist(client: Client, identifier: str) -> bool:
+    cache_dir = config.storage_home_dir / 'ia_item_exist_cache'
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    def create_item_exist_cache_file(identifier: str) -> Path:
+        with open(cache_dir / f'{identifier}.mark', 'w', encoding='utf-8') as f:
+            f.write('')
+        return cache_dir / f'{identifier}.mark'
+    def check_ia_item_exist_from_cache_file(identifier: str) -> bool:
+        return (cache_dir / f'{identifier}.mark').exists()
+
+
+    if check_ia_item_exist_from_cache_file(identifier):
+        return True
+
     # params = {
     #     'identifier': identifier,
     #     'output': 'json',
@@ -55,6 +68,7 @@ def check_ia_item_exist(client: Client, identifier: str) -> bool:
     #     raise ValueError(f'Unexpected code: {r_json["code"]}')
     item = get_item(identifier)
     if item.exists:
+        create_item_exist_cache_file(identifier)
         return True
 
     return False
@@ -135,9 +149,11 @@ def is_login(cilent: Client) -> bool:
     r.raise_for_status()
     nav_json = r.json()
     if nav_json['code'] == 0:
-        print('用户登录成功')
+        print('BiliBili 登录成功，饼干真香。')
+        print('NOTICE: 存档过程中请不要在 cookies 的源浏览器访问 B 站，避免 B 站刷新'
+              ' cookies 导致我们半路全下到的视频全是 480P 的优酷土豆级醇享画质。')
         return True
-    print('未登录/SESSDATA无效/过期')
+    print('未登录/SESSDATA无效/过期，你这饼干它保真吗？')
     return False
 
 def main():

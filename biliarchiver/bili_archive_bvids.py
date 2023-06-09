@@ -151,7 +151,7 @@ def is_login(cilent: Client) -> bool:
     if nav_json['code'] == 0:
         print('BiliBili 登录成功，饼干真香。')
         print('NOTICE: 存档过程中请不要在 cookies 的源浏览器访问 B 站，避免 B 站刷新'
-              ' cookies 导致我们半路全下到的视频全是 480P 的优酷土豆级醇享画质。')
+              ' cookies 导致我们半路下到的视频全是 480P 的优酷土豆级醇享画质。')
         return True
     print('未登录/SESSDATA无效/过期，你这饼干它保真吗？')
     return False

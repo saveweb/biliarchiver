@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "biliarchiver"
-version = "0.0.13"
+version = "0.0.14"
 description = ""
 authors = ["yzqzss <yzqzss@yandex.com>"]
 readme = "README.md"
@@ -10,6 +10,7 @@ packages = [{include = "biliarchiver"}]
 python = "^3.9"
 bilix = "0.18.3"
 internetarchive = "^3.5.0"
+danmakuc = "^0.3.6"
 
 [tool.poetry.scripts]
 bili_archive_bvids = "biliarchiver:bili_archive_bvids.main"

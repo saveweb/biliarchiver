@@ -81,9 +81,10 @@ def _upload_bvid(bvid: str):
                 if os.path.basename(file).startswith('_'):
                     continue
                 if not os.path.isfile(file):
-                    continue
+                   continue
                 filedict[filename] = file
-        
+
+        assert f'{file_basename}.mp4' in filedict
 
         # IA 去重
         for file_in_item in item.files:

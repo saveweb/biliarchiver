@@ -73,6 +73,15 @@ async def archive_bvid(d: DownloaderBilibili, bvid: str, logined: bool=False):
             print(f'{file_basename}: 已经下载过了')
             continue
 
+        def delete_cache(reason: str = ''):
+            if not os.path.exists(video_basepath):
+                return
+            _files_in_video_basepath = os.listdir(video_basepath)
+            for _file in _files_in_video_basepath:
+                if _file.startswith(file_basename):
+                    print(f'{file_basename}: {reason}，删除缓存: {_file}')
+                    os.remove(video_basepath / _file)
+        delete_cache('为防出错，清空上次未完成的下载缓存')
         video_info = await api.get_video_info(d.client, page.p_url)
         print(f'{file_basename}: {video_info.title}...')
         os.makedirs(video_basepath, exist_ok=True)
@@ -126,6 +135,31 @@ async def archive_bvid(d: DownloaderBilibili, bvid: str, logined: bool=False):
         # 下载视频超详细信息（BV 级别，不是分 P 级别）
         cor3 = download_bilibili_video_detail(d.client, bvid, f'{video_extrapath}/{file_basename}.info.json')
         await asyncio.gather(cor1, cor2, cor3)
+
+        if codec.startswith('hev') and not os.path.exists(video_basepath / f'{file_basename}.mp4'):
+
+            # 如果有下载缓存文件（以 file_basename 开头的文件），说明这个 hevc 的 dash 资源存在，只是可能因为网络之类的原因下载中途失败了
+            delete_cache('下载出错')
+
+            # 下载缓存文件都不存在，应该是对应的 dash 资源根本就没有，一些老视频会出现这种情况。
+            # 换 avc 编码
+            print(f'{file_basename}: 视频文件没有被下载？也许是 hevc 对应的 dash 资源不存在，尝试 avc ……')
+            for media in video_info.dash.videos:
+                if media.codec.startswith('avc'):
+                    codec = media.codec
+                    print(f'{file_basename}: "{codec}" "{media.quality}" ...')
+                    break
+            cor4 = d.get_video(page.p_url ,video_info=video_info, path=video_basepath,
+                    quality=0, # 选择最高画质
+                    codec=codec, # 编码
+                    # 下载 ass 弹幕(bilix 会自动调用 danmukuC 将 pb 弹幕转为 ass)、封面、字幕
+                    # 弹幕、封面、字幕都会被放进 extra 子目录里，所以需要 d.hierarchy is True
+                    dm=True, image=True, subtitle=True
+                    )
+            await asyncio.gather(cor4)
+
+
+        assert os.path.exists(video_basepath / f'{file_basename}.mp4')
 
         # 还原为了自定义文件名而做的覆盖
         video_info.pages[video_info.p].p_name = old_p_name

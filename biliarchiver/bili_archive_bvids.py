@@ -40,17 +40,15 @@ def parse_args():
 
 def check_ia_item_exist(client: Client, identifier: str) -> bool:
     cache_dir = config.storage_home_dir / 'ia_item_exist_cache'
+    # check_ia_item_exist_from_cache_file:
+    if (cache_dir / f'{identifier}.mark').exists():
+        return True
     cache_dir.mkdir(parents=True, exist_ok=True)
+
     def create_item_exist_cache_file(identifier: str) -> Path:
         with open(cache_dir / f'{identifier}.mark', 'w', encoding='utf-8') as f:
             f.write('')
         return cache_dir / f'{identifier}.mark'
-    def check_ia_item_exist_from_cache_file(identifier: str) -> bool:
-        return (cache_dir / f'{identifier}.mark').exists()
-
-
-    if check_ia_item_exist_from_cache_file(identifier):
-        return True
 
     # params = {
     #     'identifier': identifier,

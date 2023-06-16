@@ -147,7 +147,7 @@ def _upload_bvid(bvid: str):
                 retries=5,
             )
 
-        tries = 30
+        tries = 100
         item = get_item(remote_identifier) # refresh item
         while not item.exists and tries > 0:
             print(f"Waiting for item to be created ({tries})  ...", end='\r')

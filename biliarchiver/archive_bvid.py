@@ -1,6 +1,7 @@
 import asyncio
 import os
 from pathlib import Path
+from typing import Union
 
 import aiofiles
 import httpx
@@ -99,32 +100,34 @@ async def archive_bvid(d: DownloaderBilibili, bvid: str, logined: bool=False):
         # 但是我们以 {bvid}_p{pid} 作为文件名，这个长度是没问题的。
 
 
-        # 选择编码，优先 hevc，没有的话就 avc
-        # 不选 av0 ，毕竟目前没几个设备能拖得动
         codec = None
+        quality = None
         if video_info.dash:
-            for media in video_info.dash.videos:
-                if media.codec.startswith('hev'):
-                    codec = media.codec
-                    print(f'{file_basename}: "{codec}" "{media.quality}" ...')
-                    break
-            if codec is None:
+            # 选择编码 dvh->hev->avc
+            # 不选 av0 ，毕竟目前没几个设备能拖得动
+            codec_candidates = ['dvh', 'hev', 'avc']
+            for codec_candidate in codec_candidates:
                 for media in video_info.dash.videos:
-                    if media.codec.startswith('avc'):
+                    if media.codec.startswith(codec_candidate):
                         codec = media.codec
+                        quality = media.quality
                         print(f'{file_basename}: "{codec}" "{media.quality}" ...')
                         break
-            assert codec is not None, f'{file_basename}: 没有 avc 或 hevc 编码的视频'
+                if codec is not None:
+                    break
+            assert codec is not None and quality is not None, f'{file_basename}: 没有 dvh、avc 或 hevc 编码的视频'
         elif video_info.other:
-            print(f'{file_basename}: 未解析到dash资源，交给 bilix 处理 ...')
+            print(f'{file_basename}: 未解析到 dash 资源，交给 bilix 处理 ...')
             codec = ''
+            quality = 0
         else:
             raise APIError(f'{file_basename}: 未解析到视频资源', page.p_url)
 
         assert codec is not None
+        assert isinstance(quality, (int, str))
 
         cor1 = d.get_video(page.p_url ,video_info=video_info, path=video_basepath,
-                    quality=0, # 选择最高画质
+                    quality=quality, # 选择最高画质
                     codec=codec, # 编码
                     # 下载 ass 弹幕(bilix 会自动调用 danmukuC 将 pb 弹幕转为 ass)、封面、字幕
                     # 弹幕、封面、字幕都会被放进 extra 子目录里，所以需要 d.hierarchy is True

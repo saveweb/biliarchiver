@@ -7,7 +7,7 @@
 // @grant        GM_xmlhttpRequest
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     // 从 URL 获取当前视频的 BV 号
@@ -21,13 +21,55 @@
         return null;
     }
 
+    function humanReadableUpperPartMap(string, backward) {
+        // 找到字符串中所有的 ASCII 大写字母，并返回一个能表示他们绝对位置的字符串。
+        // 其中每个非相邻的大写字母之间用数字表示相隔的字符数。
+        //
+        // params: backward - 可以表示是正着看还是倒着看。
+        //
+        // NOTE: 在我们的用例中，我们 backward = true ，这样产生的 upperPart 就不太像 BV 号或者类似的编号，以免 upperPart 污染全文搜索。
+        //
+        // 例如：
+        // backward = false
+        //   BV1HP411D7Rj -> BV1HP3D1R （长得像 bvid ）
+        // backward = true
+        //   BV1HP411D7Rj -> 1R1D3PH1VB
+
+        if (backward) {
+            string = string.split('').reverse().join('');
+        }
+        console.log(string);
+
+        let result = '';
+        let steps = 0;
+        let char_ = '';
+        for (let i = 0; i < string.length; i++) {
+            char_ = string[i];
+            console.log('char_:', char_);
+            if (char_ >= 'A' && char_ <= 'Z') {
+                if (steps === 0) {
+                    result += char_;
+                } else {
+                    // steps to string
+                    result += steps.toString() + char_;
+                }
+                steps = 0;
+            } else {
+                steps++;
+            }
+        }
+
+        return result;
+    }
+
     // 查 archive.org
     function queryInternetArchive(bvNumber) {
-        var iaUrl = "https://archive.org/services/check_identifier.php?output=json&identifier=BiliBili-" + bvNumber + "_p1";
+        var iaUrl = "https://archive.org/services/check_identifier.php?output=json&identifier=BiliBili-" + bvNumber + "_p1" + "-" + humanReadableUpperPartMap(bvNumber, true);
+        console.log(iaUrl);
         GM_xmlhttpRequest({
             method: "GET",
             url: iaUrl,
-            onload: function(response) {
+            onload: function (response) {
                 var data = JSON.parse(response.responseText);
                 if (data.code === "available") {
                     showPopup("此视频没有存档过", "red");
@@ -65,7 +107,7 @@
         copyButton.textContent = "Copy BV";
         copyButton.style.marginTop = "10px";
         copyButton.style.display = "block";
-        copyButton.addEventListener("click", function() {
+        copyButton.addEventListener("click", function () {
             copyBV();
         });
 
@@ -96,10 +138,10 @@
         var bvNumber = getBVNumber();
         if (bvNumber) {
             navigator.clipboard.writeText(bvNumber)
-                .then(function() {
+                .then(function () {
                     alert("BV号已复制到剪贴板: " + bvNumber);
                 })
-                .catch(function(error) {
+                .catch(function (error) {
                     console.error("无法复制BV号:", error);
                 });
         }

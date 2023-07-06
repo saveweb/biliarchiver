@@ -4,3 +4,4 @@ aiofiles
 httpx
 requests
 internetarchive
+browser-cookie3

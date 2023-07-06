@@ -11,6 +11,7 @@ python = "^3.9"
 bilix = "0.18.3"
 internetarchive = "^3.5.0"
 danmakuc = "^0.3.6"
+browser-cookie3 = "^0.19.1"
 
 [tool.poetry.scripts]
 bili_archive_bvids = "biliarchiver.cli_tools:bili_archive_bvids.main"

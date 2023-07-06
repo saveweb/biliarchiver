@@ -3,7 +3,7 @@ import os
 import argparse
 from pathlib import Path
 import time
-from typing import Union
+from typing import Optional, Union
 
 from internetarchive import get_item
 
@@ -27,6 +27,7 @@ from dataclasses import dataclass
 class Args:
     bvids: str
     skip_ia: bool
+    from_browser: Optional[str]
 
 def parse_args():
 
@@ -34,6 +35,7 @@ def parse_args():
     parser.add_argument('--bvids', dest='bvids', type=str, help='bvids 列表的文件路径', required=True)
     parser.add_argument('-s', '--skip-ia-check', dest='skip_ia', action='store_true',
                         help='不检查 IA 上是否已存在对应 BVID 的 item ，直接开始下载')
+    parser.add_argument('--fb', '--from-browser', dest='from_browser', type=str, help='从指定浏览器导入 cookies (否则导入 config.json 中的 cookies_file) [default: None]', default=None)
     
     args = Args(**vars(parser.parse_args()))
 
@@ -88,7 +90,12 @@ def _main():
         part_concurrency=config.part_concurrency,
         stream_retry=config.stream_retry,
     )
-    update_cookies_from_file(d.client, config.cookies_file)
+
+    # load cookies
+    if args.from_browser is not None:
+        update_cookies_from_browser(d.client, args.from_browser)
+    else:
+        update_cookies_from_file(d.client, config.cookies_file)
     client = Client(cookies=d.client.cookies, headers=d.client.headers)
     logined = is_login(client)
     if not logined:
@@ -115,12 +122,11 @@ def _main():
     
 def update_cookies_from_browser(client: AsyncClient, browser: str):
     try:
-        a = time.time()
         import browser_cookie3
         f = getattr(browser_cookie3, browser.lower())
-        print(f"trying to load cookies from {browser}: bilibili.com, may need auth")
-        client.cookies.update(f(domain_name="bilibili.com"))
-        print(f"load complete, consumed time: {time.time() - a} s")
+        cookies_to_update = f(domain_name="bilibili.com")
+        client.cookies.update(cookies_to_update)
+        print(f"从 {browser} 品尝了 {len(cookies_to_update)} 块 cookies")
     except AttributeError:
         raise AttributeError(f"Invalid Browser {browser}")
 

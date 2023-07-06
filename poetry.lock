@@ -85,14 +85,14 @@ serve = ["fastapi (>=0.92.0)", "passlib[bcrypt]", "python-jose[cryptography]", "
 
 [[package]]
 name = "browser-cookie3"
-version = "0.19.0"
+version = "0.19.1"
 description = "Loads cookies from your browser into a cookiejar object so can download with urllib and other libraries the same content you see in the web browser."
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "browser-cookie3-0.19.0.tar.gz", hash = "sha256:0ad54fb4c857ea9056e2b33e1eaebc95f33a1287095fa7e05ee44e11f62c84bd"},
-    {file = "browser_cookie3-0.19.0-py3-none-any.whl", hash = "sha256:7663ccc30cf42268bf3d60c6e8465b815eb6ed0e5bf181c2d15e25053d80815f"},
+    {file = "browser-cookie3-0.19.1.tar.gz", hash = "sha256:3031ad14b96b47ef1e4c8545f2f463e10ad844ef834dcd0ebdae361e31c6119a"},
+    {file = "browser_cookie3-0.19.1-py3-none-any.whl", hash = "sha256:114e40fe80853211d65f14bc690a7d90c4c287251593dc5767692a950a9006d4"},
 ]
 
 [package.dependencies]
@@ -974,4 +974,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "1d87816bea40eec2d592dab06c7c4e64d496213709432c032bf23c3848471810"
+content-hash = "59f16db31a0dff91eeeaf50d1150b9bf88e3c3c4c69fecd23fc31a814bff4fbd"

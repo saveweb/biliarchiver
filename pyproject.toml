@@ -13,9 +13,10 @@ internetarchive = "^3.5.0"
 danmakuc = "^0.3.6"
 
 [tool.poetry.scripts]
-bili_archive_bvids = "biliarchiver:bili_archive_bvids.main"
-bili_upload = "biliarchiver:bili_upload.main"
-bili_get_bvids = "biliarchiver:bili_get_bvids.main"
+bili_archive_bvids = "biliarchiver.cli_tools:bili_archive_bvids.main"
+bili_upload = "biliarchiver.cli_tools:bili_upload.main"
+bili_get_bvids = "biliarchiver.cli_tools:bili_get_bvids.main"
+biliarchiver = "biliarchiver.cli_tools:biliarchiver.main"
 
 
 [build-system]

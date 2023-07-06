@@ -2,6 +2,7 @@ import asyncio
 import os
 import argparse
 from pathlib import Path
+import time
 from typing import Union
 
 from internetarchive import get_item
@@ -112,7 +113,16 @@ def _main():
     while len(asyncio.all_tasks(loop)) > 0:
         loop.run_until_complete(asyncio.sleep(1))
     
-
+def update_cookies_from_browser(client: AsyncClient, browser: str):
+    try:
+        a = time.time()
+        import browser_cookie3
+        f = getattr(browser_cookie3, browser.lower())
+        print(f"trying to load cookies from {browser}: bilibili.com, may need auth")
+        client.cookies.update(f(domain_name="bilibili.com"))
+        print(f"load complete, consumed time: {time.time() - a} s")
+    except AttributeError:
+        raise AttributeError(f"Invalid Browser {browser}")
 
 def update_cookies_from_file(client: AsyncClient, cookies_path: Union[str, Path]):
     if isinstance(cookies_path, Path):

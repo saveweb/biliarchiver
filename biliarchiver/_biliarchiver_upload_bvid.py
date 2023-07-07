@@ -113,6 +113,14 @@ def _upload_bvid(bvid: str):
         assert cid is not None
         assert p_part is not None
 
+        aid = bv_info['data']['View']['aid']
+        mid = bv_info['data']['View']['owner']['mid']
+
+        external_identifier = f"urn:bilibili:aid:{aid}, "
+        external_identifier += f"urn:bilibili:bvid:{bvid}, "
+        external_identifier += f"urn:bilibili:cid:{cid}, "
+        external_identifier += f"urn:bilibili:mid:{mid}, "
+
         md = {
             "mediatype": "movies",
             "collection": 'opensource_movies',
@@ -120,12 +128,13 @@ def _upload_bvid(bvid: str):
             "description": remote_identifier + ' uploading...',
             'creator': bv_info['data']['View']['owner']['name'], # UP 主
             # UTC time
-            'date': time.strftime("%Y-%m-%d", time.gmtime(pubdate)),
+            'date': time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(pubdate)),
             'year': time.strftime("%Y", time.gmtime(pubdate)),
-            'aid': bv_info['data']['View']['aid'],
-            'bvid': bvid,
-            'cid': cid,
-            'mid': bv_info['data']['View']['owner']['mid'],
+            # 'aid': aid,
+            # 'bvid': bvid,
+            # 'cid': cid,
+            # 'mid': mid,
+            "external-identifier": external_identifier,
             "subject": "; ".join(
                 tags
             ),  # Keywords should be separated by ; but it doesn't matter much; the alternative is to set one per field with subject[0], subject[1], ...
@@ -162,6 +171,8 @@ def _upload_bvid(bvid: str):
             new_md.update({"description": bv_info['data']['View']['desc']})
         if item.metadata.get("scanner") != md['scanner']:
             new_md.update({"scanner": md['scanner']})
+        if item.metadata.get("external-identifier") != md['external-identifier']:
+            new_md.update({"external-identifier": md['external-identifier']})
         if new_md:
             print(f"Updating metadata:")
             print(new_md)

@@ -2,7 +2,7 @@ import asyncio
 import os
 import argparse
 from pathlib import Path
-import time
+import sys
 from typing import Optional, Union
 
 from internetarchive import get_item
@@ -14,6 +14,7 @@ from bilix.sites.bilibili.downloader import DownloaderBilibili
 from rich.console import Console
 from httpx import AsyncClient, Client
 from rich.traceback import install
+from biliarchiver.utils.http_patch import HttpOnlyCookie_Handler
 install()
 
 from biliarchiver.utils.string import human_readable_upper_part_map
@@ -130,6 +131,7 @@ def update_cookies_from_browser(client: AsyncClient, browser: str):
     except AttributeError:
         raise AttributeError(f"Invalid Browser {browser}")
 
+
 def update_cookies_from_file(client: AsyncClient, cookies_path: Union[str, Path]):
     if isinstance(cookies_path, Path):
         cookies_path = cookies_path.expanduser()
@@ -139,24 +141,27 @@ def update_cookies_from_file(client: AsyncClient, cookies_path: Union[str, Path]
         raise TypeError(f'cookies_path: {type(cookies_path)}')
 
     assert os.path.exists(cookies_path), f'cookies 文件不存在: {cookies_path}'
+
     from http.cookiejar import MozillaCookieJar
     cj = MozillaCookieJar()
-    cj.load(f'{cookies_path}', ignore_discard=True, ignore_expires=True)
-    loadded_cookies = 0
-    for cookie in cj:
-        # only load bilibili cookies
-        if 'bilibili' in cookie.domain:
-            assert cookie.value is not None
-            client.cookies.set(
-                cookie.name, cookie.value, domain=cookie.domain, path=cookie.path
-                )
-            loadded_cookies += 1
-    print(f'从 {cookies_path} 品尝了 {loadded_cookies} 块 cookies')
-    if loadded_cookies > 100:
-        print('吃了过多的 cookies，可能导致 httpx.Client 怠工，响应非常缓慢')
 
-    assert client.cookies.get('SESSDATA') is not None, 'SESSDATA 不存在'
-    # print(f'SESS_DATA: {client.cookies.get("SESSDATA")}')
+    with HttpOnlyCookie_Handler(cookies_path):
+        cj.load(f'{cookies_path}', ignore_discard=True, ignore_expires=True)
+        loadded_cookies = 0
+        for cookie in cj:
+            # only load bilibili cookies
+            if 'bilibili' in cookie.domain:
+                assert cookie.value is not None
+                client.cookies.set(
+                    cookie.name, cookie.value, domain=cookie.domain, path=cookie.path
+                    )
+                loadded_cookies += 1
+        print(f'从 {cookies_path} 品尝了 {loadded_cookies} 块 cookies')
+        if loadded_cookies > 100:
+            print('吃了过多的 cookies，可能导致 httpx.Client 怠工，响应非常缓慢')
+
+        assert client.cookies.get('SESSDATA') is not None, 'SESSDATA 不存在'
+        # print(f'SESS_DATA: {client.cookies.get("SESSDATA")}')
 
 def is_login(cilent: Client) -> bool:
     r = cilent.get('https://api.bilibili.com/x/member/web/account')

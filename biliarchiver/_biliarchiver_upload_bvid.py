@@ -2,6 +2,7 @@ import json
 import os
 from pathlib import Path
 import time
+from typing import List
 from internetarchive import get_item
 from requests import Response
 from rich import print
@@ -114,12 +115,18 @@ def _upload_bvid(bvid: str):
         assert p_part is not None
 
         aid = bv_info['data']['View']['aid']
-        mid = bv_info['data']['View']['owner']['mid']
+        owner_mid = bv_info['data']['View']['owner']['mid']
 
-        external_identifier = f"urn:bilibili:aid:{aid}, "
-        external_identifier += f"urn:bilibili:bvid:{bvid}, "
-        external_identifier += f"urn:bilibili:cid:{cid}, "
-        external_identifier += f"urn:bilibili:mid:{mid}, "
+        mids: List[int] = [owner_mid]
+        if bv_info['data']['View'].get('staff') is not None:
+            mids = [] # owner_mid 在 staff 也有
+            for staff in bv_info['data']['View']['staff']:
+                mids.append(staff['mid']) if staff['mid'] not in mids else None
+        external_identifier = [f"urn:bilibili:aid:{aid}",
+                               f"urn:bilibili:bvid:{bvid}",
+                               f"urn:bilibili:cid:{cid}"]
+        for mid in mids:
+            external_identifier.append(f"urn:bilibili:mid:{mid}")
 
         md = {
             "mediatype": "movies",
@@ -167,7 +174,7 @@ def _upload_bvid(bvid: str):
         new_md = {}
         if item.metadata.get("upload-state") != "uploaded":
             new_md.update({"upload-state": "uploaded"})
-        if item.metadata.get("description") != bv_info['data']['View']['desc']:
+        if item.metadata.get("description", "") != bv_info['data']['View']['desc']:
             new_md.update({"description": bv_info['data']['View']['desc']})
         if item.metadata.get("scanner") != md['scanner']:
             new_md.update({"scanner": md['scanner']})

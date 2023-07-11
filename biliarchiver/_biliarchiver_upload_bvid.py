@@ -116,12 +116,16 @@ def _upload_bvid(bvid: str):
 
         aid = bv_info['data']['View']['aid']
         owner_mid = bv_info['data']['View']['owner']['mid']
+        owner_creator = bv_info['data']['View']['owner']['name'] # UP 主
 
         mids: List[int] = [owner_mid]
+        creators: List[str] = [owner_creator]
         if bv_info['data']['View'].get('staff') is not None:
             mids = [] # owner_mid 在 staff 也有
+            creators = []
             for staff in bv_info['data']['View']['staff']:
                 mids.append(staff['mid']) if staff['mid'] not in mids else None
+                creators.append(staff['name']) if staff['name'] not in creators else None
         external_identifier = [f"urn:bilibili:aid:{aid}",
                                f"urn:bilibili:bvid:{bvid}",
                                f"urn:bilibili:cid:{cid}"]
@@ -133,7 +137,7 @@ def _upload_bvid(bvid: str):
             "collection": 'opensource_movies',
             "title": bv_info['data']['View']['title'] + f' P{pid} ' + p_part ,
             "description": remote_identifier + ' uploading...',
-            'creator': bv_info['data']['View']['owner']['name'], # UP 主
+            'creator': creators,
             # UTC time
             'date': time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(pubdate)),
             'year': time.strftime("%Y", time.gmtime(pubdate)),
@@ -174,6 +178,8 @@ def _upload_bvid(bvid: str):
         new_md = {}
         if item.metadata.get("upload-state") != "uploaded":
             new_md.update({"upload-state": "uploaded"})
+        if item.metadata.get("creator") != md['creator']:
+            new_md.update({"creator": md['creator']})
         if item.metadata.get("description", "") != bv_info['data']['View']['desc']:
             new_md.update({"description": bv_info['data']['View']['desc']})
         if item.metadata.get("scanner") != md['scanner']:

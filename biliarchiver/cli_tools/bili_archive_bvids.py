@@ -148,14 +148,21 @@ def update_cookies_from_file(client: AsyncClient, cookies_path: Union[str, Path]
     with HttpOnlyCookie_Handler(cookies_path):
         cj.load(f'{cookies_path}', ignore_discard=True, ignore_expires=True)
         loadded_cookies = 0
+        loadded_keys = []
         for cookie in cj:
             # only load bilibili cookies
-            if 'bilibili' in cookie.domain:
-                assert cookie.value is not None
-                client.cookies.set(
-                    cookie.name, cookie.value, domain=cookie.domain, path=cookie.path
-                    )
-                loadded_cookies += 1
+            if not 'bilibili.com' in cookie.domain:
+                continue
+            if cookie.name in loadded_keys:
+                print(f'跳过重复的 cookies: {cookie.name}')
+                # httpx 不能处理不同域名的同名 cookies，只好硬去重了
+                continue
+            assert cookie.value is not None
+            client.cookies.set(
+                cookie.name, cookie.value, domain=cookie.domain, path=cookie.path
+                )
+            loadded_keys.append(cookie.name)
+            loadded_cookies += 1
         print(f'从 {cookies_path} 品尝了 {loadded_cookies} 块 cookies')
         if loadded_cookies > 100:
             print('吃了过多的 cookies，可能导致 httpx.Client 怠工，响应非常缓慢')

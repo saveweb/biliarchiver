@@ -116,7 +116,7 @@ def _upload_bvid(bvid: str, *, update_existing: bool = False):
 
         aid = bv_info['data']['View']['aid']
         owner_mid = bv_info['data']['View']['owner']['mid']
-        owner_creator = bv_info['data']['View']['owner']['name'] # UP 主
+        owner_creator: str = bv_info['data']['View']['owner']['name'] # UP 主
 
         mids: List[int] = [owner_mid]
         creators: List[str] = [owner_creator]
@@ -137,7 +137,7 @@ def _upload_bvid(bvid: str, *, update_existing: bool = False):
             "collection": 'opensource_movies',
             "title": bv_info['data']['View']['title'] + f' P{pid} ' + p_part ,
             "description": remote_identifier + ' uploading...',
-            'creator': creators,
+            'creator': creators if len(creators) > 1 else owner_creator, # type: list[str] | str
             # UTC time
             'date': time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(pubdate)),
             'year': time.strftime("%Y", time.gmtime(pubdate)),

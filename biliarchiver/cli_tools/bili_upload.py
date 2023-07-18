@@ -10,6 +10,7 @@ from biliarchiver.config import config
 class Args:
     bvids: str
     by_storage_home_dir: bool
+    update_existing: bool
 
 
 def parse_args():
@@ -22,6 +23,10 @@ def parse_args():
     storage_home_dir_group.title = 'storage_home_dir'
     storage_home_dir_group.add_argument('--by-storage_home_dir', action='store_true', dest='by_storage_home_dir',
         help='从 config.json 中读取 storage_home_dir，然后上传 storage_home_dir/videos 下的所有视频')
+    update_existing_group = parser.add_argument_group()
+    update_existing_group.title = 'update_existing'
+    update_existing_group.add_argument('--update_existing', action='store_true', dest='update_existing',
+        help='更新已存在的 item')
 
     args = Args(**vars(parser.parse_args()))
 
@@ -35,14 +40,14 @@ def main():
             if '-' in bvid_with_upper_part:
                 bvid = bvid_with_upper_part.split('-')[0]
 
-            upload_bvid(bvid)
+            upload_bvid(bvid, update_existing=args.update_existing)
     
     if args.bvids:
         with open(args.bvids, 'r', encoding='utf-8') as f:
             bvids_from_file = f.read().splitlines()
         for bvid in bvids_from_file:
 
-            upload_bvid(bvid)
+            upload_bvid(bvid, update_existing=args.update_existing)
 
 if __name__ == '__main__':
     main()

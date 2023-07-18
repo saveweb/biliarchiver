@@ -13,12 +13,12 @@ from biliarchiver.config import BILIBILI_IDENTIFIER_PERFIX, config
 from biliarchiver.utils.dirLock import UploadLock, AlreadyRunningError
 from biliarchiver.version import BILI_ARCHIVER_VERSION
 
-def upload_bvid(bvid):
+def upload_bvid(bvid: str, *, update_existing: bool = False):
     try:
         lock_dir = config.storage_home_dir / '.locks' / bvid
         os.makedirs(lock_dir, exist_ok=True)
         with UploadLock(lock_dir): # type: ignore
-            _upload_bvid(bvid)
+            _upload_bvid(bvid, update_existing=update_existing)
     except AlreadyRunningError:
         print(f'已经有一个上传 {bvid} 的进程在运行，跳过')
     except VideosBasePathNotFoundError:
@@ -27,7 +27,7 @@ def upload_bvid(bvid):
         print(f'上传 {bvid} 时出错：')
         raise e
 
-def _upload_bvid(bvid: str):
+def _upload_bvid(bvid: str, *, update_existing: bool = False):
     access_key, secret_key = read_ia_keys(config.ia_key_file)
 
     # identifier format: BiliBili-{bvid}_p{pid}-{upper_part} 
@@ -43,7 +43,7 @@ def _upload_bvid(bvid: str):
         raise VideosBasePathNotFoundError(f'{videos_basepath}')
     for local_identifier in os.listdir(videos_basepath):
         remote_identifier = f'{local_identifier}-{upper_part}'
-        if os.path.exists(f'{videos_basepath}/{local_identifier}/_uploaded.mark'):
+        if os.path.exists(f'{videos_basepath}/{local_identifier}/_uploaded.mark') and not update_existing:
             print(f'{local_identifier} => {remote_identifier} 已经上传过了(_uploaded.mark)')
             continue
         if local_identifier.startswith('_') :
@@ -61,7 +61,7 @@ def _upload_bvid(bvid: str):
 
         print(f'=== 开始上传 {local_identifier} => {remote_identifier} ===')
         item = get_item(remote_identifier)
-        if item.exists:
+        if item.exists and not update_existing:
             print(f'item {remote_identifier} 已存在(item.exists)')
             if item.metadata.get("upload-state") == "uploaded":
                 print(f'{remote_identifier} 已经上传过了，跳过(item.metadata.uploaded)')

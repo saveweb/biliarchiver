@@ -40,9 +40,10 @@ jobs:
     - name: run biliarchiver tools
       run: |
         touch biliarchiver.home
-        python -m biliarchiver.bili_archive_bvids -h
-        python -m biliarchiver.bili_get_bvids -h
-        python -m biliarchiver.bili_upload -h
+        python -m biliarchiver.cli_tools.biliarchiver -h
+        python -m biliarchiver.cli_tools.bili_archive_bvids -h
+        python -m biliarchiver.cli_tools.bili_get_bvids -h
+        python -m biliarchiver.cli_tools.bili_upload -h
     # - name: Test with pytest
       # run: |
         # pytest

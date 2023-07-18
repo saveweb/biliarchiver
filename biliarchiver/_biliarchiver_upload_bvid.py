@@ -126,11 +126,11 @@ def _upload_bvid(bvid: str):
             for staff in bv_info['data']['View']['staff']:
                 mids.append(staff['mid']) if staff['mid'] not in mids else None
                 creators.append(staff['name']) if staff['name'] not in creators else None
-        external_identifier = [f"urn:bilibili:aid:{aid}",
-                               f"urn:bilibili:bvid:{bvid}",
-                               f"urn:bilibili:cid:{cid}"]
+        external_identifier = [f"urn:bilibili:video:aid:{aid}",
+                               f"urn:bilibili:video:bvid:{bvid}",
+                               f"urn:bilibili:video:cid:{cid}"]
         for mid in mids:
-            external_identifier.append(f"urn:bilibili:mid:{mid}")
+            external_identifier.append(f"urn:bilibili:video:mid:{mid}")
 
         md = {
             "mediatype": "movies",

@@ -64,8 +64,7 @@ async def archive_bvid(d: DownloaderBilibili, bvid: str, logined: bool=False):
     for page in first_video_info.pages:
         pid += 1 # pid 从 1 开始
         if not page.p_url.endswith(f'?p={pid}'):
-            print(f'{bvid} 的 P{pid} 不存在 (可能视频被 UP主/B站 删了)')
-            continue
+            raise NotImplementedError(f'{bvid} 的 P{pid} 不存在 (可能视频被 UP主/B站 删了)，请报告此问题，我们需要这个样本！')
 
         file_basename = f'{bvid}_p{pid}'
         video_basepath = videos_basepath / f'{BILIBILI_IDENTIFIER_PERFIX}-{file_basename}'

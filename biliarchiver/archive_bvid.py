@@ -36,6 +36,19 @@ async def new_get_subtitle_info(client: httpx.AsyncClient, bvid, cid):
 api.get_subtitle_info = new_get_subtitle_info
 
 
+@raise_api_error
+async def new_get_video_info(client: httpx.AsyncClient, url: str):
+    """ 
+    monkey patch 一下，只使用 API 获取 video_info
+    理由：
+        - API 目前只支持一般的 AV/BV 视频，可以预防我们不小心下到了番剧/影视剧之类的版权内容
+        - 如果缺 url 对应的分P，bilix 那边会报 AssertionError(f"没有找到分P: p{selected_page_num}，请检查输入")
+        - 对于一些老视频， _get_video_info_from_html() 只会返回烦人且不稳定的 durl 资源。而 API 只会请求 dash 资源。
+    """
+    # print("using api")
+    return await api._get_video_info_from_api(client, url)
+api.get_video_info = new_get_video_info
+
 async def archive_bvid(d: DownloaderBilibili, bvid: str, logined: bool=False):
     assert d.hierarchy is True, 'hierarchy 必须为 True' # 为保持后续目录结构、文件命名的一致性
     assert d.client.cookies.get('SESSDATA') is not None, 'sess_data 不能为空' # 开个大会员呗，能下 4k 呢。

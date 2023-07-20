@@ -15,6 +15,8 @@ from rich.console import Console
 from httpx import AsyncClient, Client
 from rich.traceback import install
 from biliarchiver.utils.http_patch import HttpOnlyCookie_Handler
+from biliarchiver.utils.version_check import check_outdated_version
+from biliarchiver.version import BILI_ARCHIVER_VERSION
 install()
 
 from biliarchiver.utils.string import human_readable_upper_part_map
@@ -82,6 +84,8 @@ def _main():
     assert args.bvids is not None, '必须指定 bvids 列表的文件路径'
     with open(args.bvids, 'r', encoding='utf-8') as f:
         bvids_from_file = f.read().splitlines()
+
+    check_outdated_version(pypi_project='biliarchiver', self_version=BILI_ARCHIVER_VERSION)
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)

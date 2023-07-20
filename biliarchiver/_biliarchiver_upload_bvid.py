@@ -13,12 +13,12 @@ from biliarchiver.config import BILIBILI_IDENTIFIER_PERFIX, config
 from biliarchiver.utils.dirLock import UploadLock, AlreadyRunningError
 from biliarchiver.version import BILI_ARCHIVER_VERSION
 
-def upload_bvid(bvid: str, *, update_existing: bool = False):
+def upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
     try:
         lock_dir = config.storage_home_dir / '.locks' / bvid
         os.makedirs(lock_dir, exist_ok=True)
         with UploadLock(lock_dir): # type: ignore
-            _upload_bvid(bvid, update_existing=update_existing)
+            _upload_bvid(bvid, update_existing=update_existing, collection=collection)
     except AlreadyRunningError:
         print(f'已经有一个上传 {bvid} 的进程在运行，跳过')
     except VideosBasePathNotFoundError:
@@ -27,7 +27,7 @@ def upload_bvid(bvid: str, *, update_existing: bool = False):
         print(f'上传 {bvid} 时出错：')
         raise e
 
-def _upload_bvid(bvid: str, *, update_existing: bool = False):
+def _upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
     access_key, secret_key = read_ia_keys(config.ia_key_file)
 
     # identifier format: BiliBili-{bvid}_p{pid}-{upper_part} 
@@ -134,7 +134,7 @@ def _upload_bvid(bvid: str, *, update_existing: bool = False):
 
         md = {
             "mediatype": "movies",
-            "collection": 'opensource_movies',
+            "collection": collection,
             "title": bv_info['data']['View']['title'] + f' P{pid} ' + p_part ,
             "description": remote_identifier + ' uploading...',
             'creator': creators if len(creators) > 1 else owner_creator, # type: list[str] | str

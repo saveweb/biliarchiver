@@ -159,6 +159,7 @@ async def archive_bvid(d: DownloaderBilibili, bvid: str, logined: bool=False):
             # 下载缓存文件都不存在，应该是对应的 dash 资源根本就没有，一些老视频会出现这种情况。
             # 换 avc 编码
             print(f'{file_basename}: 视频文件没有被下载？也许是 hevc 对应的 dash 资源不存在，尝试 avc ……')
+            assert video_info.dash is not None
             for media in video_info.dash.videos:
                 if media.codec.startswith('avc'):
                     codec = media.codec

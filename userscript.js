@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Bilibili Archive Checker
-// @version      1.0
+// @version      1.1
 // @description  多 p 视频只检查 p1 是否存在。
 // @author       yzqzss
 // @match        https://www.bilibili.com/video/*
@@ -16,9 +16,23 @@
         var bvRegex = /\/video\/(BV\w+)/;
         var matches = url.match(bvRegex);
         if (matches && matches.length > 1) {
+            console.log("BV:", matches[1]);
             return matches[1];
         }
+        console.log("No BV number found.");
         return null;
+    }
+
+    function getPageNumber() {
+        var url = window.location.href;
+        var pageRegex = /p=(\d+)/;
+        var matches = url.match(pageRegex);
+        if (matches && matches.length > 1) {
+            console.log("PageNumber:", matches[1]);
+            return matches[1];
+        }
+        console.log("No PageNumber found, use 1.");
+        return '1';
     }
 
     function humanReadableUpperPartMap(string, backward) {
@@ -38,14 +52,13 @@
         if (backward) {
             string = string.split('').reverse().join('');
         }
-        console.log(string);
 
         let result = '';
         let steps = 0;
         let char_ = '';
         for (let i = 0; i < string.length; i++) {
             char_ = string[i];
-            console.log('char_:', char_);
+            // console.log('char_:', char_);
             if (char_ >= 'A' && char_ <= 'Z') {
                 if (steps === 0) {
                     result += char_;
@@ -58,14 +71,14 @@
                 steps++;
             }
         }
-
+        console.log("upperPart:", result);
         return result;
     }
 
     // 查 archive.org
-    function queryInternetArchive(bvNumber) {
-        var iaUrl = "https://archive.org/services/check_identifier.php?output=json&identifier=BiliBili-" + bvNumber + "_p1" + "-" + humanReadableUpperPartMap(bvNumber, true);
-        console.log(iaUrl);
+    function queryInternetArchive(bvNumber, pageNumber) {
+        var iaUrl = "https://archive.org/services/check_identifier.php?output=json&identifier=BiliBili-" + bvNumber + "_p" + pageNumber + "-" + humanReadableUpperPartMap(bvNumber, true);
+        console.log("Querying:", iaUrl);
         GM_xmlhttpRequest({
             method: "GET",
             url: iaUrl,
@@ -151,8 +164,9 @@
 
     function main() {
         var bvNumber = getBVNumber();
+        var pageNumber = getPageNumber();
         if (bvNumber) {
-            queryInternetArchive(bvNumber);
+            queryInternetArchive(bvNumber, pageNumber);
         }
     }
 

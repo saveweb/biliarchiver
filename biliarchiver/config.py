@@ -39,6 +39,8 @@ class _Config(metaclass=singleton):
 
         self.storage_home_dir: Path = Path(config_file['storage_home_dir']).expanduser()
         self.ia_key_file: Path = Path(config_file['ia_key_file']).expanduser()
+        self.cookies_file: Path = Path(config_file['cookies_file']).expanduser()
+
 
     def save(self):
         with open(CONFIG_FILE, 'w', encoding='utf-8') as f:

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Archive Checker
-// @version      1.1
-// @description  多 p 视频只检查 p1 是否存在。
+// @version      1.2
+// @description  检查 BiliBili 视频是否已经存档到 Internet Archive。
 // @author       yzqzss
 // @match        https://www.bilibili.com/video/*
 // @grant        GM_xmlhttpRequest
@@ -9,6 +9,18 @@
 
 (function () {
     'use strict';
+
+    function isAvVideo() {
+        var url = window.location.href;
+        var avRegex = /\/video\/av(\d+)/;
+        var matches = url.match(avRegex);
+        if (matches && matches.length > 1) {
+            console.log("AV:", matches[1]);
+            return true;
+        }
+        console.log("No AV number found.");
+        return false;
+    }
 
     // 从 URL 获取当前视频的 BV 号
     function getBVNumber() {
@@ -163,6 +175,11 @@
 
 
     function main() {
+        var isAv = isAvVideo();
+        if (isAv) {
+            showPopup("咱不支持识别avid", "yellow");
+            return;
+        }
         var bvNumber = getBVNumber();
         var pageNumber = getPageNumber();
         if (bvNumber) {

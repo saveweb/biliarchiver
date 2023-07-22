@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Bilibili Archive Checker
-// @version      1.2
+// @version      1.3
 // @description  检查 BiliBili 视频是否已经存档到 Internet Archive。
 // @author       yzqzss
 // @match        https://www.bilibili.com/video/*
@@ -10,7 +10,11 @@
 (function () {
     'use strict';
 
-    function isAvVideo() {
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function isVideo() {
         var url = window.location.href;
         var avRegex = /\/video\/av(\d+)/;
         var matches = url.match(avRegex);
@@ -18,19 +22,75 @@
             console.log("AV:", matches[1]);
             return true;
         }
-        console.log("No AV number found.");
+        var bvRegex = /\/video\/(BV\w+)/;
+        matches = url.match(bvRegex);
+        if (matches && matches.length > 1) {
+            console.log("BV:", matches[1]);
+            return true;
+        }
         return false;
     }
 
-    // 从 URL 获取当前视频的 BV 号
-    function getBVNumber() {
-        var url = window.location.href;
-        var bvRegex = /\/video\/(BV\w+)/;
-        var matches = url.match(bvRegex);
-        if (matches && matches.length > 1) {
-            console.log("BV:", matches[1]);
-            return matches[1];
+    function _av2bv(av) {
+        return new Promise(resolve => {
+          var api_url = "https://api.bilibili.com/x/web-interface/view?aid=" + av;
+          console.log("Querying:", api_url);
+          GM_xmlhttpRequest({
+            method: "GET",
+            url: api_url,
+            onload: async function (response) {
+              var data = JSON.parse(response.responseText);
+              if (data.code === 0) {
+                var bv = data.data.bvid;
+                if (bv === undefined) {
+                  console.log("Failed to convert AV to BV.");
+                  console.log("data:", data);
+                  resolve(null);
+                } else {
+                  console.log("av2bv succ:", bv);
+                  resolve(bv);
+                }
+              } else {
+                console.log("Failed to convert AV to BV.");
+                console.log("data:", data);
+                resolve(null);
+              }
+            }
+          });
+        });
+      }
+      
+      async function av2bv(av) {
+        try {
+          const bv = await _av2bv(av);
+          console.log("Converted BV:", bv);
+          return bv;
+        } catch (error) {
+          console.error("An error occurred:", error);
         }
+      }
+
+
+    // 从 URL 获取当前视频的 BV 号
+    async function getBVNumber() {
+        var url = window.location.href;
+        var avRegex = /\/video\/av(\d+)/;
+        var bvRegex = /\/video\/(BV\w+)/;
+        var bvMatches = url.match(bvRegex);
+        if (bvMatches && bvMatches.length > 1) {
+            console.log("BV:", bvMatches[1]);
+            return bvMatches[1];
+        }
+        var avMatches = url.match(avRegex);
+        if (avMatches && avMatches.length > 1) {
+            console.log("AV:", avMatches[1]);
+            var avNumber = avMatches[1];
+            showPopup("正在查询 av" + avNumber + "对应的 BV 号", "yellow");
+            var bvNumber = await av2bv(avNumber);
+            console.log("Got BV from av2bv():", bvNumber);
+            return bvNumber;
+        }
+
         console.log("No BV number found.");
         return null;
     }
@@ -89,17 +149,19 @@
 
     // 查 archive.org
     function queryInternetArchive(bvNumber, pageNumber) {
-        var iaUrl = "https://archive.org/services/check_identifier.php?output=json&identifier=BiliBili-" + bvNumber + "_p" + pageNumber + "-" + humanReadableUpperPartMap(bvNumber, true);
+        var identifier = "BiliBili-" + bvNumber + "_p" + pageNumber + "-" + humanReadableUpperPartMap(bvNumber, true);
+        var iaUrl = "https://archive.org/services/check_identifier.php?output=json&identifier=" + identifier;
         console.log("Querying:", iaUrl);
+        showPopup("正在查询 IA (BV:" + bvNumber + ",P:"+pageNumber+")", "yellow")
         GM_xmlhttpRequest({
             method: "GET",
             url: iaUrl,
             onload: function (response) {
                 var data = JSON.parse(response.responseText);
                 if (data.code === "available") {
-                    showPopup("此视频没有存档过", "red");
+                    showPopup("未存档", "red");
                 } else {
-                    showPopup("本视频已存档", "green");
+                    showPopup("本视频已存档", "green", "https://archive.org/details/" + identifier);
                 }
             }
         });
@@ -123,7 +185,7 @@
         var text = document.createElement("span");
         text.style.marginRight = "10px";
         text.style.color = "#333";
-        text.textContent = "Item Status: ";
+        text.textContent = "";
 
         var status = document.createElement("span");
         status.id = "item-status";
@@ -144,7 +206,7 @@
     }
 
     // 显示悬浮窗
-    function showPopup(message, color) {
+    function showPopup(message, color, href=null) {
         var popup = document.getElementById("archive-popup");
         if (!popup) {
             createPopup();
@@ -153,14 +215,19 @@
         var status = document.getElementById("item-status");
         if (status) {
             status.textContent = message;
+            if (href) {
+                status.style.color = "blue";
+                status.style.textDecoration = "underline";
+                status.innerHTML = "<a href=\"" + href + "\" target=\"_blank\">" + message + "</a>";         
+            }
         }
         popup = document.getElementById("archive-popup");
         popup.style.backgroundColor = color;
     }
 
     // 复制 BV 号
-    function copyBV() {
-        var bvNumber = getBVNumber();
+    async function copyBV() {
+        var bvNumber = await getBVNumber();
         if (bvNumber) {
             navigator.clipboard.writeText(bvNumber)
                 .then(function () {
@@ -173,20 +240,35 @@
     }
 
 
-
-    function main() {
-        var isAv = isAvVideo();
-        if (isAv) {
-            showPopup("咱不支持识别avid", "yellow");
+    async function check() {
+        if (!isVideo()) {
+            console.log("Not a video page, skip.");
             return;
         }
-        var bvNumber = getBVNumber();
+        var bvNumber = await getBVNumber();
         var pageNumber = getPageNumber();
         if (bvNumber) {
             queryInternetArchive(bvNumber, pageNumber);
         }
+        else {
+            showPopup("无法获取 BV 号", "red");
+        }
     }
 
+
+    async function main() {
+        var url = null;
+        while (true) {
+            url = window.location.href;
+            console.log("url:", url);
+            check();
+            while (url === window.location.href) {
+                // sleep 5s
+                await sleep(5000);
+            }
+            showPopup("URL 变化...", "yellow");
+        }
+    }
 
     main();
 })();

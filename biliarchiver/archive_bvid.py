@@ -16,7 +16,7 @@ import json
 from bilix.sites.bilibili.downloader import DownloaderBilibili
 from biliarchiver.config import BILIBILI_IDENTIFIER_PERFIX
 from biliarchiver.config import config
-from biliarchiver.utils.string import human_readable_upper_part_map
+from biliarchiver.utils.identifier import human_readable_upper_part_map
 
 @raise_api_error
 async def new_get_subtitle_info(client: httpx.AsyncClient, bvid, cid):

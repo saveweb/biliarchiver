@@ -2,24 +2,22 @@ import asyncio
 import os
 import argparse
 from pathlib import Path
-import sys
 from typing import Optional, Union
-
-from internetarchive import get_item
 
 from biliarchiver.archive_bvid import archive_bvid
 from biliarchiver.config import config
 
 from bilix.sites.bilibili.downloader import DownloaderBilibili
 from rich.console import Console
-from httpx import AsyncClient, Client
+from httpx import AsyncClient, Client, TransportError
 from rich.traceback import install
 from biliarchiver.utils.http_patch import HttpOnlyCookie_Handler
 from biliarchiver.utils.version_check import check_outdated_version
+from biliarchiver.utils.storage import get_free_space
 from biliarchiver.version import BILI_ARCHIVER_VERSION
 install()
 
-from biliarchiver.utils.string import human_readable_upper_part_map
+from biliarchiver.utils.identifier import human_readable_upper_part_map
 from biliarchiver.utils.ffmpeg import check_ffmpeg
 
 from biliarchiver.config import BILIBILI_IDENTIFIER_PERFIX
@@ -31,6 +29,7 @@ class Args:
     bvids: str
     skip_ia: bool
     from_browser: Optional[str]
+    min_free_space_gb: int
 
 def parse_args():
 
@@ -39,6 +38,7 @@ def parse_args():
     parser.add_argument('-s', '--skip-ia-check', dest='skip_ia', action='store_true',
                         help='不检查 IA 上是否已存在对应 BVID 的 item ，直接开始下载')
     parser.add_argument('--fb', '--from-browser', dest='from_browser', type=str, help='从指定浏览器导入 cookies (否则导入 config.json 中的 cookies_file) [default: None]', default=None)
+    parser.add_argument('--min-free-space-gb', dest='min_free_space_gb', type=int, help='最小剩余空间 (GB)，用超退出 [default: 10]', default=10)
     
     args = Args(**vars(parser.parse_args()))
 
@@ -48,34 +48,39 @@ def check_ia_item_exist(client: Client, identifier: str) -> bool:
     cache_dir = config.storage_home_dir / 'ia_item_exist_cache'
     # check_ia_item_exist_from_cache_file:
     if (cache_dir / f'{identifier}.mark').exists():
+        # print('from cached .mark')
         return True
-    cache_dir.mkdir(parents=True, exist_ok=True)
 
     def create_item_exist_cache_file(identifier: str) -> Path:
         with open(cache_dir / f'{identifier}.mark', 'w', encoding='utf-8') as f:
             f.write('')
         return cache_dir / f'{identifier}.mark'
 
-    # params = {
-    #     'identifier': identifier,
-    #     'output': 'json',
-    # }
-    # r = client.get('https://archive.org/services/check_identifier.php' ,params=params)
-    # r.raise_for_status()
-    # r_json = r.json()
-    # assert r_json['type'] =='success'
-    # if r_json['code'] == 'available':
-    #     return False
-    # elif r_json['code'] == 'not_available':
-    #     return True
-    # else:
-    #     raise ValueError(f'Unexpected code: {r_json["code"]}')
-    item = get_item(identifier)
-    if item.exists:
+    params = {
+        'identifier': identifier,
+        'output': 'json',
+    }
+    # check_identifier.php API 响应快
+    r = None
+    for _ in range(3):
+        try:
+            r = client.get('https://archive.org/services/check_identifier.php', params=params)
+            break
+        except TransportError as e:
+            print(e, 'retrying...')
+    assert r is not None
+    r.raise_for_status()
+    r_json = r.json()
+    assert r_json['type'] =='success'
+    if r_json['code'] == 'available':
+        return False
+    elif r_json['code'] == 'not_available': # exists
+        cache_dir.mkdir(parents=True, exist_ok=True)
         create_item_exist_cache_file(identifier)
         return True
+    else:
+        raise ValueError(f'Unexpected code: {r_json["code"]}')
 
-    return False
 
 def _main():
     args = parse_args()
@@ -106,8 +111,16 @@ def _main():
     if not logined:
         return
 
+    def check_free_space():
+        if args.min_free_space_gb != 0:
+            if get_free_space(path=config.storage_home_dir) // 1024 // 1024 // 1024 <= args.min_free_space_gb:
+                return False # not pass
+        return True # pass
+
     d.progress.start()
     for index, bvid in enumerate(bvids_from_file):
+        if not check_free_space():
+            break
         if not args.skip_ia:
             upper_part = human_readable_upper_part_map(string=bvid, backward=True)
             remote_identifier = f'{BILIBILI_IDENTIFIER_PERFIX}-{bvid}_p1-{upper_part}'
@@ -121,6 +134,9 @@ def _main():
         print(f'=== {bvid} ({index+1}/{len(bvids_from_file)}) ===')
 
         task = loop.create_task(archive_bvid(d, bvid, logined=logined))
+    
+    if not check_free_space():
+        print(f'剩余空间不足 {args.min_free_space_gb} GiB，退出中...')
     
     while len(asyncio.all_tasks(loop)) > 0:
         loop.run_until_complete(asyncio.sleep(1))

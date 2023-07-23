@@ -8,7 +8,7 @@ from requests import Response
 from rich import print
 from biliarchiver.exception import VideosBasePathNotFoundError
 
-from biliarchiver.utils.string import human_readable_upper_part_map
+from biliarchiver.utils.identifier import human_readable_upper_part_map
 from biliarchiver.config import BILIBILI_IDENTIFIER_PERFIX, config
 from biliarchiver.utils.dirLock import UploadLock, AlreadyRunningError
 from biliarchiver.version import BILI_ARCHIVER_VERSION

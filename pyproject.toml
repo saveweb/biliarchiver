@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "biliarchiver"
-version = "0.0.25"
+version = "0.0.26"
 description = ""
 authors = ["yzqzss <yzqzss@yandex.com>"]
 readme = "README.md"

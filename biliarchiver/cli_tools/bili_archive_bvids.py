@@ -39,7 +39,7 @@ def parse_args():
                         help='不检查 IA 上是否已存在对应 BVID 的 item ，直接开始下载')
     parser.add_argument('--fb', '--from-browser', dest='from_browser', type=str, help='从指定浏览器导入 cookies (否则导入 config.json 中的 cookies_file) [default: None]', default=None)
     parser.add_argument('--min-free-space-gb', dest='min_free_space_gb', type=int, help='最小剩余空间 (GB)，用超退出 [default: 10]', default=10)
-    
+
     args = Args(**vars(parser.parse_args()))
 
     return args

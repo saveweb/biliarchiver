@@ -153,6 +153,15 @@ def _upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
             'originalurl': f'https://www.bilibili.com/video/{bvid}/?p={pid}',
             'scanner': f'biliarchiver v{BILI_ARCHIVER_VERSION} (dev)',
         }
+
+        # XML 中不能有 \b 等特殊控制字符，IA 会拒收。
+        # 先只简单删 \b ，如果以后再发现元数据里出现其它非法字符，再说。
+        _md_str = json.dumps(md, ensure_ascii=False)
+        if "\\b" in _md_str:
+            print("WARNING: \\b in metadata, removing it")
+            md = json.loads(_md_str.replace("\\b", ""))
+        del(_md_str)
+
         print(filedict)
         print(md)
 

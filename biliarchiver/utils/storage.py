@@ -14,7 +14,7 @@ def get_free_space(path: Union[Path,str]) -> int:
         raise FileNotFoundError(f'{path} File Not Found')
     if platform.system() == 'Windows':
         free_bytes = ctypes.c_ulonglong(0)
-        ctypes.windll.kernel32.GetDiskFreeSpaceExW(ctypes.c_wchar_p(path), None, None, ctypes.pointer(free_bytes)) # type: ignore
+        ctypes.windll.kernel32.GetDiskFreeSpaceExW(ctypes.c_wchar_p(os.path.abspath(path)), None, None, ctypes.pointer(free_bytes)) # type: ignore
         return free_bytes.value
     else:
         st = os.statvfs(path)

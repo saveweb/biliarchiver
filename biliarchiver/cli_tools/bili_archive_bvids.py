@@ -2,7 +2,7 @@ import asyncio
 import os
 import argparse
 from pathlib import Path
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 from biliarchiver.archive_bvid import archive_bvid
 from biliarchiver.config import config
@@ -118,9 +118,27 @@ def _main():
         return True # pass
 
     d.progress.start()
-    for index, bvid in enumerate(bvids_from_file):
+    sem = asyncio.Semaphore(config.video_concurrency)
+    tasks: List[asyncio.Task] = []
+    def tasks_check():
+        for task in tasks:
+            if task.done():
+                _task_exception = task.exception()
+                if isinstance(_task_exception, BaseException):
+                    print(f'任务 {task} 出错，即将异常退出...')
+                    for task in tasks:
+                        task.cancel()
+                    raise _task_exception
+                # print(f'任务 {task} 已完成')
+                tasks.remove(task)
         if not check_free_space():
-            break
+            print(f'剩余空间不足 {args.min_free_space_gb} GiB')
+            for task in tasks:
+                task.cancel()
+            raise RuntimeError(f'剩余空间不足 {args.min_free_space_gb} GiB')
+        
+    for index, bvid in enumerate(bvids_from_file):
+        tasks_check()
         if not args.skip_ia:
             upper_part = human_readable_upper_part_map(string=bvid, backward=True)
             remote_identifier = f'{BILIBILI_IDENTIFIER_PERFIX}-{bvid}_p1-{upper_part}'
@@ -128,18 +146,21 @@ def _main():
                 print(f'IA 上已存在 {remote_identifier} ，跳过')
                 continue
 
-        while len(asyncio.all_tasks(loop)) > config.video_concurrency:
-            loop.run_until_complete(asyncio.sleep(0.008))
+        if len(tasks) >= config.video_concurrency:
+            loop.run_until_complete(asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED))
+            tasks_check()
 
         print(f'=== {bvid} ({index+1}/{len(bvids_from_file)}) ===')
 
-        task = loop.create_task(archive_bvid(d, bvid, logined=logined))
+        task = loop.create_task(archive_bvid(d, bvid, logined=logined, semaphore=sem), name=f'archive_bvid({bvid})')
+        tasks.append(task)
     
-    if not check_free_space():
-        print(f'剩余空间不足 {args.min_free_space_gb} GiB，退出中...')
+    while len(tasks) > 0:
+        loop.run_until_complete(asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED))
+        tasks_check()
+
+    print("DONE")
     
-    while len(asyncio.all_tasks(loop)) > 0:
-        loop.run_until_complete(asyncio.sleep(1))
     
 def update_cookies_from_browser(client: AsyncClient, browser: str):
     try:

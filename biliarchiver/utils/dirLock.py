@@ -68,8 +68,12 @@ class UploadLock_Fcntl():
         if self.lock_file_fd is None:
             raise IOError("Lock file not opened.")
         self.fcntl.lockf(self.lock_file_fd, self.fcntl.LOCK_UN)
-        self.lock_file_fd.close()
-        os.remove(self.lock_file)
+        self.lock_file_fd.close() # lock_file_fd.close() 之后，其他进程有机会在本进程删掉锁文件之前拿到新锁
+        try:
+            os.remove(self.lock_file) # 删除文件不影响其他进程已持有的 inode 新锁
+        except FileNotFoundError:
+            # 如果抢到新锁的是本进程，删除文件的是其他进程，那么本进程再删除时自然会 FileNotFoundError，忽略就好
+            pass
         # print("Released lock.")
 
     # decorator

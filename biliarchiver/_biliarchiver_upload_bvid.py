@@ -201,7 +201,7 @@ def _upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
             print(new_md)
 
             # remove XML illegal characters
-            _md_before = hash(json.dumps(md))
+            _md_before = hash(json.dumps(new_md))
             new_md = xml_chars_legalize(obj=new_md)
             assert isinstance(new_md, dict)
             if hash(json.dumps(new_md)) != _md_before:

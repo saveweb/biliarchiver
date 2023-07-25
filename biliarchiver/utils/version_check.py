@@ -2,21 +2,23 @@ import requests
 
 from biliarchiver.exception import VersionOutdatedError
 
+
 def get_latest_version(pypi_project: str):
     '''Returns the latest version of pypi_project.'''
     project_url_pypi = f'https://pypi.org/pypi/{pypi_project}/json'
     
     try:
         response = requests.get(project_url_pypi, timeout=5, headers={'Accept': 'application/json', 'Accept-Encoding': 'gzip'})
-    except requests.exceptions.Timeout or requests.exceptions.ConnectionError:
-        print(f'Warning: Could not get latest version of {pypi_project} from pypi.org. (Timeout)')
+    except Exception as e:
+        print(f'Warning: Could not get latest version of {pypi_project} from pypi.org. (Exception: {e})')
         return None
+
     if response.status_code == 200:
         data = response.json()
         latest_version: str = data['info']['version']
         return latest_version
     else:
-        print(f'Warning: Could not get latest version of {pypi_project}. HTTP status_code: {response.status_code}')
+        print(f'Warning: Could not get latest version of {pypi_project} from pypi.org. HTTP status_code: {response.status_code}')
         return None
 
 def check_outdated_version(pypi_project: str, self_version: str, raise_error: bool = True):

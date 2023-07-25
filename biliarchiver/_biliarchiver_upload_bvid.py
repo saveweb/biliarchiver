@@ -11,6 +11,7 @@ from biliarchiver.exception import VideosBasePathNotFoundError
 from biliarchiver.utils.identifier import human_readable_upper_part_map
 from biliarchiver.config import BILIBILI_IDENTIFIER_PERFIX, config
 from biliarchiver.utils.dirLock import UploadLock, AlreadyRunningError
+from biliarchiver.utils.xml_chars import xml_chars_legalize
 from biliarchiver.version import BILI_ARCHIVER_VERSION
 
 def upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
@@ -154,16 +155,16 @@ def _upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
             'scanner': f'biliarchiver v{BILI_ARCHIVER_VERSION} (dev)',
         }
 
-        # XML 中不能有 \b 等特殊控制字符，IA 会拒收。
-        # 先只简单删 \b ，如果以后再发现元数据里出现其它非法字符，再说。
-        _md_str = json.dumps(md, ensure_ascii=False)
-        if "\\b" in _md_str:
-            print("WARNING: \\b in metadata, removing it")
-            md = json.loads(_md_str.replace("\\b", ""))
-        del(_md_str)
-
         print(filedict)
         print(md)
+
+        # remove XML illegal characters
+        _md_before = hash(json.dumps(md))
+        md = xml_chars_legalize(obj=md)
+        assert isinstance(md, dict)
+        if hash(json.dumps(md)) != _md_before:
+            print(f"Removed XML illegal characters from metadata, cleaned metadata:")
+            print(md)
 
         if filedict:
             r = item.upload(
@@ -186,18 +187,27 @@ def _upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
 
         new_md = {}
         if item.metadata.get("upload-state") != "uploaded":
-            new_md.update({"upload-state": "uploaded"})
+            new_md["upload-state"] = "uploaded"
         if item.metadata.get("creator") != md['creator']:
-            new_md.update({"creator": md['creator']})
+            new_md["creator"] = md['creator']
         if item.metadata.get("description", "") != bv_info['data']['View']['desc']:
-            new_md.update({"description": bv_info['data']['View']['desc']})
+            new_md["description"] = bv_info['data']['View']['desc']
         if item.metadata.get("scanner") != md['scanner']:
-            new_md.update({"scanner": md['scanner']})
+            new_md["scanner"] = md['scanner']
         if item.metadata.get("external-identifier") != md['external-identifier']:
-            new_md.update({"external-identifier": md['external-identifier']})
+            new_md["external-identifier"] = md['external-identifier']
         if new_md:
             print(f"Updating metadata:")
             print(new_md)
+
+            # remove XML illegal characters
+            _md_before = hash(json.dumps(md))
+            new_md = xml_chars_legalize(obj=new_md)
+            assert isinstance(new_md, dict)
+            if hash(json.dumps(new_md)) != _md_before:
+                print(f"Removed XML illegal characters from metadata, cleaned metadata:")
+                print(new_md)
+
             r = item.modify_metadata(
                 metadata=new_md,
                 access_key=access_key,

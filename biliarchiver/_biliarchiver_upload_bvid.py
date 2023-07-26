@@ -39,6 +39,10 @@ def _upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
     if os.path.exists(OLD_videos_basepath):
         print(f'检测到旧的视频主目录 {OLD_videos_basepath}，将其重命名为 {videos_basepath}...')
         os.rename(OLD_videos_basepath, videos_basepath)
+    
+    if not (videos_basepath / "_all_downloaded.mark").exists():
+        print(f'{bvid} 还没有下载完成全部分P，跳过')
+        return
 
     if not os.path.exists(videos_basepath):
         raise VideosBasePathNotFoundError(f'{videos_basepath}')
@@ -48,7 +52,7 @@ def _upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
             print(f'{local_identifier} => {remote_identifier} 已经上传过了(_uploaded.mark)')
             continue
         if local_identifier.startswith('_') :
-            print(f'跳过 {local_identifier}')
+            print(f'跳过带 _ 前缀的 local_identifier: {local_identifier}')
             continue
         if not local_identifier.startswith(BILIBILI_IDENTIFIER_PERFIX):
             print(f'{local_identifier} 不是以 {BILIBILI_IDENTIFIER_PERFIX} 开头的正确 local_identifier')

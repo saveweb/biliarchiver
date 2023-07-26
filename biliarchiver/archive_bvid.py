@@ -43,7 +43,7 @@ async def new_get_video_info(client: httpx.AsyncClient, url: str):
     理由：
         - API 目前只支持一般的 AV/BV 视频，可以预防我们不小心下到了番剧/影视剧之类的版权内容
         - 如果缺 url 对应的分P，bilix 那边会报 AssertionError(f"没有找到分P: p{selected_page_num}，请检查输入")
-        - 对于一些老视频， _get_video_info_from_html() 只会返回烦人且不稳定的 durl 资源。而 API 只会请求 dash 资源。
+        - 对于一些老视频， _get_video_info_from_html() 经常返回烦人且不稳定的 durl 资源。而 API 会更多请求到 dash 资源（虽然仍有少数视频只有 durl 资源）。
     """
     # print("using api")
     return await api._get_video_info_from_api(client, url)
@@ -183,7 +183,7 @@ async def archive_bvid(d: DownloaderBilibili, bvid: str, *, logined: bool=False,
                 await asyncio.gather(cor4)
 
 
-            assert os.path.exists(video_basepath / f'{file_basename}.mp4')
+            assert os.path.exists(video_basepath / f'{file_basename}.mp4') or os.path.exists(video_basepath / f'{file_basename}.flv')
 
             # 还原为了自定义文件名而做的覆盖
             video_info.pages[video_info.p].p_name = old_p_name

@@ -90,7 +90,7 @@ def _upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
                    continue
                 filedict[filename] = file
 
-        assert f'{file_basename}.mp4' in filedict
+        assert (f'{file_basename}.mp4' in filedict) or (f'{file_basename}.flv' in filedict)
 
         # IA 去重
         for file_in_item in item.files:

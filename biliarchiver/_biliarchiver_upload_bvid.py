@@ -6,7 +6,7 @@ from typing import List
 from internetarchive import get_item
 from requests import Response
 from rich import print
-from biliarchiver.exception import VideosBasePathNotFoundError
+from biliarchiver.exception import VideosBasePathNotFoundError, VideosNotFinishedDownloadError
 
 from biliarchiver.utils.identifier import human_readable_upper_part_map
 from biliarchiver.config import BILIBILI_IDENTIFIER_PERFIX, config
@@ -24,6 +24,8 @@ def upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
         print(f'已经有一个上传 {bvid} 的进程在运行，跳过')
     except VideosBasePathNotFoundError:
         print(f'没有找到 {bvid} 对应的文件夹。可能是因已存在 IA item 而跳过了下载，或者你传入了错误的 bvid')
+    except VideosNotFinishedDownloadError:
+        print(f'{bvid} 的视频还没有下载完成，跳过')
     except Exception as e:
         print(f'上传 {bvid} 时出错：')
         raise e
@@ -39,13 +41,12 @@ def _upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
     if os.path.exists(OLD_videos_basepath):
         print(f'检测到旧的视频主目录 {OLD_videos_basepath}，将其重命名为 {videos_basepath}...')
         os.rename(OLD_videos_basepath, videos_basepath)
-    
-    if not (videos_basepath / "_all_downloaded.mark").exists():
-        print(f'{bvid} 还没有下载完成全部分P，跳过')
-        return
 
     if not os.path.exists(videos_basepath):
         raise VideosBasePathNotFoundError(f'{videos_basepath}')
+    if not (videos_basepath / "_all_downloaded.mark").exists():
+        raise VideosNotFinishedDownloadError(f'{videos_basepath}')
+
     for local_identifier in os.listdir(videos_basepath):
         remote_identifier = f'{local_identifier}-{upper_part}'
         if os.path.exists(f'{videos_basepath}/{local_identifier}/_uploaded.mark') and not update_existing:

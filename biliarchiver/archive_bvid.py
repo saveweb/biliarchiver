@@ -93,7 +93,11 @@ async def archive_bvid(d: DownloaderBilibili, bvid: str, *, logined: bool=False,
 
         url = f'https://www.bilibili.com/video/{bvid}/'
         # 为了获取 pages，先请求一次
-        first_video_info = await api.get_video_info(d.client, url)
+        try:
+            first_video_info = await api.get_video_info(d.client, url)
+        except APIResourceError as e:
+            print(f'{bvid} 获取 video_info 失败，原因：{e}')
+            return
 
         os.makedirs(videos_basepath, exist_ok=True)
 

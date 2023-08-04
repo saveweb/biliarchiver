@@ -151,6 +151,13 @@ def _main():
                 print(f'IA 上已存在 {remote_identifier} ，跳过')
                 continue
 
+
+        upper_part = human_readable_upper_part_map(string=bvid, backward=True)
+        videos_basepath: Path = config.storage_home_dir / 'videos' / f'{bvid}-{upper_part}'
+        if os.path.exists(videos_basepath / '_all_downloaded.mark'):
+            print(f'{bvid} 所有分p都已下载过了')
+            continue
+
         if len(tasks) >= config.video_concurrency:
             loop.run_until_complete(asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED))
             tasks_check()

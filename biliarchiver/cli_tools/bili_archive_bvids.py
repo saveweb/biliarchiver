@@ -30,6 +30,7 @@ class Args:
     skip_ia: bool
     from_browser: Optional[str]
     min_free_space_gb: int
+    skip_to: int = 0
 
 def parse_args():
 
@@ -39,6 +40,7 @@ def parse_args():
                         help='不检查 IA 上是否已存在对应 BVID 的 item ，直接开始下载')
     parser.add_argument('--fb', '--from-browser', dest='from_browser', type=str, help='从指定浏览器导入 cookies (否则导入 config.json 中的 cookies_file) [default: None]', default=None)
     parser.add_argument('--min-free-space-gb', dest='min_free_space_gb', type=int, help='最小剩余空间 (GB)，用超退出 [default: 10]', default=10)
+    parser.add_argument('--skip-to', dest='skip_to', type=int, help='跳过前 skip_to 个 bvid [default: 0]', default=0)
 
     args = Args(**vars(parser.parse_args()))
 
@@ -136,8 +138,11 @@ def _main():
             for task in tasks:
                 task.cancel()
             raise RuntimeError(f'剩余空间不足 {args.min_free_space_gb} GiB')
-        
+
     for index, bvid in enumerate(bvids_from_file):
+        if index < args.skip_to:
+            print(f'跳过 {bvid} ({index+1}/{len(bvids_from_file)})', end='\r')
+            continue
         tasks_check()
         if not args.skip_ia:
             upper_part = human_readable_upper_part_map(string=bvid, backward=True)

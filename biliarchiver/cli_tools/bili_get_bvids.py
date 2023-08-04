@@ -39,8 +39,30 @@ def arg_parse():
     popular_series_group.add_argument('--popular_series-number', type=int, default=1, help='获取第几期（周） [default: 1]')
     popular_series_group.add_argument('--all-popular_series', action='store_true', help='自动获取全部的每周必看（增量）', dest='all_popular_series')
 
+    space_fav_season = parser.add_argument_group()
+    space_fav_season.title = 'space_fav_season'
+    space_fav_season.description = '获取合集或视频列表内视频'
+    space_fav_season.add_argument('--by-space_fav_season', type=str, help='合集或视频列表 sid (或 URL)', dest='by_space_fav_season', default=None)
+
     args = parser.parse_args()
     return args
+
+
+async def by_sapce_fav_season(url_or_sid: str) -> Path:
+    sid = sid = re.search(r'sid=(\d+)', url_or_sid).groups()[0] if url_or_sid.startswith('http') else url_or_sid
+    client = AsyncClient(**api.dft_client_settings)
+    print(f'正在获取 {sid} 的视频列表……')
+    col_name, up_name, bvids = await api.get_collect_info(client, sid)
+    filepath = f'bvids/by-sapce_fav_season/sid-{sid}-{int(time.time())}.txt'
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    abs_filepath = os.path.abspath(filepath)
+    with open(abs_filepath, 'w', encoding='utf-8') as f:
+        for bv_id in bvids:
+            f.write(f'{bv_id}' + '\n')
+    print(f'已获取 {col_name}（{up_name}）的 {len(bvids)} 个视频')
+    print(f'到 {abs_filepath}')
+    return Path(abs_filepath)
+
 
 def by_raning(rid: int) -> Path:
     bilibili_ranking_api = "https://api.bilibili.com/x/web-interface/ranking/v2"
@@ -190,6 +212,8 @@ async def _main():
                 by_popular_series_one(number)
         else:
             by_popular_series_one(args.popular_series_number)
+    if args.by_space_fav_season:
+        await by_sapce_fav_season(args.by_space_fav_season)
         
 
 def main():

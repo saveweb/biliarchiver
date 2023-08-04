@@ -78,7 +78,7 @@ def _upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
         with open(f'{videos_basepath}/{local_identifier}/extra/{file_basename}.info.json', 'r', encoding='utf-8') as f:
             bv_info = json.load(f)
 
-        cover_url: str = bv_info['data']['pic']
+        cover_url: str = bv_info['data']['View']['pic']
         cover_suffix = PurePath(urlparse(cover_url).path).suffix
 
         filedict = {} # "remote filename": "local filename"

@@ -1,8 +1,9 @@
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePath
 import time
 from typing import List
+from urllib.parse import urlparse
 from internetarchive import get_item
 from requests import Response
 from rich import print
@@ -74,6 +75,12 @@ def _upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
                 with open(f'{videos_basepath}/{local_identifier}/_uploaded.mark', 'w', encoding='utf-8') as f:
                     f.write('')
                 continue
+        with open(f'{videos_basepath}/{local_identifier}/extra/{file_basename}.info.json', 'r', encoding='utf-8') as f:
+            bv_info = json.load(f)
+
+        cover_url: str = bv_info['data']['pic']
+        cover_suffix = PurePath(urlparse(cover_url).path).suffix
+
         filedict = {} # "remote filename": "local filename"
         for filename in os.listdir(f'{videos_basepath}/{local_identifier}/extra'):
             file = f'{videos_basepath}/{local_identifier}/extra/{filename}'
@@ -81,6 +88,10 @@ def _upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
                 if file.startswith('_'):
                     continue
                 filedict[filename] = file
+                
+                # 复制一份 cover 作为 itemimage
+                if filename == f'{bvid}_p{pid}{cover_suffix}':
+                    filedict[f'{bvid}_p{pid}_itemimage{cover_suffix}'] = file
 
         for filename in os.listdir(f'{videos_basepath}/{local_identifier}'):
             file = f'{videos_basepath}/{local_identifier}/{filename}'
@@ -93,6 +104,7 @@ def _upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
 
         assert (f'{file_basename}.mp4' in filedict) or (f'{file_basename}.flv' in filedict)
 
+
         # IA 去重
         for file_in_item in item.files:
             if file_in_item["name"] in filedict:
@@ -100,8 +112,6 @@ def _upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
                 print(f"File {file_in_item['name']} already exists in {remote_identifier}.")
 
 
-        with open(f'{videos_basepath}/{local_identifier}/extra/{file_basename}.info.json', 'r', encoding='utf-8') as f:
-            bv_info = json.load(f)
         # with open(f'{videos_basepath}/_videos_info.json', 'r', encoding='utf-8') as f:
         #     videos_info = json.load(f)
 

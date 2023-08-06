@@ -37,11 +37,11 @@
 
     // 从 URL 获取当前视频的 BV 号
     function getBVNumber() {
-        return initialState.bvid;
+        return unsafeWindow.__INITIAL_STATE__?.bvid ?? initialState?.bvid ?? unsafeWindow.vd?.bvid;
     }
 
     function getPageNumber() {
-        return initialState.p;
+        return unsafeWindow.__INITIAL_STATE__?.p ?? initialState.p ?? unsafeWindow.vd?.embedPlayer?.p;
     }
 
     function humanReadableUpperPartMap(string, backward) {

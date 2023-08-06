@@ -4,13 +4,15 @@
 // @description  检查 BiliBili 视频是否已经存档到 Internet Archive。
 // @author       yzqzss
 // @match        https://www.bilibili.com/video/*
-// @run-at       document-end
+// @run-at       document-start
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // ==/UserScript==
 
 (function () {
     'use strict';
+
+    const initialState = unsafeWindow.__INITIAL_STATE__;
 
     function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
@@ -35,11 +37,11 @@
 
     // 从 URL 获取当前视频的 BV 号
     function getBVNumber() {
-        return unsafeWindow.__INITIAL_STATE__.bvid;
+        return initialState.bvid;
     }
 
     function getPageNumber() {
-        return unsafeWindow.__INITIAL_STATE__.p;
+        return initialState.p;
     }
 
     function humanReadableUpperPartMap(string, backward) {
@@ -208,5 +210,5 @@
         }
     }
 
-    main();
+    document.addEventListener("DOMContentLoaded", main);
 })();

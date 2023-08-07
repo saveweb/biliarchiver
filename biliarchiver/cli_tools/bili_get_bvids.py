@@ -44,12 +44,17 @@ def arg_parse():
     space_fav_season.description = '获取合集或视频列表内视频'
     space_fav_season.add_argument('--by-space_fav_season', type=str, help='合集或视频列表 sid (或 URL)', dest='by_space_fav_season', default=None)
 
+    favour_group = parser.add_argument_group()
+    favour_group.title = 'favour'
+    favour_group.description = '收藏夹'
+    favour_group.add_argument('--by-fav', type=str, help='收藏夹 fid (或 URL)', dest='by_fav', default=None)
+
     args = parser.parse_args()
     return args
 
 
 async def by_sapce_fav_season(url_or_sid: str) -> Path:
-    sid = sid = re.search(r'sid=(\d+)', url_or_sid).groups()[0] if url_or_sid.startswith('http') else url_or_sid
+    sid = sid = re.search(r'sid=(\d+)', url_or_sid).groups()[0] if url_or_sid.startswith('http') else url_or_sid # type: ignore
     client = AsyncClient(**api.dft_client_settings)
     print(f'正在获取 {sid} 的视频列表……')
     col_name, up_name, bvids = await api.get_collect_info(client, sid)
@@ -196,6 +201,42 @@ def not_got_popular_series() -> list[int]:
             series_not_got.append(i)
     return series_not_got
 
+
+async def by_favour(url_or_fid: str):
+    if url_or_fid.startswith('http'):
+        fid = re.findall(r'fid=(\d+)', url_or_fid)[0]
+    else:
+        fid = url_or_fid
+
+    client = AsyncClient(**api.dft_client_settings)
+    PAGE_SIZE = 20
+    media_left = None
+    total_size = None
+    bvids = []
+    page_num = 1
+    while media_left is None or media_left > 0:
+        # bilix 的收藏夹获取有 bug
+        fav_name, up_name, total_size, available_bvids = await api.get_favour_page_info(client=client, url_or_fid=fid, pn=page_num, ps=PAGE_SIZE, keyword='')
+        bvids.extend(available_bvids)
+        if media_left is None:
+            print(f'fav_name: {fav_name}, up_name: {up_name}, total_size: {total_size}')
+        media_left = total_size - PAGE_SIZE * page_num
+        print(f'还剩 ~{media_left // PAGE_SIZE} 页', end='\r')
+        await asyncio.sleep(2)
+        page_num += 1
+    await client.aclose()
+    assert total_size is not None
+    assert len(bvids) == len(set(bvids)), '有重复的 bvid'
+    print(f'{len(bvids)} 个有效视频，{total_size-len(bvids)} 个失效视频')
+    filepath = f'bvids/by-favour/fid-{fid}-{int(time.time())}.txt'
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    abs_filepath = os.path.abspath(filepath)
+    with open(abs_filepath, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(bvids))
+        f.write('\n')
+    print(f'已保存 {len(bvids)} 个 bvid 到 {abs_filepath}')
+
+
 async def _main():
     args = arg_parse()
     if args.by_ranking:
@@ -214,6 +255,8 @@ async def _main():
             by_popular_series_one(args.popular_series_number)
     if args.by_space_fav_season:
         await by_sapce_fav_season(args.by_space_fav_season)
+    if args.by_fav:
+        await by_favour(args.by_fav)
         
 
 def main():

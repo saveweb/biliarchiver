@@ -1,7 +1,7 @@
 from typing import Union
 
 _xml_ILLEGAL_CHARS = []
-_xml_ILLEGAL_CHARS.extend([bytes([i]).decode('ascii') for i in range(int('01', 16), int('08', 16)+1)])
+_xml_ILLEGAL_CHARS.extend([bytes([i]).decode('ascii') for i in range(int('00', 16), int('08', 16)+1)])
 _xml_ILLEGAL_CHARS.extend([bytes([i]).decode('ascii') for i in range(int('0b', 16), int('0c', 16)+1)])
 _xml_ILLEGAL_CHARS.extend([bytes([i]).decode('ascii') for i in range(int('0e', 16), int('1f', 16)+1)])
 _xml_ILLEGAL_CHARS.extend(['\x7f'])
@@ -11,7 +11,7 @@ _xml_ILLEGAL_CHARS.extend(['\x7f'])
 XML_ILLEGAL_CHARS = _xml_ILLEGAL_CHARS
 
 
-def _legalize_str(s: str, print_info: bool=False):
+def _legalize_str(s: str, print_info: bool=True):
     for c in XML_ILLEGAL_CHARS:
         hash_before = hash(s)
         s = s.replace(c, '')
@@ -67,6 +67,7 @@ def _test_xml_chars_legalize():
     _dict_in_list_in_dict_in_dict = {"dict": [{'A': '\x0bA', 'B': '\x0cB', 'C': 'C\v', 'list': _list, 'dict': _dict}]}
     _dict_balabala_after = {'dict': [{'A': 'A', 'B': 'B', 'C': 'C', 'list': _list_after, 'dict': _dict_after}]}
     assert _legalize_dict(_dict_in_list_in_dict_in_dict) == _dict_balabala_after
+    assert _legalize_str("\x00") == ""
 
 if __name__ == '__main__':
     # TODO: use pytest

@@ -1,8 +1,8 @@
 import asyncio
+from io import TextIOWrapper
 import os
 from pathlib import Path
 from typing import List, Union
-import click
 
 from biliarchiver.archive_bvid import archive_bvid
 from biliarchiver.config import config
@@ -61,7 +61,7 @@ def check_ia_item_exist(client: Client, identifier: str) -> bool:
 
 
 def _down(
-    bvids: click.File(),
+    bvids: TextIOWrapper,
     skip_ia_check: bool,
     from_browser: str | None,
     min_free_space_gb: int,
@@ -69,9 +69,7 @@ def _down(
 ):
     assert check_ffmpeg() is True, "ffmpeg 未安装"
 
-    assert bvids is not None, "必须指定 bvids 列表的文件路径"
-    with open(bvids, "r", encoding="utf-8") as f:
-        bvids_from_file = f.read().splitlines()
+    bvids_from_file = bvids.read().splitlines()
 
     check_outdated_version(
         pypi_project="biliarchiver", self_version=BILI_ARCHIVER_VERSION

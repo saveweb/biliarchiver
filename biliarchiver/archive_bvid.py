@@ -25,7 +25,7 @@ async def new_get_subtitle_info(client: httpx.AsyncClient, bvid, cid):
     res = await req_retry(client, 'https://api.bilibili.com/x/player/v2', params=params)
     info = json.loads(res.text)
     if info['code'] == -400:
-        raise APIError(f'未找到字幕信息', params)
+        raise APIError('未找到字幕信息', params)
 
     # 这里 monkey patch 一下把返回 lan_doc 改成返回 lan，这样生成的字幕文件名就是 语言代码 而不是 中文名 了
     # 例如

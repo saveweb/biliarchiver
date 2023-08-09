@@ -1,5 +1,4 @@
 import os
-import sys
 import importlib.util
 
 class AlreadyRunningError(Exception):

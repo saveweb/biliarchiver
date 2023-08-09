@@ -178,7 +178,7 @@ def _upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
         md = xml_chars_legalize(obj=md)
         assert isinstance(md, dict)
         if hash(json.dumps(md)) != _md_before:
-            print(f"Removed XML illegal characters from metadata, cleaned metadata:")
+            print("Removed XML illegal characters from metadata, cleaned metadata:")
             print(md)
 
         if filedict:
@@ -212,7 +212,7 @@ def _upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
         if item.metadata.get("external-identifier") != md['external-identifier']:
             new_md["external-identifier"] = md['external-identifier']
         if new_md:
-            print(f"Updating metadata:")
+            print("Updating metadata:")
             print(new_md)
 
             # remove XML illegal characters
@@ -220,7 +220,7 @@ def _upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
             new_md = xml_chars_legalize(obj=new_md)
             assert isinstance(new_md, dict)
             if hash(json.dumps(new_md)) != _md_before:
-                print(f"Removed XML illegal characters from metadata, cleaned metadata:")
+                print("Removed XML illegal characters from metadata, cleaned metadata:")
                 print(new_md)
 
             r = item.modify_metadata(

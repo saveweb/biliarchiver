@@ -360,7 +360,15 @@ class URLorIntParamType(click.ParamType):
     "--favlist", help=click.style("收藏夹", fg="green"), type=URLorIntParamType("fid")
 )
 def get(**kwargs):
-    if not any(kwargs.values()):
+    if (
+        not kwargs["favlist"]
+        and not kwargs["series"]
+        and not kwargs["ranking"]
+        and not kwargs["up_videos"]
+        and not kwargs["popular_precious"]
+        and not kwargs["popular_series"]
+    ):
+        click.echo(click.style("ERROR: 请指定获取方式。", fg="red"))
         click.echo(get.get_help(click.Context(get)))
         return
     asyncio.run(main(**kwargs))

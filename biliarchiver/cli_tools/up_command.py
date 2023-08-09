@@ -39,7 +39,7 @@ def up(
     bvids: TextIOWrapper,
     by_storage_home_dir: bool,
     update_existing: bool,
-    collection,
+    collection: str,
 ):
     from biliarchiver._biliarchiver_upload_bvid import upload_bvid
     from biliarchiver.config import config
@@ -50,11 +50,9 @@ def up(
             if "-" in bvid_with_upper_part:
                 bvid = bvid_with_upper_part.split("-")[0]
 
-            upload_bvid(bvid, update_existing=update_existing,
-                        collection=collection)
+            upload_bvid(bvid, update_existing=update_existing, collection=collection)
 
     elif bvids:
         bvids_from_file = bvids.read().splitlines()
         for bvid in bvids_from_file:
-            upload_bvid(bvid, update_existing=update_existing,
-                        collection=collection)
+            upload_bvid(bvid, update_existing=update_existing, collection=collection)

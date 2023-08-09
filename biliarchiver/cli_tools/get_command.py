@@ -7,6 +7,7 @@ from httpx import AsyncClient
 import requests
 import json
 import click
+from click_option_group import optgroup
 
 from bilix.sites.bilibili import api
 from rich import print
@@ -260,14 +261,16 @@ async def by_favlist(url_or_fid: str):
 async def main(
     series: str,
     ranking: str,
+    rid: str,
     up_videos: str,
     popular_precious: bool,
     popular_series: bool,
+    popular_series_number: int,
     all_popular_series: bool,
     favlist: str,
 ):
     if ranking:
-        by_ranking(ranking)
+        by_ranking(rid)
     if up_videos:
         await by_up_videos(up_videos)
     if popular_precious:
@@ -303,20 +306,61 @@ class URLorIntParamType(click.ParamType):
 
 
 @click.command(help=click.style("批量获取 BV 号", fg="cyan"))
-@click.option("--series", help="获取合集或视频列表内视频", type=URLorIntParamType("sid"))
-@click.option(
+@optgroup.group("合集")
+@optgroup.option(
+    "--series", help=click.style("合集或视频列表内视频", fg="red"), type=URLorIntParamType("sid")
+)
+@optgroup.group("排行榜")
+@optgroup.option(
     "--ranking",
-    help="""排行榜（全站榜，非个性推荐榜）。0 为全站排行榜。rid 等于分区的 tid。""",
-    type=URLorIntParamType("rid"),
+    "-r",
+    help=click.style("排行榜（全站榜，非个性推荐榜）", fg="yellow"),
+    is_flag=True,
+)
+@optgroup.option(
+    "--rid",
+    "--ranking-id",
     default=0,
     show_default=True,
+    help=click.style("目标排行 rid，0 为全站排行榜。rid 等于分区的 tid", fg="yellow"),
+    type=int,
 )
-@click.option("--up-videos", help="UP 主用户页投稿", type=URLorIntParamType("mid"))
-@click.option("--popular-precious", help="入站必刷，更新频率低", is_flag=True)
-@click.option(
-    "--popular-series", help="每周必看，每周五晚18:00更新", type=int, default=1, show_default=True
+@optgroup.group("UP 主")
+@optgroup.option(
+    "--up-videos",
+    "-u",
+    help=click.style("UP 主用户页投稿", fg="cyan"),
+    type=URLorIntParamType("mid"),
 )
-@click.option("--all-popular-series", help="自动获取全部的每周必看（增量）", is_flag=True)
-@click.option("--favlist", help="收藏夹", type=URLorIntParamType("fid"))
+@optgroup.group("入站必刷")
+@optgroup.option(
+    "--popular-precious", help=click.style("入站必刷，更新频率低", fg="bright_red"), is_flag=True
+)
+@optgroup.group("每周必看")
+@optgroup.option(
+    "--popular-series",
+    "-p",
+    help=click.style("每周必看，每周五晚 18:00 更新", fg="magenta"),
+    is_flag=True,
+)
+@optgroup.option(
+    "--popular-series-number",
+    default=1,
+    type=int,
+    show_default=True,
+    help=click.style("获取第几期（周）", fg="magenta"),
+)
+@optgroup.option(
+    "--all-popular-series",
+    help=click.style("自动获取全部的每周必看（增量）", fg="magenta"),
+    is_flag=True,
+)
+@optgroup.group("收藏夹")
+@optgroup.option(
+    "--favlist", help=click.style("收藏夹", fg="green"), type=URLorIntParamType("fid")
+)
 def get(**kwargs):
+    if not any(kwargs.values()):
+        click.echo(get.get_help(click.Context(get)))
+        return
     asyncio.run(main(**kwargs))

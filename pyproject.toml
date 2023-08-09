@@ -13,6 +13,7 @@ internetarchive = "^3.5.0"
 danmakuc = "^0.3.6"
 browser-cookie3 = "^0.19.1"
 click = "^8.1.6"
+click-option-group = "^0.5.6"
 
 [tool.poetry.scripts]
 biliarchiver = "biliarchiver.cli_tools.biliarchiver:biliarchiver"

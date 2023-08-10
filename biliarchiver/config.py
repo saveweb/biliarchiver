@@ -17,7 +17,7 @@ class singleton(type):
 
 @dataclass
 class _Config(metaclass=singleton):
-    video_concurrency: int = 3 
+    video_concurrency: int = 3
     part_concurrency: int = 10
     stream_retry: int = 20
     storage_home_dir: Path = Path('bilibili_archive_dir/').expanduser()

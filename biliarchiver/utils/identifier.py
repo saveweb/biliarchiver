@@ -1,9 +1,13 @@
-''' 为同一字符串序列的不同大小写形式生成不碰撞的字符串。以便在大小写不敏感的系统中存储同一字符串的不同形式。 '''
 
 from io import StringIO
 
+
+BASE58_CHARS = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+
 def human_readable_upper_part_map(string: str, backward: bool):
-    ''' 找到字符串中所有的 ASCII 大写字母，并返回一个能表示他们绝对位置的字符串。
+    ''' 为同一字符串序列的不同大小写形式生成不碰撞的字符串。以便在大小写不敏感的系统中存储同一字符串的不同形式。
+        
+        找到字符串中所有的 ASCII 大写字母，并返回一个能表示他们绝对位置的字符串。
         其中每个非相邻的大写字母之间用数字表示相隔的字符数。
 
         params: backward: 可以表示是正着看还是倒着看。
@@ -35,3 +39,14 @@ def human_readable_upper_part_map(string: str, backward: bool):
             steps += 1
 
     return result.getvalue()
+
+
+def is_bvid(string: str):
+    ''' 判断一个字符串是否是 Base58 的 bv 号 '''
+    if not string.startswith('BV'):
+        return False
+    for char in string:
+        if char not in BASE58_CHARS:
+            return False
+    
+    return True

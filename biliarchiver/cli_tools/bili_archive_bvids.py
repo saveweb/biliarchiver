@@ -2,7 +2,7 @@ import asyncio
 from io import TextIOWrapper
 import os
 from pathlib import Path
-from typing import List, Union
+from typing import List, Optional, Union
 
 from biliarchiver.archive_bvid import archive_bvid
 from biliarchiver.config import config
@@ -61,11 +61,11 @@ def check_ia_item_exist(client: Client, identifier: str) -> bool:
 
 
 def _down(
-    bvids: TextIOWrapper,
+    bvids: Union[Path, str, List[str]],
     skip_ia_check: bool,
-    from_browser: str | None,
+    from_browser: Optional[str],
     min_free_space_gb: int,
-    skip: int,
+    skip_to: int,
 ):
     assert check_ffmpeg() is True, "ffmpeg 未安装"
 
@@ -128,11 +128,11 @@ def _down(
             raise RuntimeError(f"剩余空间不足 {min_free_space_gb} GiB")
 
     for index, bvid in enumerate(bvids_from_file):
-        if index < skip:
+        if index < skip_to:
             print(f"跳过 {bvid} ({index+1}/{len(bvids_from_file)})", end="\r")
             continue
         tasks_check()
-        if not skip:
+        if not skip_ia_check:
             upper_part = human_readable_upper_part_map(
                 string=bvid, backward=True)
             remote_identifier = f"{BILIBILI_IDENTIFIER_PERFIX}-{bvid}_p1-{upper_part}"

@@ -26,7 +26,7 @@ from rich.console import Console
     help="最小剩余空间 (GB)，用超退出",
     show_default=True,
 )
-@click.option("--skip", type=int, default=0, show_default=True, help="跳过文件开头 bvid 的个数")
+@click.option("--skip-to", type=int, default=0, show_default=True, help="跳过文件开头 bvid 的个数")
 def down(**kwargs):
     from biliarchiver.cli_tools.bili_archive_bvids import _down
 

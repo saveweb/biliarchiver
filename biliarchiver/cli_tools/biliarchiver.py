@@ -2,12 +2,20 @@ import click
 from biliarchiver.cli_tools.up_command import up
 from biliarchiver.cli_tools.down_command import down
 from biliarchiver.cli_tools.get_command import get
+from biliarchiver.version import BILI_ARCHIVER_VERSION
 
 
 class HelpCommand(click.Group):
     def format_help(self, ctx, formatter):
+        version_info = click.style(
+            f"[ biliarchiver {BILI_ARCHIVER_VERSION} ]",
+            fg="black",
+            bg="white",
+            bold=True,
+            blink=True,
+        )
         click.echo(
-            """
+            f"""
                 <_-^-_>
        <%&&&&&&&&&&&&&&&&&&&&%*>
  <&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&>      > __      __   __   __       <
@@ -21,7 +29,7 @@ class HelpCommand(click.Group):
   (<&&&>/*   <&&&>,       <&&&>   .//<&&&)> >  / /_/ / / /   / /__  / / / / / /  | |/ / /  __/ / / <
    <&&&>((/((<&&&>((((((((<&&&>(((/((<&&&>  >  \__,_/ /_/    \___/ /_/ /_/ /_/   |___/  \___/ /_/  <
    <&&&>  ,,(<&&&>        <&&&>(,,   <&&&>
-  <&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&>
+  <&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&>               {version_info}
 <&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&><""".replace(
                 "<", "\u001b[0m"
             ).replace(
@@ -32,7 +40,7 @@ class HelpCommand(click.Group):
 
 
 @click.group(cls=HelpCommand)
-def biliarchiver():
+def biliarchiver(version):
     pass
 
 

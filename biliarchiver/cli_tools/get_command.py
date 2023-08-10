@@ -65,7 +65,7 @@ from rich import print
  """
 
 
-async def by_sapce_fav_season(url_or_sid: str) -> Path:
+async def by_series(url_or_sid: str) -> Path:
     sid = sid = (
         re.search(r"sid=(\d+)", url_or_sid).groups()[0]
         if url_or_sid.startswith("http")
@@ -281,9 +281,9 @@ async def main(
                 time.sleep(3)
                 by_popular_series_one(number)
         else:
-            by_popular_series_one(popular_series)
+            by_popular_series_one(popular_series_number)
     if series:
-        await by_sapce_fav_season(series)
+        await by_series(series)
     if favlist:
         await by_favlist(favlist)
 
@@ -305,10 +305,16 @@ class URLorIntParamType(click.ParamType):
         self.fail(f"{value!r} is not a valid {self.name}", param, ctx)
 
 
-@click.command(help=click.style("批量获取 BV 号", fg="cyan"))
+@click.command(
+    short_help=click.style("批量获取 BV 号", fg="cyan"),
+    help="请通过 flag 指定至少一种批量获取 BV 号的方式。多个不同组的 flag 同时使用时，将会先后通过不同方式获取。",
+)
 @optgroup.group("合集")
 @optgroup.option(
-    "--series", help=click.style("合集或视频列表内视频", fg="red"), type=URLorIntParamType("sid")
+    "--series",
+    "-s",
+    help=click.style("合集或视频列表内视频", fg="red"),
+    type=URLorIntParamType("sid"),
 )
 @optgroup.group("排行榜")
 @optgroup.option(
@@ -357,7 +363,10 @@ class URLorIntParamType(click.ParamType):
 )
 @optgroup.group("收藏夹")
 @optgroup.option(
-    "--favlist", help=click.style("收藏夹", fg="green"), type=URLorIntParamType("fid")
+    "--favlist",
+    "--fav",
+    help=click.style("收藏夹", fg="green"),
+    type=URLorIntParamType("fid"),
 )
 def get(**kwargs):
     if (
@@ -368,7 +377,7 @@ def get(**kwargs):
         and not kwargs["popular_precious"]
         and not kwargs["popular_series"]
     ):
-        click.echo(click.style("ERROR: 请指定获取方式。", fg="red"))
+        click.echo(click.style("ERROR: 请指定至少一种获取方式。", fg="red"))
         click.echo(get.get_help(click.Context(get)))
         return
     asyncio.run(main(**kwargs))

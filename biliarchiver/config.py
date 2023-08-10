@@ -55,6 +55,6 @@ class _Config(metaclass=singleton):
 
     def is_right_pwd(self):
         if not os.path.exists('biliarchiver.home'):
-            raise Exception('先在当前工作目录创建 biliarchiver.home 文件')
+            raise Exception('先在当前工作目录运行 biliarchiver init 以初始化配置')
 
 config = _Config()

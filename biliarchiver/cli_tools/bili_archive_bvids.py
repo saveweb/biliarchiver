@@ -255,3 +255,7 @@ def is_login(cilent: Client) -> bool:
         return True
     print("未登录/SESSDATA无效/过期，你这饼干它保真吗？")
     return False
+
+
+if __name__ == "__main__":
+    raise DeprecationWarning("已废弃直接运行此命令，请改用 biliarchiver 命令")

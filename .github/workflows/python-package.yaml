@@ -39,8 +39,11 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: run biliarchiver tools
       run: |
-        touch biliarchiver.home
-        python -m biliarchiver.cli_tools.biliarchiver
+        python -m biliarchiver.cli_tools.biliarchiver --help
+        python -m biliarchiver.cli_tools.biliarchiver init
+        python -m biliarchiver.cli_tools.biliarchiver down --help
+        python -m biliarchiver.cli_tools.biliarchiver get --help
+        python -m biliarchiver.cli_tools.biliarchiver up --help
     # - name: Test with pytest
       # run: |
         # pytest

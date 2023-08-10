@@ -40,7 +40,7 @@ class HelpCommand(click.Group):
 
 
 @click.group(cls=HelpCommand)
-def biliarchiver(version):
+def biliarchiver():
     pass
 
 

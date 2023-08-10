@@ -3,7 +3,7 @@ from rich.console import Console
 
 
 @click.command(help=click.style("从哔哩哔哩下载", fg="cyan"))
-@click.option("--bvids", type=click.File(), required=True, help="bvids 列表的文件路径")
+@click.option("--bvids", type=click.Path(exists=False), required=True, help="bvids 列表的文件路径")
 @click.option(
     "--skip-ia-check",
     "-s",

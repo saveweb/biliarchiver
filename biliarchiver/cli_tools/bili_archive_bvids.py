@@ -1,21 +1,21 @@
 import asyncio
-from io import TextIOWrapper
 import os
 from pathlib import Path
 from typing import List, Optional, Union
 
-from biliarchiver.archive_bvid import archive_bvid
-from biliarchiver.config import config
 from bilix.sites.bilibili.downloader import DownloaderBilibili
 from httpx import AsyncClient, Client, TransportError
 from rich.traceback import install
+
+from biliarchiver.archive_bvid import archive_bvid
+from biliarchiver.config import config
+from biliarchiver.config import BILIBILI_IDENTIFIER_PERFIX
 from biliarchiver.utils.http_patch import HttpOnlyCookie_Handler
 from biliarchiver.utils.version_check import check_outdated_version
 from biliarchiver.utils.storage import get_free_space
-from biliarchiver.version import BILI_ARCHIVER_VERSION
-from biliarchiver.config import BILIBILI_IDENTIFIER_PERFIX
-from biliarchiver.utils.identifier import human_readable_upper_part_map
+from biliarchiver.utils.identifier import human_readable_upper_part_map, is_bvid
 from biliarchiver.utils.ffmpeg import check_ffmpeg
+from biliarchiver.version import BILI_ARCHIVER_VERSION
 
 install()
 
@@ -69,7 +69,26 @@ def _down(
 ):
     assert check_ffmpeg() is True, "ffmpeg 未安装"
 
-    bvids_from_file = bvids.read().splitlines()
+    bvids_list = None
+
+    if isinstance(bvids, str):
+        bvids = Path(bvids)
+    if isinstance(bvids, list):
+        bvids_list = bvids
+    elif not bvids.exists() and bvids.name.startswith("BV"):
+        if is_bvid(bvids.name):
+            print("你输入的 bvids 不是文件，貌似是单个的 bvid，将直接下载...")
+            bvids_list = [bvids.name]
+        else:
+            raise ValueError(f"你输入的 bvids 不是文件，貌似是单个的 bvid，但是不是合法的 bvid: {bvids.name}")
+    else:
+        with open(bvids, "r", encoding="utf-8") as f:
+            bvids_list = f.read().splitlines()
+
+    assert bvids_list is not None and len(bvids_list) > 0, "bvids 为空"
+    del bvids
+    for bvid in bvids_list:
+        assert is_bvid(bvid), f"bvid {bvid} 不合法"
 
     check_outdated_version(
         pypi_project="biliarchiver", self_version=BILI_ARCHIVER_VERSION
@@ -127,9 +146,9 @@ def _down(
                 task.cancel()
             raise RuntimeError(f"剩余空间不足 {min_free_space_gb} GiB")
 
-    for index, bvid in enumerate(bvids_from_file):
+    for index, bvid in enumerate(bvids_list):
         if index < skip_to:
-            print(f"跳过 {bvid} ({index+1}/{len(bvids_from_file)})", end="\r")
+            print(f"跳过 {bvid} ({index+1}/{len(bvids_list)})", end="\r")
             continue
         tasks_check()
         if not skip_ia_check:
@@ -154,7 +173,7 @@ def _down(
             )
             tasks_check()
 
-        print(f"=== {bvid} ({index+1}/{len(bvids_from_file)}) ===")
+        print(f"=== {bvid} ({index+1}/{len(bvids_list)}) ===")
 
         task = loop.create_task(
             archive_bvid(d, bvid, logined=logined, semaphore=sem),

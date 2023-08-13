@@ -2,6 +2,8 @@ from io import TextIOWrapper
 import click
 import os
 
+from biliarchiver.cli_tools.utils import read_bvids
+
 
 DEFAULT_COLLECTION = "opensource_movies"
 """
@@ -15,7 +17,7 @@ BILIBILI_VIDEOS_SUB_1_COLLECTION = "bilibili_videos_sub_1"
 
 
 @click.command(help=click.style("上传至互联网档案馆", fg="cyan"))
-@click.option("--bvids", type=click.File(), default=None, help="bvids 列表的文件路径")
+@click.option("--bvids", type=click.STRING, default=None, help="bvids 列表的文件路径")
 @click.option(
     "--by-storage-home-dir",
     is_flag=True,
@@ -53,6 +55,5 @@ def up(
             upload_bvid(bvid, update_existing=update_existing, collection=collection)
 
     elif bvids:
-        bvids_from_file = bvids.read().splitlines()
-        for bvid in bvids_from_file:
+        for bvid in read_bvids(bvids):
             upload_bvid(bvid, update_existing=update_existing, collection=collection)

@@ -2,6 +2,7 @@ import gettext
 import locale
 
 default_lang, default_enc = locale.getdefaultlocale()
+default_lang = default_lang or "en"
 
 languages = ["en"] if not default_lang.lower().startswith("zh") else ["zh_CN"]
 

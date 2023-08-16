@@ -2,7 +2,7 @@
 # Copyright (C) 2023 THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # Neko <overflowcat@gmail.com>, 2023.
-# 
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
@@ -280,8 +280,8 @@ msgstr "Batch fetching BV numbers"
 #: biliarchiver/cli_tools/get_command.py:307
 msgid "请通过 flag 指定至少一种批量获取 BV 号的方式。多个不同组的 flag 同时使用时，将会先后通过不同方式获取。"
 msgstr ""
-"Please specify at least one way to batch fetch BV numbers through the flag. When multiple group flags are used "
-"simultaneously, they will be fetched in sequence."
+"Please specify at least one way to batch fetch BV numbers through the flag."
+"When flags of multiple groups are used together, they will be fetched in sequence."
 
 #: biliarchiver/cli_tools/get_command.py:309
 msgid "合集"

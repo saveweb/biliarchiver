@@ -45,6 +45,8 @@ Please use poetry to install dependencies:
 poetry install
 ```
 
+Build English locale if necessary. Refer to the last section for details.
+
 ### Run
 
 ```sh
@@ -58,6 +60,8 @@ poetry run ruff check .
 ```
 
 ### i18n
+
+To generate and build locales, you need a GNU gettext compatible toolchain. You can install `mingw` and use `sh` to enter a bash shell on Windows.
 
 Generate `biliarchiver.pot`:
 
@@ -77,7 +81,7 @@ Update a language:
 pnpx gpt-po sync --po biliarchiver/locales/en/LC_MESSAGES/biliarchiver.po --pot biliarchiver/locales/biliarchiver.pot
 ```
 
-Build a language:
+**(Important)** Build a language:
 
 ```sh
 msgfmt biliarchiver/locales/en/LC_MESSAGES/biliarchiver.po -o biliarchiver/locales/en/LC_MESSAGES/biliarchiver.mo

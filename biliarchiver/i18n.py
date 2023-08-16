@@ -3,7 +3,7 @@ import locale
 
 default_lang, default_enc = locale.getdefaultlocale()
 
-languages = ["en"] if default_lang.startswith("en") else ["zh_CN"]
+languages = ["en"] if not default_lang.lower().startswith("zh") else ["zh_CN"]
 
 appname = "biliarchiver"
 

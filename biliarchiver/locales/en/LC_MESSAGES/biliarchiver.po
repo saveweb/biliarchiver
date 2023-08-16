@@ -280,8 +280,8 @@ msgstr "Batch fetching BV numbers"
 #: biliarchiver/cli_tools/get_command.py:307
 msgid "请通过 flag 指定至少一种批量获取 BV 号的方式。多个不同组的 flag 同时使用时，将会先后通过不同方式获取。"
 msgstr ""
-"Please specify at least one way to batch fetch BV numbers through the flag."
-"When flags of multiple groups are used together, they will be fetched in sequence."
+"Please specify at least one way to batch fetch BV numbers through the flag.When flags of multiple groups are used "
+"together, they will be fetched in sequence."
 
 #: biliarchiver/cli_tools/get_command.py:309
 msgid "合集"
@@ -322,6 +322,10 @@ msgstr "Must-watch on entry, low update frequency"
 #: biliarchiver/cli_tools/get_command.py:344
 msgid "每周必看"
 msgstr "Must-watch weekly"
+
+#: biliarchiver/cli_tools/get_command.py:348
+msgid "每周必看，每周五晚 18:00 更新"
+msgstr "Must-watch weekly, updated every Friday at 18:00 UTC+8"
 
 #: biliarchiver/cli_tools/get_command.py:356
 msgid "获取第几期（周）"

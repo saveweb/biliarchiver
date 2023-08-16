@@ -3,6 +3,7 @@ import click
 import os
 
 from biliarchiver.cli_tools.utils import read_bvids
+from biliarchiver.i18n import _
 
 
 DEFAULT_COLLECTION = "opensource_movies"
@@ -10,21 +11,29 @@ DEFAULT_COLLECTION = "opensource_movies"
 开放 collection ，任何人均可上传。
 通过 biliarchiver 上传的 item 会在24小时内被自动转移到 bilibili_videos collection
 """
+"""
+An open collection. Anyone can upload.
+Items uploaded by biliarchiver will be automatically moved to bilibili_videos collection within 24 hours.
+"""
+
 BILIBILI_VIDEOS_COLLECTION = "bilibili_videos"
 """ 由 arkiver 管理。bilibili_videos 属于 social-media-video 的子集 """
+""" Managed by arkiver. bilibili_videos is a subset of social-media-video """
+
 BILIBILI_VIDEOS_SUB_1_COLLECTION = "bilibili_videos_sub_1"
 """ 由 yzqzss 管理。属于 bilibili_videos 的子集 """
+""" Managed by yzqzss. A subset of bilibili_videos """
 
 
-@click.command(help=click.style("上传至互联网档案馆", fg="cyan"))
-@click.option("--bvids", type=click.STRING, default=None, help="bvids 列表的文件路径")
+@click.command(help=click.style(_("上传至互联网档案馆"), fg="cyan"))
+@click.option("--bvids", type=click.STRING, default=None, help=_("bvids 列表的文件路径"))
 @click.option(
     "--by-storage-home-dir",
     is_flag=True,
     default=False,
-    help="使用 `$storage_home_dir/videos` 目录下的所有视频",
+    help=_("使用 `$storage_home_dir/videos` 目录下的所有视频"),
 )
-@click.option("--update-existing", is_flag=True, default=False, help="更新已存在的 item")
+@click.option("--update-existing", is_flag=True, default=False, help=_("更新已存在的 item"))
 @click.option(
     "--collection",
     default=DEFAULT_COLLECTION,
@@ -35,7 +44,8 @@ BILIBILI_VIDEOS_SUB_1_COLLECTION = "bilibili_videos_sub_1"
             BILIBILI_VIDEOS_SUB_1_COLLECTION,
         ]
     ),
-    help=f"Collection to upload to. (非默认值仅限 collection 管理员使用) [default: {DEFAULT_COLLECTION}]",
+    help=_("欲上传至的 collection. (非默认值仅限 collection 管理员使用)")
+    + f" [default: {DEFAULT_COLLECTION}]",
 )
 def up(
     bvids: TextIOWrapper,

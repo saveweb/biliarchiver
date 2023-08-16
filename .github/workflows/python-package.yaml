@@ -26,11 +26,15 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
+        sudo apt install gettext
         python -m pip install --upgrade pip
-        python -m pip install poetry ruff pytest
+        python -m pip install poetry pytest
         # if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         poetry install
         pip install -e .
+    - name: build
+      run: |
+        python build.py
     - name: Lint with ruff
       uses: chartboost/ruff-action@v1
       with:

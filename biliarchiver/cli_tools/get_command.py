@@ -1,4 +1,5 @@
 import asyncio
+from gettext import ngettext
 import os
 from pathlib import Path
 import re
@@ -9,60 +10,10 @@ import json
 import click
 from click_option_group import optgroup
 
+from biliarchiver.i18n import _, ngettext
+
 from bilix.sites.bilibili import api
 from rich import print
-
-
-""" def arg_parse():
-    parser = argparse.ArgumentParser()
-    # 为啥是 by-xxx 而不是 from-xxx ？因为命令行里好敲……
-    ranking_group = parser.add_argument_group()
-    ranking_group.title = 'by ranking'
-    ranking_group.description = '排行榜（全站榜，非个性推荐榜）'
-    ranking_group.add_argument(
-        '--by-ranking', action='store_true', help='从排行榜获取 bvids')
-    ranking_group.add_argument('--ranking-rid', type=int, default=0,
-                               help='目标排行 rid，0 为全站排行榜。rid 等于分区的 tid [default: 0]')
-
-    up_videos_group = parser.add_argument_group()
-    up_videos_group.title = 'by up videos'
-    up_videos_group.description = 'up 主用户页投稿'
-    up_videos_group.add_argument(
-        '--by-up_videos', action='store_true', help='从 up 主用户页获取全部的投稿的 bvids')
-    up_videos_group.add_argument(
-        '--up_videos-mid', type=str, help='目标 up 主的 mid (也可以是用户页的 URL)')
-
-    popular_precious_group = parser.add_argument_group()
-    popular_precious_group.title = 'popular precious'
-    popular_precious_group.description = '入站必刷，更新频率低'
-    popular_precious_group.add_argument(
-        '--by-popular_precious', action='store_true', help='从入站必刷获取 bvids', dest='by_popular_precious')
-
-    popular_series_group = parser.add_argument_group()
-    popular_series_group.title = 'popular series'
-    popular_series_group.description = '每周必看，每周五晚18:00更新'
-    popular_series_group.add_argument(
-        '--by-popular_series', action='store_true', help='从每周必看获取 bvids', dest='by_popular_series')
-    popular_series_group.add_argument(
-        '--popular_series-number', type=int, default=1, help='获取第几期（周） [default: 1]')
-    popular_series_group.add_argument(
-        '--all-popular_series', action='store_true', help='自动获取全部的每周必看（增量）', dest='all_popular_series')
-
-    space_fav_season = parser.add_argument_group()
-    space_fav_season.title = 'space_fav_season'
-    space_fav_season.description = '获取合集或视频列表内视频'
-    space_fav_season.add_argument('--by-space_fav_season', type=str,
-                                  help='合集或视频列表 sid (或 URL)', dest='by_space_fav_season', default=None)
-
-    favour_group = parser.add_argument_group()
-    favour_group.title = 'favour'
-    favour_group.description = '收藏夹'
-    favour_group.add_argument(
-        '--by-fav', type=str, help='收藏夹 fid (或 URL)', dest='by_fav', default=None)
-
-    args = parser.parse_args()
-    return args
- """
 
 
 async def by_series(url_or_sid: str) -> Path:
@@ -72,7 +23,7 @@ async def by_series(url_or_sid: str) -> Path:
         else url_or_sid
     )  # type: ignore
     client = AsyncClient(**api.dft_client_settings)
-    print(f"正在获取 {sid} 的视频列表……")
+    print(_("正在获取 {sid} 的视频列表……").format(sid=sid))
     col_name, up_name, bvids = await api.get_collect_info(client, sid)
     filepath = f"bvids/by-sapce_fav_season/sid-{sid}-{int(time.time())}.txt"
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
@@ -80,8 +31,16 @@ async def by_series(url_or_sid: str) -> Path:
     with open(abs_filepath, "w", encoding="utf-8") as f:
         for bv_id in bvids:
             f.write(f"{bv_id}" + "\n")
-    print(f"已获取 {col_name}（{up_name}）的 {len(bvids)} 个视频")
-    print(f"到 {abs_filepath}")
+    # print(f"已获取 {col_name}（{up_name}）的 {len(bvids)} 个视频")
+    count = len(bvids)
+    print(
+        ngettext(
+            "已获取 {}（{}）的一个视频",
+            "已获取 {}（{}）的 {count} 个视频",
+            count,
+        ).format(col_name, up_name, count=count)
+    )
+    print(_("存储到 {}").format(abs_filepath))
     return Path(abs_filepath)
 
 
@@ -112,7 +71,11 @@ def by_ranking(rid: int) -> Path:
         for bvid in bvids:
             f.write(f"{bvid}" + "\n")
     abs_filepath = os.path.abspath(bvids_filepath)
-    print(f"已保存 {len(bvids)} 个 bvid 到 {abs_filepath}")
+    print(
+        ngettext("已保存一个 bvid 到 {}", "已保存 {count} 个 bvid 到 {}", len(bvids)).format(
+            abs_filepath, count=len(bvids)
+        )
+    )
     return Path(abs_filepath)
 
 
@@ -127,7 +90,7 @@ async def by_up_videos(url_or_mid: str) -> Path:
         mid = url_or_mid
 
     assert isinstance(mid, str)
-    assert mid.isdigit(), "mid 应是数字字符串"
+    assert mid.isdigit(), _("mid 应是数字字符串")
 
     client = AsyncClient(**api.dft_client_settings)
     ps = 30  # 每页视频数，最小 1，最大 50，默认 30
@@ -135,32 +98,41 @@ async def by_up_videos(url_or_mid: str) -> Path:
     keyword = ""  # 搜索关键词
     bv_ids = []
     pn = 1
-    print(f"获取第 {pn} 页...")
+    print(ngettext("获取第 {} 页...", "获取第 {} 页...", pn).format(pn))
     up_name, total_size, bv_ids_page = await api.get_up_info(
         client, mid, pn, ps, order, keyword
     )
     bv_ids += bv_ids_page
+    # print(f"{mid} {up_name} 共 {total_size} 个视频. (如果最新的视频为合作视频的非主作者，UP 名可能会识别错误，但不影响获取 bvid 列表)")
     print(
-        f"{mid} {up_name} 共 {total_size} 个视频. (如果最新的视频为合作视频的非主作者，UP 名可能会识别错误，但不影响获取 bvid 列表)"
+        ngettext("{} {} 共 {} 个视频.", "{} {} 共 {} 个视频.", total_size).format(
+            mid, up_name, total_size
+        )
     )
+    print(_("（如果最新的视频为合作视频的非主作者，UP 名可能会识别错误，但不影响获取 bvid 列表)"))
     while pn < total_size / ps:
         pn += 1
-        print(f"获取第 {pn} 页 (10s...)")
+        # print(f"获取第 {pn} 页 (10s...)")
+        print(ngettext("获取第 {} 页 (10 秒...)", "获取第 {} 页 (10 秒...)", pn).format(pn))
         await asyncio.sleep(10)
-        _, _, bv_ids_page = await api.get_up_info(client, mid, pn, ps, order, keyword)
+        _x, _y, bv_ids_page = await api.get_up_info(client, mid, pn, ps, order, keyword)
         bv_ids += bv_ids_page
 
     print(mid, up_name, total_size)
     await client.aclose()
-    assert len(bv_ids) == len(set(bv_ids)), "有重复的 bv_id"
-    assert total_size == len(bv_ids), "视频总数不匹配"
+    assert len(bv_ids) == len(set(bv_ids)), _("有重复的 bv_id")
+    assert total_size == len(bv_ids), _("视频总数不匹配")
     filepath = f"bvids/by-up_videos/mid-{mid}-{int(time.time())}.txt"
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     abs_filepath = os.path.abspath(filepath)
     with open(abs_filepath, "w", encoding="utf-8") as f:
         for bv_id in bv_ids:
             f.write(f"{bv_id}" + "\n")
-    print(f"已保存 {len(bv_ids)} 个 bvid 到 {abs_filepath}")
+    print(
+        ngettext("已保存一个 bvid 到 {}", "已保存 {count} 个 bvid 到 {}", len(bv_ids)).format(
+            abs_filepath, count=len(bv_ids)
+        )
+    )
     return Path(abs_filepath)
 
 
@@ -179,7 +151,12 @@ def by_popular_precious():
     abs_filepath = os.path.abspath(filepath)
     with open(abs_filepath, "w", encoding="utf-8") as f:
         f.write("\n".join(bvids))
-    print(f"已保存 {len(bvids)} 个 bvid 到 {abs_filepath}")
+    # print(f"已保存 {len(bvids)} 个 bvid 到 {abs_filepath}")
+    print(
+        ngettext("已保存一个 bvid 到 {}", "已保存 {count} 个 bvid 到 {}", len(bvids)).format(
+            abs_filepath, count=len(bvids)
+        )
+    )
 
 
 def by_popular_series_one(number: int):
@@ -198,7 +175,12 @@ def by_popular_series_one(number: int):
     abs_filepath = os.path.abspath(filepath)
     with open(abs_filepath, "w", encoding="utf-8") as f:
         f.write("\n".join(bvids))
-    print(f"已保存 {len(bvids)} 个 bvid 到 {abs_filepath}")
+    # print(f"已保存 {len(bvids)} 个 bvid 到 {abs_filepath}")
+    print(
+        ngettext("已保存一个 bvid 到 {}", "已保存 {count} 个 bvid 到 {}", len(bvids)).format(
+            abs_filepath, count=len(bvids)
+        )
+    )
 
 
 def not_got_popular_series() -> list[int]:
@@ -242,20 +224,35 @@ async def by_favlist(url_or_fid: str):
         if media_left is None:
             print(f"fav_name: {fav_name}, up_name: {up_name}, total_size: {total_size}")
         media_left = total_size - PAGE_SIZE * page_num
-        print(f"还剩 ~{media_left // PAGE_SIZE} 页", end="\r")
+        print(
+            ngettext("还剩 ~{} 页", "还剩 ~{} 页", media_left // PAGE_SIZE).format(
+                media_left // PAGE_SIZE
+            ),
+            end="\r",
+        )
         await asyncio.sleep(2)
         page_num += 1
     await client.aclose()
     assert total_size is not None
-    assert len(bvids) == len(set(bvids)), "有重复的 bvid"
-    print(f"{len(bvids)} 个有效视频，{total_size-len(bvids)} 个失效视频")
+    assert len(bvids) == len(set(bvids)), _("有重复的 bvid")
+    print(
+        ngettext(
+            "{} 个有效视频，{} 个失效视频",
+            "{} 个有效视频，{} 个失效视频",
+            total_size,
+        ).format(len(bvids), total_size - len(bvids))
+    )
     filepath = f"bvids/by-favour/fid-{fid}-{int(time.time())}.txt"
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     abs_filepath = os.path.abspath(filepath)
     with open(abs_filepath, "w", encoding="utf-8") as f:
         f.write("\n".join(bvids))
         f.write("\n")
-    print(f"已保存 {len(bvids)} 个 bvid 到 {abs_filepath}")
+    print(
+        ngettext("已保存一个 bvid 到 {}", "已保存 {count} 个 bvid 到 {}", len(bvids)).format(
+            abs_filepath, count=len(bvids)
+        )
+    )
 
 
 async def main(
@@ -306,21 +303,21 @@ class URLorIntParamType(click.ParamType):
 
 
 @click.command(
-    short_help=click.style("批量获取 BV 号", fg="cyan"),
-    help="请通过 flag 指定至少一种批量获取 BV 号的方式。多个不同组的 flag 同时使用时，将会先后通过不同方式获取。",
+    short_help=click.style(_("批量获取 BV 号"), fg="cyan"),
+    help=_("请通过 flag 指定至少一种批量获取 BV 号的方式。多个不同组的 flag 同时使用时，将会先后通过不同方式获取。"),
 )
-@optgroup.group("合集")
+@optgroup.group(_("合集"))
 @optgroup.option(
     "--series",
     "-s",
-    help=click.style("合集或视频列表内视频", fg="red"),
+    help=click.style(_("合集或视频列表内视频"), fg="red"),
     type=URLorIntParamType("sid"),
 )
-@optgroup.group("排行榜")
+@optgroup.group(_("排行榜"))
 @optgroup.option(
     "--ranking",
     "-r",
-    help=click.style("排行榜（全站榜，非个性推荐榜）", fg="yellow"),
+    help=click.style(_("排行榜（全站榜，非个性推荐榜）"), fg="yellow"),
     is_flag=True,
 )
 @optgroup.option(
@@ -328,25 +325,27 @@ class URLorIntParamType(click.ParamType):
     "--ranking-id",
     default=0,
     show_default=True,
-    help=click.style("目标排行 rid，0 为全站排行榜。rid 等于分区的 tid", fg="yellow"),
+    help=click.style(_("目标排行 rid，0 为全站排行榜。rid 等于分区的 tid"), fg="yellow"),
     type=int,
 )
-@optgroup.group("UP 主")
+@optgroup.group(_("UP 主"))
 @optgroup.option(
     "--up-videos",
     "-u",
-    help=click.style("UP 主用户页投稿", fg="cyan"),
+    help=click.style(_("UP 主用户页投稿"), fg="cyan"),
     type=URLorIntParamType("mid"),
 )
-@optgroup.group("入站必刷")
+@optgroup.group(_("入站必刷"))
 @optgroup.option(
-    "--popular-precious", help=click.style("入站必刷，更新频率低", fg="bright_red"), is_flag=True
+    "--popular-precious",
+    help=click.style(_("入站必刷，更新频率低"), fg="bright_red"),
+    is_flag=True,
 )
-@optgroup.group("每周必看")
+@optgroup.group(_("每周必看"))
 @optgroup.option(
     "--popular-series",
     "-p",
-    help=click.style("每周必看，每周五晚 18:00 更新", fg="magenta"),
+    help=click.style(_("每周必看，每周五晚 18:00 更新"), fg="magenta"),
     is_flag=True,
 )
 @optgroup.option(
@@ -354,18 +353,18 @@ class URLorIntParamType(click.ParamType):
     default=1,
     type=int,
     show_default=True,
-    help=click.style("获取第几期（周）", fg="magenta"),
+    help=click.style(_("获取第几期（周）"), fg="magenta"),
 )
 @optgroup.option(
     "--all-popular-series",
-    help=click.style("自动获取全部的每周必看（增量）", fg="magenta"),
+    help=click.style(_("自动获取全部的每周必看（增量）"), fg="magenta"),
     is_flag=True,
 )
-@optgroup.group("收藏夹")
+@optgroup.group(_("收藏夹"))
 @optgroup.option(
     "--favlist",
     "--fav",
-    help=click.style("收藏夹", fg="green"),
+    help=click.style(_("用户收藏夹"), fg="green"),
     type=URLorIntParamType("fid"),
 )
 def get(**kwargs):
@@ -377,7 +376,7 @@ def get(**kwargs):
         and not kwargs["popular_precious"]
         and not kwargs["popular_series"]
     ):
-        click.echo(click.style("ERROR: 请指定至少一种获取方式。", fg="red"))
+        click.echo(click.style(_("ERROR: 请指定至少一种获取方式。"), fg="red"))
         click.echo(get.get_help(click.Context(get)))
         return
     asyncio.run(main(**kwargs))

@@ -4,6 +4,6 @@ config.json
 .venv/
 __pycache__/
 videos/
-.vscode/
+.vscode/settings.json
 bilibili_archive_dir/
 dist/

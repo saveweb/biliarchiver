@@ -5,6 +5,7 @@ description = ""
 authors = ["yzqzss <yzqzss@yandex.com>"]
 readme = "README.md"
 packages = [{ include = "biliarchiver" }]
+include = ["biliarchiver/locales/**/*.mo"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -27,7 +28,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 # Enable the pycodestyle (`E`) and Pyflakes (`F`) rules by default.
-# Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
 select = ["E9", "F63", "F7", "F82"]
 ignore = []
 
@@ -36,28 +36,13 @@ fixable = ["ALL"]
 unfixable = []
 
 # Exclude a variety of commonly ignored directories.
-exclude = [
-    ".direnv",
-    ".git",
-    ".git-rewrite",
-    ".pants.d",
-    ".pytype",
-    ".ruff_cache",
-    ".js",
-    ".venv",
-    "__pypackages__",
-    "_build",
-    "build",
-    "dist",
-    "node_modules",
-    "venv",
-]
+exclude = []
 per-file-ignores = {}
 
 # Same as Black.
 line-length = 127
 
-# Assume Python 3.8
+# Assume Python 3.9
 target-version = "py39"
 
 [tool.ruff.mccabe]

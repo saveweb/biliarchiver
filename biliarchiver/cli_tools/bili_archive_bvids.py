@@ -17,6 +17,7 @@ from biliarchiver.utils.identifier import human_readable_upper_part_map
 from biliarchiver.utils.ffmpeg import check_ffmpeg
 from biliarchiver.version import BILI_ARCHIVER_VERSION
 from biliarchiver.cli_tools.utils import read_bvids
+from biliarchiver.i18n import _
 
 install()
 
@@ -68,7 +69,7 @@ def _down(
     min_free_space_gb: int,
     skip_to: int,
 ):
-    assert check_ffmpeg() is True, "ffmpeg 未安装"
+    assert check_ffmpeg() is True, _("ffmpeg 未安装")
 
     bvids_list = read_bvids(bvids)
 
@@ -122,10 +123,11 @@ def _down(
                 # print(f'任务 {task} 已完成')
                 tasks.remove(task)
         if not check_free_space():
-            print(f"剩余空间不足 {min_free_space_gb} GiB")
+            s = _("剩余空间不足 {} GiB").format(min_free_space_gb)
+            print(s)
             for task in tasks:
                 task.cancel()
-            raise RuntimeError(f"剩余空间不足 {min_free_space_gb} GiB")
+            raise RuntimeError(s)
 
     for index, bvid in enumerate(bvids_list):
         if index < skip_to:
@@ -136,7 +138,7 @@ def _down(
             upper_part = human_readable_upper_part_map(string=bvid, backward=True)
             remote_identifier = f"{BILIBILI_IDENTIFIER_PERFIX}-{bvid}_p1-{upper_part}"
             if check_ia_item_exist(client, remote_identifier):
-                print(f"IA 上已存在 {remote_identifier} ，跳过")
+                print(_("IA 上已存在 {}，跳过").format(remote_identifier))
                 continue
 
         upper_part = human_readable_upper_part_map(string=bvid, backward=True)
@@ -144,7 +146,7 @@ def _down(
             config.storage_home_dir / "videos" / f"{bvid}-{upper_part}"
         )
         if os.path.exists(videos_basepath / "_all_downloaded.mark"):
-            print(f"{bvid} 所有分p都已下载过了")
+            print(_("{} 的所有分p都已下载过了").format(bvid))
             continue
 
         if len(tasks) >= config.video_concurrency:
@@ -177,7 +179,7 @@ def update_cookies_from_browser(client: AsyncClient, browser: str):
         f = getattr(browser_cookie3, browser.lower())
         cookies_to_update = f(domain_name="bilibili.com")
         client.cookies.update(cookies_to_update)
-        print(f"从 {browser} 品尝了 {len(cookies_to_update)} 块 cookies")
+        print(_("从 {} 品尝了 {} 块 cookies").format(browser, len(cookies_to_update)))
     except AttributeError:
         raise AttributeError(f"Invalid Browser {browser}")
 
@@ -190,7 +192,7 @@ def update_cookies_from_file(client: AsyncClient, cookies_path: Union[str, Path]
     else:
         raise TypeError(f"cookies_path: {type(cookies_path)}")
 
-    assert os.path.exists(cookies_path), f"cookies 文件不存在: {cookies_path}"
+    assert os.path.exists(cookies_path), _("cookies 文件不存在: {}").format(cookies_path)
 
     from http.cookiejar import MozillaCookieJar
 
@@ -205,7 +207,8 @@ def update_cookies_from_file(client: AsyncClient, cookies_path: Union[str, Path]
             if "bilibili.com" not in cookie.domain:
                 continue
             if cookie.name in loadded_keys:
-                print(f"跳过重复的 cookies: {cookie.name}")
+                print(_("跳过重复的 cookies"), end="")
+                print(f": {cookie.name}")
                 # httpx 不能处理不同域名的同名 cookies，只好硬去重了
                 continue
             assert cookie.value is not None
@@ -214,9 +217,9 @@ def update_cookies_from_file(client: AsyncClient, cookies_path: Union[str, Path]
             )
             loadded_keys.append(cookie.name)
             loadded_cookies += 1
-        print(f"从 {cookies_path} 品尝了 {loadded_cookies} 块 cookies")
+        print(_("从 {} 品尝了 {} 块 cookies").format(cookies_path, loadded_cookies))
         if loadded_cookies > 100:
-            print("吃了过多的 cookies，可能导致 httpx.Client 怠工，响应非常缓慢")
+            print(_("吃了过多的 cookies，可能导致 httpx.Client 怠工，响应非常缓慢"))
 
         assert client.cookies.get("SESSDATA") is not None, "SESSDATA 不存在"
         # print(f'SESS_DATA: {client.cookies.get("SESSDATA")}')
@@ -227,15 +230,13 @@ def is_login(cilent: Client) -> bool:
     r.raise_for_status()
     nav_json = r.json()
     if nav_json["code"] == 0:
-        print("BiliBili 登录成功，饼干真香。")
-        print(
-            "NOTICE: 存档过程中请不要在 cookies 的源浏览器访问 B 站，避免 B 站刷新"
-            " cookies 导致我们半路下到的视频全是 480P 的优酷土豆级醇享画质。"
-        )
+        print(_("BiliBili 登录成功，饼干真香。"))
+        print(_("NOTICE: 存档过程中请不要在 cookies 的源浏览器访问 B 站，避免 B 站刷新"), end=" ")
+        print(_("cookies 导致我们半路下到的视频全是 480P 的优酷土豆级醇享画质。"))
         return True
-    print("未登录/SESSDATA无效/过期，你这饼干它保真吗？")
+    print(_("未登录/SESSDATA无效/过期，你这饼干它保真吗？"))
     return False
 
 
 if __name__ == "__main__":
-    raise DeprecationWarning("已废弃直接运行此命令，请改用 biliarchiver 命令")
+    raise DeprecationWarning(_("已废弃直接运行此命令，请改用 biliarchiver 命令"))

@@ -41,7 +41,7 @@
     }
 
     function getPageNumber() {
-        return unsafeWindow.__INITIAL_STATE__?.p ?? initialState.p ?? unsafeWindow.vd?.embedPlayer?.p;
+        return unsafeWindow.__INITIAL_STATE__?.p ?? initialState?.p ?? unsafeWindow.vd?.embedPlayer?.p;
     }
 
     function humanReadableUpperPartMap(string, backward) {

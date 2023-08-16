@@ -3,7 +3,9 @@ from rich.console import Console
 
 
 @click.command(help=click.style("从哔哩哔哩下载", fg="cyan"))
-@click.option("--bvids", type=click.Path(exists=False), required=True, help="bvids 列表的文件路径")
+@click.option(
+    "--bvids", type=click.STRING, required=True, help="空白字符分隔的 bvids 列表（记得加引号），或文件路径"
+)
 @click.option(
     "--skip-ia-check",
     "-s",
@@ -26,7 +28,9 @@ from rich.console import Console
     help="最小剩余空间 (GB)，用超退出",
     show_default=True,
 )
-@click.option("--skip-to", type=int, default=0, show_default=True, help="跳过文件开头 bvid 的个数")
+@click.option(
+    "--skip-to", type=int, default=0, show_default=True, help="跳过文件开头 bvid 的个数"
+)
 def down(**kwargs):
     from biliarchiver.cli_tools.bili_archive_bvids import _down
 

@@ -13,9 +13,10 @@ from biliarchiver.config import BILIBILI_IDENTIFIER_PERFIX
 from biliarchiver.utils.http_patch import HttpOnlyCookie_Handler
 from biliarchiver.utils.version_check import check_outdated_version
 from biliarchiver.utils.storage import get_free_space
-from biliarchiver.utils.identifier import human_readable_upper_part_map, is_bvid
+from biliarchiver.utils.identifier import human_readable_upper_part_map
 from biliarchiver.utils.ffmpeg import check_ffmpeg
 from biliarchiver.version import BILI_ARCHIVER_VERSION
+from biliarchiver.cli_tools.utils import read_bvids
 
 install()
 
@@ -61,7 +62,7 @@ def check_ia_item_exist(client: Client, identifier: str) -> bool:
 
 
 def _down(
-    bvids: Union[Path, str, List[str]],
+    bvids: str,
     skip_ia_check: bool,
     from_browser: Optional[str],
     min_free_space_gb: int,
@@ -69,26 +70,7 @@ def _down(
 ):
     assert check_ffmpeg() is True, "ffmpeg 未安装"
 
-    bvids_list = None
-
-    if isinstance(bvids, str):
-        bvids = Path(bvids)
-    if isinstance(bvids, list):
-        bvids_list = bvids
-    elif not bvids.exists() and bvids.name.startswith("BV"):
-        if is_bvid(bvids.name):
-            print("你输入的 bvids 不是文件，貌似是单个的 bvid，将直接下载...")
-            bvids_list = [bvids.name]
-        else:
-            raise ValueError(f"你输入的 bvids 不是文件，貌似是单个的 bvid，但是不是合法的 bvid: {bvids.name}")
-    else:
-        with open(bvids, "r", encoding="utf-8") as f:
-            bvids_list = f.read().splitlines()
-
-    assert bvids_list is not None and len(bvids_list) > 0, "bvids 为空"
-    del bvids
-    for bvid in bvids_list:
-        assert is_bvid(bvid), f"bvid {bvid} 不合法"
+    bvids_list = read_bvids(bvids)
 
     check_outdated_version(
         pypi_project="biliarchiver", self_version=BILI_ARCHIVER_VERSION
@@ -118,8 +100,7 @@ def _down(
     def check_free_space():
         if min_free_space_gb != 0:
             if (
-                get_free_space(
-                    path=config.storage_home_dir) // 1024 // 1024 // 1024
+                get_free_space(path=config.storage_home_dir) // 1024 // 1024 // 1024
                 <= min_free_space_gb
             ):
                 return False  # not pass
@@ -152,8 +133,7 @@ def _down(
             continue
         tasks_check()
         if not skip_ia_check:
-            upper_part = human_readable_upper_part_map(
-                string=bvid, backward=True)
+            upper_part = human_readable_upper_part_map(string=bvid, backward=True)
             remote_identifier = f"{BILIBILI_IDENTIFIER_PERFIX}-{bvid}_p1-{upper_part}"
             if check_ia_item_exist(client, remote_identifier):
                 print(f"IA 上已存在 {remote_identifier} ，跳过")

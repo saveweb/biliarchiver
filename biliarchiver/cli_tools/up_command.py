@@ -26,9 +26,10 @@ BILIBILI_VIDEOS_SUB_1_COLLECTION = "bilibili_videos_sub_1"
 
 
 @click.command(help=click.style(_("上传至互联网档案馆"), fg="cyan"))
-@click.option("--bvids", type=click.STRING, default=None, help=_("bvids 列表的文件路径"))
+@click.option("--bvids", "-i", type=click.STRING, default=None, help=_("bvids 列表的文件路径"))
 @click.option(
     "--by-storage-home-dir",
+    "-a",
     is_flag=True,
     default=False,
     help=_("使用 `$storage_home_dir/videos` 目录下的所有视频"),
@@ -36,6 +37,7 @@ BILIBILI_VIDEOS_SUB_1_COLLECTION = "bilibili_videos_sub_1"
 @click.option("--update-existing", is_flag=True, default=False, help=_("更新已存在的 item"))
 @click.option(
     "--collection",
+    "-c",
     default=DEFAULT_COLLECTION,
     type=click.Choice(
         [
@@ -47,23 +49,38 @@ BILIBILI_VIDEOS_SUB_1_COLLECTION = "bilibili_videos_sub_1"
     help=_("欲上传至的 collection. (非默认值仅限 collection 管理员使用)")
     + f" [default: {DEFAULT_COLLECTION}]",
 )
+@click.option(
+    "--delete-after-upload",
+    "-d",
+    is_flag=True,
+    default=False,
+    help=_("上传后删除视频文件"),
+)
 def up(
     bvids: TextIOWrapper,
     by_storage_home_dir: bool,
     update_existing: bool,
     collection: str,
+    delete_after_upload: bool,
 ):
     from biliarchiver._biliarchiver_upload_bvid import upload_bvid
     from biliarchiver.config import config
+
+    ids = []
 
     if by_storage_home_dir:
         for bvid_with_upper_part in os.listdir(config.storage_home_dir / "videos"):
             bvid = bvid_with_upper_part
             if "-" in bvid_with_upper_part:
                 bvid = bvid_with_upper_part.split("-")[0]
-
-            upload_bvid(bvid, update_existing=update_existing, collection=collection)
-
+            ids.append(bvid)
     elif bvids:
-        for bvid in read_bvids(bvids):
-            upload_bvid(bvid, update_existing=update_existing, collection=collection)
+        ids = read_bvids(bvids)
+
+    for id in ids:
+        upload_bvid(
+            id,
+            update_existing=update_existing,
+            collection=collection,
+            delete_after_upload=delete_after_upload,
+        )

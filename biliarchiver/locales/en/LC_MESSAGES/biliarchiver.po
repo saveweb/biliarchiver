@@ -420,3 +420,9 @@ msgstr "{} is not the correct local_identifier that starts with {}"
 #: biliarchiver/_biliarchiver_upload_bvid.py:80
 msgid "没有下载完成"
 msgstr "Download not finished"
+
+msgid "上传后删除视频文件"
+msgstr "Delete video files after upload"
+
+msgid "已删除视频文件夹 {}"
+msgstr "Deleted video folder {}"

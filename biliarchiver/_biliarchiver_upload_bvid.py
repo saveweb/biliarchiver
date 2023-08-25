@@ -7,6 +7,10 @@ from urllib.parse import urlparse
 from internetarchive import get_item
 from requests import Response
 from rich import print
+from pathlib import Path
+from shutil import rmtree
+from biliarchiver.i18n import _
+
 from biliarchiver.exception import (
     VideosBasePathNotFoundError,
     VideosNotFinishedDownloadError,
@@ -20,12 +24,23 @@ from biliarchiver.version import BILI_ARCHIVER_VERSION
 from biliarchiver.i18n import _
 
 
-def upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
+def upload_bvid(
+    bvid: str,
+    *,
+    update_existing: bool = False,
+    collection: str,
+    delete_after_upload: bool = False,
+):
     try:
         lock_dir = config.storage_home_dir / ".locks" / bvid
-        os.makedirs(lock_dir, exist_ok=True)
+        lock_dir.mkdir(parents=True, exist_ok=True)
         with UploadLock(lock_dir):  # type: ignore
-            _upload_bvid(bvid, update_existing=update_existing, collection=collection)
+            _upload_bvid(
+                bvid,
+                update_existing=update_existing,
+                collection=collection,
+                delete_after_upload=delete_after_upload,
+            )
     except AlreadyRunningError:
         print(_("已经有一个上传 {} 的进程在运行，跳过".format(bvid)))
     except VideosBasePathNotFoundError:
@@ -37,7 +52,13 @@ def upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
         raise e
 
 
-def _upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
+def _upload_bvid(
+    bvid: str,
+    *,
+    update_existing: bool = False,
+    collection: str,
+    delete_after_upload: bool = False,
+):
     access_key, secret_key = read_ia_keys(config.ia_key_file)
 
     # identifier format: BiliBili-{bvid}_p{pid}-{upper_part}
@@ -54,7 +75,8 @@ def _upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
     if not (videos_basepath / "_all_downloaded.mark").exists():
         raise VideosNotFinishedDownloadError(f"{videos_basepath}")
 
-    for local_identifier in os.listdir(videos_basepath):
+    local_identifiers = [f.name for f in videos_basepath.iterdir() if f.is_dir()]
+    for local_identifier in local_identifiers:
         remote_identifier = f"{local_identifier}-{upper_part}"
         if (
             os.path.exists(f"{videos_basepath}/{local_identifier}/_uploaded.mark")
@@ -270,6 +292,18 @@ def _upload_bvid(bvid: str, *, update_existing: bool = False, collection: str):
         ) as f:
             f.write("")
         print(f"==== {remote_identifier} {_('上传完成')} ====")
+
+    if delete_after_upload and len(local_identifiers) > 0:
+        try:
+            for local_identifier in local_identifiers:
+                rmtree(f"{videos_basepath}/{local_identifier}")
+            print(
+                "[yellow]"
+                + _("已删除视频文件夹 {}").format(", ".join(local_identifiers))
+                + "[/yellow]"
+            )
+        except Exception as e:
+            print(e)
 
 
 def read_ia_keys(keysfile):

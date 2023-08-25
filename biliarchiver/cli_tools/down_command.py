@@ -5,7 +5,11 @@ from biliarchiver.i18n import _
 
 @click.command(help=click.style(_("从哔哩哔哩下载"), fg="cyan"))
 @click.option(
-    "--bvids", type=click.STRING, required=True, help=_("空白字符分隔的 bvids 列表（记得加引号），或文件路径")
+    "--bvids",
+    "-i",
+    type=click.STRING,
+    required=True,
+    help=_("空白字符分隔的 bvids 列表（记得加引号），或文件路径"),
 )
 @click.option(
     "--skip-ia-check",

@@ -172,6 +172,38 @@ msgstr "Not logged in, or SESSDATA invalid/expired. Your cookies seems to have e
 msgid "已废弃直接运行此命令，请改用 biliarchiver 命令"
 msgstr "This command is deprecated. Use `biliarchiver down` instead."
 
+#: biliarchiver/cli_tools/conf_command.py:6
+msgid "将传入参数写入配置文件"
+msgstr "Write the passed parameters to the configuration file"
+
+#: biliarchiver/cli_tools/conf_command.py:7
+msgid "视频下载并发数"
+msgstr "Video download concurrency"
+
+#: biliarchiver/cli_tools/conf_command.py:8
+msgid "分P下载并发数"
+msgstr "Part download concurrency"
+
+#: biliarchiver/cli_tools/conf_command.py:9
+msgid "流下载重试次数"
+msgstr "Stream download retry count"
+
+#: biliarchiver/cli_tools/conf_command.py:10
+msgid "存储目录"
+msgstr "Storage home directory"
+
+#: biliarchiver/cli_tools/conf_command.py:11
+msgid "IA key文件"
+msgstr "IA key file"
+
+#: biliarchiver/cli_tools/conf_command.py:12
+msgid "cookies文件"
+msgstr "Cookies file"
+
+#: biliarchiver/cli_tools/conf_command.py:20
+msgid "配置文件写入成功"
+msgstr "Configuration file written successfully"
+
 #: biliarchiver/cli_tools/down_command.py:6
 msgid "从哔哩哔哩下载"
 msgstr "Download from BiliBili"

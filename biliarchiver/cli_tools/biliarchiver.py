@@ -3,6 +3,7 @@ from biliarchiver.i18n import _
 from biliarchiver.cli_tools.up_command import up
 from biliarchiver.cli_tools.down_command import down
 from biliarchiver.cli_tools.get_command import get
+from biliarchiver.cli_tools.conf_command import config
 from biliarchiver.version import BILI_ARCHIVER_VERSION
 
 
@@ -58,6 +59,7 @@ def init():
 biliarchiver.add_command(up)
 biliarchiver.add_command(down)
 biliarchiver.add_command(get)
+biliarchiver.add_command(config)
 
 
 @biliarchiver.command(help=click.style(_("配置账号信息"), fg="cyan"))

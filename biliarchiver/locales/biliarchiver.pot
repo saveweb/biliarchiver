@@ -177,6 +177,38 @@ msgstr ""
 msgid "已废弃直接运行此命令，请改用 biliarchiver 命令"
 msgstr ""
 
+#: biliarchiver/cli_tools/conf_command.py:6
+msgid "将传入参数写入配置文件"
+msgstr ""
+
+#: biliarchiver/cli_tools/conf_command.py:7
+msgid "视频下载并发数"
+msgstr ""
+
+#: biliarchiver/cli_tools/conf_command.py:8
+msgid "分P下载并发数"
+msgstr ""
+
+#: biliarchiver/cli_tools/conf_command.py:9
+msgid "流下载重试次数"
+msgstr ""
+
+#: biliarchiver/cli_tools/conf_command.py:10
+msgid "存储目录"
+msgstr ""
+
+#: biliarchiver/cli_tools/conf_command.py:11
+msgid "IA key文件"
+msgstr ""
+
+#: biliarchiver/cli_tools/conf_command.py:12
+msgid "cookies文件"
+msgstr ""
+
+#: biliarchiver/cli_tools/conf_command.py:20
+msgid "配置文件写入成功"
+msgstr ""
+
 #: biliarchiver/cli_tools/down_command.py:6
 msgid "从哔哩哔哩下载"
 msgstr ""

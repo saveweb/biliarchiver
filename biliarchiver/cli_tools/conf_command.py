@@ -1,9 +1,5 @@
 import click
-
 from dataclasses import dataclass
-import os
-import json
-from pathlib import Path
 from biliarchiver.i18n import _
 from biliarchiver.config import _Config
 

@@ -211,7 +211,6 @@ def _upload_bvid(
             else owner_creator,  # type: list[str] | str
             # UTC time
             "date": time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(pubdate)),
-            "year": time.strftime("%Y", time.gmtime(pubdate)),
             # 'aid': aid,
             # 'bvid': bvid,
             # 'cid': cid,

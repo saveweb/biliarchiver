@@ -14,7 +14,8 @@ from biliarchiver.i18n import _, ngettext
 
 from bilix.sites.bilibili import api
 from rich import print
-
+from biliarchiver.cli_tools.bili_archive_bvids import update_cookies_from_file
+from biliarchiver.config import config
 
 async def by_series(url_or_sid: str) -> Path:
     sid = sid = (
@@ -93,6 +94,7 @@ async def by_up_videos(url_or_mid: str) -> Path:
     assert mid.isdigit(), _("mid 应是数字字符串")
 
     client = AsyncClient(**api.dft_client_settings)
+    update_cookies_from_file(client,config.cookies_file)
     ps = 30  # 每页视频数，最小 1，最大 50，默认 30
     order = "pubdate"  # 默认为pubdate 最新发布：pubdate 最多播放：click 最多收藏：stow
     keyword = ""  # 搜索关键词
@@ -113,8 +115,8 @@ async def by_up_videos(url_or_mid: str) -> Path:
     while pn < total_size / ps:
         pn += 1
         # print(f"获取第 {pn} 页 (10s...)")
-        print(ngettext("获取第 {} 页 (10 秒...)", "获取第 {} 页 (10 秒...)", pn).format(pn))
-        await asyncio.sleep(10)
+        print(ngettext("获取第 {} 页 (3 秒...)", "获取第 {} 页 (3 秒...)", pn).format(pn))
+        await asyncio.sleep(3)
         _x, _y, bv_ids_page = await api.get_up_info(client, mid, pn, ps, order, keyword)
         bv_ids += bv_ids_page
 

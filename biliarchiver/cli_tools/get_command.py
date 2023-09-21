@@ -12,7 +12,6 @@ from click_option_group import optgroup
 from httpx import AsyncClient
 from rich import print
 
-from biliarchiver.cli_tools.bili_archive_bvids import update_cookies_from_file
 from biliarchiver.i18n import _, ngettext
 
 
@@ -97,6 +96,7 @@ async def by_up_videos(url_or_mid: str) -> Path:
     from biliarchiver.config import config
 
     if config.cookies_file.exists():
+        from biliarchiver.cli_tools.bili_archive_bvids import update_cookies_from_file
         update_cookies_from_file(client, config.cookies_file)
         delay = 3
     else:

@@ -1,21 +1,20 @@
 import asyncio
-from gettext import ngettext
+import json
 import os
-from pathlib import Path
 import re
 import time
-from httpx import AsyncClient
-import requests
-import json
-import click
-from click_option_group import optgroup
+from pathlib import Path
 
+import click
+import requests
+from bilix.sites.bilibili import api
+from click_option_group import optgroup
+from httpx import AsyncClient
+from rich import print
+
+from biliarchiver.cli_tools.bili_archive_bvids import update_cookies_from_file
 from biliarchiver.i18n import _, ngettext
 
-from bilix.sites.bilibili import api
-from rich import print
-from biliarchiver.cli_tools.bili_archive_bvids import update_cookies_from_file
-from biliarchiver.config import config
 
 async def by_series(url_or_sid: str) -> Path:
     sid = sid = (
@@ -94,7 +93,16 @@ async def by_up_videos(url_or_mid: str) -> Path:
     assert mid.isdigit(), _("mid 应是数字字符串")
 
     client = AsyncClient(**api.dft_client_settings)
-    update_cookies_from_file(client,config.cookies_file)
+
+    from biliarchiver.config import config
+
+    if config.cookies_file.exists():
+        update_cookies_from_file(client, config.cookies_file)
+        delay = 3
+    else:
+        print(_("cookies 文件不存在: {}").format(config.cookies_file))
+        delay = 10
+
     ps = 30  # 每页视频数，最小 1，最大 50，默认 30
     order = "pubdate"  # 默认为pubdate 最新发布：pubdate 最多播放：click 最多收藏：stow
     keyword = ""  # 搜索关键词
@@ -114,9 +122,8 @@ async def by_up_videos(url_or_mid: str) -> Path:
     print(_("（如果最新的视频为合作视频的非主作者，UP 名可能会识别错误，但不影响获取 bvid 列表)"))
     while pn < total_size / ps:
         pn += 1
-        # print(f"获取第 {pn} 页 (10s...)")
-        print(ngettext("获取第 {} 页 (3 秒...)", "获取第 {} 页 (3 秒...)", pn).format(pn))
-        await asyncio.sleep(3)
+        print(ngettext("获取第 {} 页", "获取第 {} 页", pn).format(pn))
+        await asyncio.sleep(delay)
         _x, _y, bv_ids_page = await api.get_up_info(client, mid, pn, ps, order, keyword)
         bv_ids += bv_ids_page
 

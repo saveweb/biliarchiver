@@ -48,11 +48,20 @@ def biliarchiver():
 
 @biliarchiver.command(help=click.style(_("初始化所需目录"), fg="cyan"))
 def init():
+    import os
     import pathlib
 
     biliarchiver_home = pathlib.Path.cwd() / "biliarchiver.home"
     bilibili_archive_dir = pathlib.Path.cwd() / "bilibili_archive_dir"
-    biliarchiver_home.mkdir(exist_ok=True)
+
+    # 猫猫创成文件夹了
+    if biliarchiver_home.exists() and not biliarchiver_home.is_file():
+        try:
+            os.removedirs(biliarchiver_home)
+        except Exception as e:
+            print(e) # 不是啥问题，反正路径还存在
+
+    biliarchiver_home.touch(exist_ok=True)
     bilibili_archive_dir.mkdir(exist_ok=True)
 
 

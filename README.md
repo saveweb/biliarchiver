@@ -16,26 +16,51 @@ pip install biliarchiver
 biliarchiver --help
 ```
 
+### Basic usage
+
 Follow these steps to start archiving:
 
 1. Initialize a new workspace in current working directory:
+
 ```bash
 biliarchiver init
 ```
+
 2. Provide cookies and tokens following instructions:
+
 ```bash
 biliarchiver auth
 ```
+
 3. Download videos from BiliBili:
+
 ```bash
 biliarchiver down --bvids BVXXXXXXXXX
 ```
+
 - This command also accepts a list of BVIDs or path to a file. Details can be found in `biliarchiver down --help`.
+
 4. Upload videos to Internet Archive:
+
 ```bash
 biliarchiver up --bvids BVXXXXXXXXX
 ```
+
 - This command also accepts a list of BVIDs or path to a file. Details can be found in `biliarchiver up --help`.
+
+### Rest API
+
+1. Start server
+
+```bash
+biliarchiver api
+```
+
+2. Add videos
+
+```bash
+curl -X PUT -H "Content-Type: application/json" http://127.0.0.1:8000/archive/BVXXXXXX
+```
 
 ## Develop
 

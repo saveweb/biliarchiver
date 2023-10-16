@@ -40,7 +40,9 @@ def down(**kwargs):
     from biliarchiver.cli_tools.bili_archive_bvids import _down
 
     try:
-        _down(**kwargs)
+        import asyncio
+
+        asyncio.run(_down(**kwargs))
     except KeyboardInterrupt:
         print("KeyboardInterrupt")
     finally:

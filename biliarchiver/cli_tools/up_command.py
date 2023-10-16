@@ -34,7 +34,9 @@ BILIBILI_VIDEOS_SUB_1_COLLECTION = "bilibili_videos_sub_1"
     default=False,
     help=_("使用 `$storage_home_dir/videos` 目录下的所有视频"),
 )
-@click.option("--update-existing", is_flag=True, default=False, help=_("更新已存在的 item"))
+@click.option(
+    "--update-existing", "-u", is_flag=True, default=False, help=_("更新已存在的 item")
+)
 @click.option(
     "--collection",
     "-c",

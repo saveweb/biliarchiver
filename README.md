@@ -1,6 +1,8 @@
 # biliarchiver
 
-> 基于 bilix 的 BiliBili 存档工具
+> Archiving tool for Bilibili based on bilix
+
+[![PyPI version](https://badge.fury.io/py/biliarchiver.svg)](https://badge.fury.io/py/biliarchiver)
 
 ## Install
 

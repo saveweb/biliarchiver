@@ -62,7 +62,7 @@ def check_ia_item_exist(client: Client, identifier: str) -> bool:
         raise ValueError(f'Unexpected code: {r_json["code"]}')
 
 
-def _down(
+async def _down(
     bvids: str,
     skip_ia_check: bool,
     from_browser: Optional[str],
@@ -77,8 +77,7 @@ def _down(
         pypi_project="biliarchiver", self_version=BILI_ARCHIVER_VERSION
     )
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    loop = asyncio.get_event_loop()
 
     d = DownloaderBilibili(
         hierarchy=True,
@@ -150,9 +149,7 @@ def _down(
             continue
 
         if len(tasks) >= config.video_concurrency:
-            loop.run_until_complete(
-                asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-            )
+            await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
             tasks_check()
 
         print(f"=== {bvid} ({index+1}/{len(bvids_list)}) ===")
@@ -164,9 +161,7 @@ def _down(
         tasks.append(task)
 
     while len(tasks) > 0:
-        loop.run_until_complete(
-            asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-        )
+        await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         tasks_check()
 
     print("DONE")

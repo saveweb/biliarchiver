@@ -10,10 +10,24 @@ app = FastAPI()
 
 queue = Queue()
 
+from enum import Enum
+
+
+class VideoStatus(str, Enum):
+    pending = "pending"
+    downloading = "downloaded"
+    uploading = "uploaded"
+    finished = "finished"
+    failed = "failed"
+
 
 class Video:
-    def __init__(self, vid):
+    def __init__(self, vid, status=VideoStatus.pending):
         self.vid = vid
+        self.status = status
+
+    def __str__(self):
+        return f"{self.vid} {self.status}"
 
 
 @app.get("/")
@@ -46,9 +60,10 @@ async def get(vid: str):
     return {"success": False, "vid": vid}
 
 
-@app.delete("/archive/{vid}")
-async def delete(vid: str):
-    return {"success": True, "vid": vid}
+# @app.delete("/archive/{vid}")
+# async def delete(vid: str):
+#     # TODO
+#     return {"success": True, "vid": vid}
 
 
 async def scheduler():
@@ -63,6 +78,30 @@ async def scheduler():
 
 @app.on_event("startup")
 async def startup_event():
-    bg_task = BackgroundTasks()
-    bg_task.add_task(scheduler)
+    # bg_task = BackgroundTasks()
+    # bg_task.add_task(scheduler)
     asyncio.create_task(scheduler())
+    load_queue()
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    print("Shutting down...")
+    save_queue()
+    exit()
+
+
+def save_queue():
+    with open("queue.txt", "w") as f:
+        while not queue.empty():
+            video = queue.get_nowait()
+            f.write(str(video) + "\n")
+
+
+def load_queue():
+    try:
+        with open("queue.txt", "r") as f:
+            for line in f:
+                queue.put_nowait(Video(*line.strip().split(" ")))
+    except FileNotFoundError:
+        pass

@@ -82,7 +82,19 @@ def auth():
 
 
 @biliarchiver.command(help=click.style(_("运行 API"), fg="cyan"))
-def api():
+@click.option(
+    "--host",
+    type=str,
+    default="127.0.0.1",
+    show_default=True,
+)
+@click.option(
+    "--port",
+    type=int,
+    default=8000,
+    show_default=True,
+)
+def api(**kwargs):
     try:
         import fastapi
         import uvicorn
@@ -93,7 +105,7 @@ def api():
 
     from biliarchiver.rest_api.main import app
 
-    uvicorn.run(app)
+    uvicorn.run(app, **kwargs)
 
 
 if __name__ == "__main__":

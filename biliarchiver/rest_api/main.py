@@ -1,14 +1,36 @@
+from contextlib import asynccontextmanager
+from datetime import datetime
+import sys
+
 import asyncio
 from asyncio import Queue
 from fastapi import FastAPI, BackgroundTasks
 from pydantic import BaseModel
+
 from biliarchiver.rest_api.bilivid import BiliVideo
-from datetime import datetime
 from biliarchiver.version import BILI_ARCHIVER_VERSION
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # bg_task = BackgroundTasks()
+    # bg_task.add_task(scheduler)
+    asyncio.create_task(scheduler())
+    print("Loading queue...")
+    load_queue()
+    yield
+    print("Shutting down...")
+    save_queue()
+
+def save_queue():
+    with open("queue.txt", "w") as f:
+        while not queue.empty():
+            video = queue.get_nowait()
+            f.write(str(video) + "\n")
 
 queue = Queue()
+
+app = FastAPI(lifespan=lifespan)
 
 from enum import Enum
 
@@ -75,27 +97,6 @@ async def scheduler():
         print(f"Start uploading {video}")
         await video.up()
 
-
-@app.on_event("startup")
-async def startup_event():
-    # bg_task = BackgroundTasks()
-    # bg_task.add_task(scheduler)
-    asyncio.create_task(scheduler())
-    load_queue()
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    print("Shutting down...")
-    save_queue()
-    exit()
-
-
-def save_queue():
-    with open("queue.txt", "w") as f:
-        while not queue.empty():
-            video = queue.get_nowait()
-            f.write(str(video) + "\n")
 
 
 def load_queue():

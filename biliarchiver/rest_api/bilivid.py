@@ -9,7 +9,7 @@ from biliarchiver.cli_tools.up_command import DEFAULT_COLLECTION
 class VideoStatus(str, Enum):
     pending = "pending"
     downloading = "downloading"
-    uploading = "uploaded"
+    uploading = "uploading"
     finished = "finished"
     failed = "failed"
 

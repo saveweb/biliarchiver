@@ -68,6 +68,7 @@ async def _down(
     from_browser: Optional[str],
     min_free_space_gb: int,
     skip_to: int,
+    disable_version_check: bool,
 ):
     assert check_ffmpeg() is True, _("ffmpeg 未安装")
 
@@ -75,6 +76,8 @@ async def _down(
 
     check_outdated_version(
         pypi_project="biliarchiver", self_version=BILI_ARCHIVER_VERSION
+    ) if disable_version_check is False else print(
+        _("pypi version check disabled")
     )
 
     loop = asyncio.get_event_loop()

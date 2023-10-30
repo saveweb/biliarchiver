@@ -83,8 +83,15 @@ def auth():
 
 @biliarchiver.command(help=click.style(_("运行 API"), fg="cyan"))
 def api():
+    try:
+        import fastapi
+        import uvicorn
+    except ImportError:
+        print("Please install fastapi and uvicorn first.")
+        print('pip install "uvicorn[standard]" fastapi')
+        return
+
     from biliarchiver.rest_api.main import app
-    import uvicorn
 
     uvicorn.run(app)
 

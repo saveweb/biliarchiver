@@ -36,6 +36,9 @@ from biliarchiver.i18n import _
 @click.option(
     "--skip-to", type=int, default=0, show_default=True, help=_("跳过文件开头 bvid 的个数")
 )
+@click.option(
+    "--disable-version-check", type=bool, default=False, help=_("禁用 biliarchiver 的 pypi 版本检查")
+)
 def down(**kwargs):
     from biliarchiver.cli_tools.bili_archive_bvids import _down
 

@@ -1,16 +1,30 @@
+from enum import Enum
+import time
+from typing import Optional
+
 from biliarchiver.cli_tools.bili_archive_bvids import _down
-from biliarchiver._biliarchiver_upload_bvid import upload_bvid
-from biliarchiver.config import config
+from biliarchiver.cli_tools.up_command import DEFAULT_COLLECTION
+
+
+class VideoStatus(str, Enum):
+    pending = "pending"
+    downloading = "downloading"
+    uploading = "uploaded"
+    finished = "finished"
+    failed = "failed"
 
 
 class BiliVideo:
-    def __init__(self, bvid) -> None:
+    def __init__(self, bvid: str, status: VideoStatus):
         if not bvid.startswith("BV"):
             bvid = "BV" + bvid
+        self.added_time = int(time.time())
         self.bvid = bvid
+        self.status = status
+
 
     def __str__(self) -> str:
-        return self.bvid
+        return "\t".join([self.bvid, self.status])
 
     async def down(self):
         await _down(
@@ -19,12 +33,25 @@ class BiliVideo:
             from_browser=None,
             min_free_space_gb=1,
             skip_to=0,
+            disable_version_check=True,
         )
 
-    async def up(self):
-        upload_bvid(
-            self.bvid,
-            update_existing=False,
-            collection="default",
-            delete_after_upload=False,
-        )
+    async def up(self) -> int:
+        import subprocess as sp
+        from asyncio import subprocess
+        from shlex import quote
+
+        cmd = ["biliarchiver", "up" ,"-i", quote(self.bvid), "-d"]
+
+        process: Optional[subprocess.Process] = None
+        try:
+            process = await subprocess.create_subprocess_exec(*cmd)
+            retcode = await process.wait()
+        except (KeyboardInterrupt, SystemExit, Exception):
+            if process:
+                process.terminate()
+                await process.wait()
+                print("upload terminated")
+            return -1
+        else:
+            return retcode

@@ -16,15 +16,13 @@ browser-cookie3 = "^0.19.1"
 click = "^8.1.6"
 click-option-group = "^0.5.6"
 
-[tool.poetry.group.api.dependencies]
-fastapi = "^0.101.1"
-uvicorn = {extras = ["standard"], version = "^0.23.2"}
-
 [tool.poetry.scripts]
 biliarchiver = "biliarchiver.cli_tools.biliarchiver:biliarchiver"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.0.284"
+fastapi = "^0.104.1"
+uvicorn = {extras = ["standard"], version = "^0.23.2"}
 
 [build-system]
 requires = ["poetry-core"]

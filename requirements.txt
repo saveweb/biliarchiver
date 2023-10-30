@@ -5,3 +5,7 @@ httpx
 requests
 internetarchive
 browser-cookie3
+
+# optional
+fastapi
+uvicorn[standard]

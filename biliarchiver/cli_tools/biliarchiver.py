@@ -79,7 +79,21 @@ def auth():
     click.echo(click.style("Internet archive", bg="yellow"))
     click.echo(_("前往 https://archive.org/account/s3.php 获取 Access Key 和 Secret Key。"))
     click.echo(_("""将它们放在 `config.json` 指定的文件（默认为 `~/.bili_ia_keys.txt`）中，两者由换行符分隔。"""))
-    
+
+
+@biliarchiver.command(help=click.style(_("运行 API"), fg="cyan"))
+def api():
+    try:
+        import fastapi
+        import uvicorn
+    except ImportError:
+        print("Please install fastapi and uvicorn first.")
+        print('pip install "uvicorn[standard]" fastapi')
+        return
+
+    from biliarchiver.rest_api.main import app
+
+    uvicorn.run(app)
 
 
 if __name__ == "__main__":

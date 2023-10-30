@@ -7,3 +7,6 @@ videos/
 .vscode/settings.json
 bilibili_archive_dir/
 dist/
+
+.ia_keys.txt
+.cookies.txt

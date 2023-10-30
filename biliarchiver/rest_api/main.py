@@ -45,7 +45,7 @@ class BiliQueue(Queue):
         await self.put(ori_video)
 
 pending_queue = BiliQueue()
-other_queue = BiliQueue()
+other_queue = BiliQueue(maxsize=250)
 
 app = FastAPI(lifespan=lifespan)
 

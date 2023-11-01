@@ -18,12 +18,17 @@ from biliarchiver.version import BILI_ARCHIVER_VERSION
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    asyncio.create_task(scheduler())
+    global pending_queue, other_queue
+    pending_queue = BiliQueue()
+    other_queue = BiliQueue(maxsize=250)
     print("Loading queue...")
     load_queue()
+    print("Queue loaded")
+    asyncio.create_task(scheduler())
     yield
     print("Shutting down...")
     save_queue()
+    print("Queue saved")
 
 
 class BiliQueue(Queue):
@@ -44,8 +49,8 @@ class BiliQueue(Queue):
         ori_video.status = status
         await self.put(ori_video)
 
-pending_queue = BiliQueue()
-other_queue = BiliQueue(maxsize=250)
+pending_queue: BiliQueue = None # type: ignore
+other_queue: BiliQueue = None # type: ignore
 
 app = FastAPI(lifespan=lifespan)
 
@@ -109,7 +114,8 @@ async def scheduler():
         downloaded = False
         for _ in range(2):
             try:
-                await video.down()
+                if retcode := await video.down():
+                    raise Exception(f"Download failed with retcode {retcode}")
                 downloaded = True
                 break
             except Exception as e:

@@ -1,3 +1,4 @@
+import asyncio
 from enum import Enum
 import time
 from typing import Optional
@@ -27,17 +28,25 @@ class BiliVideo:
         return "\t".join([self.bvid, self.status])
 
     async def down(self):
-        await _down(
-            bvids=self.bvid,
-            skip_ia_check=True,
-            from_browser=None,
-            min_free_space_gb=1,
-            skip_to=0,
-            disable_version_check=True,
-        )
+        from asyncio import subprocess
+        from shlex import quote
+
+        cmd = ["biliarchiver", "down" ,"-i", quote(self.bvid), "-s", "--disable-version-check"]
+
+        process: Optional[subprocess.Process] = None
+        try:
+            process = await asyncio.create_subprocess_exec(*cmd)
+            retcode = await process.wait()
+        except (KeyboardInterrupt, SystemExit, Exception):
+            if process:
+                process.terminate()
+                await process.wait()
+                print("download terminated")
+            return -1
+        else:
+            return retcode
 
     async def up(self) -> int:
-        import subprocess as sp
         from asyncio import subprocess
         from shlex import quote
 

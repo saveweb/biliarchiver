@@ -80,8 +80,6 @@ async def _down(
         _("pypi version check disabled")
     )
 
-    loop = asyncio.get_event_loop()
-
     d = DownloaderBilibili(
         hierarchy=True,
         sess_data=None,  # sess_data 将在后面装载 cookies 时装载 # type: ignore
@@ -118,6 +116,8 @@ async def _down(
             if task.done():
                 _task_exception = task.exception()
                 if isinstance(_task_exception, BaseException):
+                    import traceback
+                    traceback.print_exc()
                     print(f"任务 {task} 出错，即将异常退出...")
                     for task in tasks:
                         task.cancel()
@@ -157,7 +157,7 @@ async def _down(
 
         print(f"=== {bvid} ({index+1}/{len(bvids_list)}) ===")
 
-        task = loop.create_task(
+        task = asyncio.create_task(
             archive_bvid(d, bvid, logined=logined, semaphore=sem),
             name=f"archive_bvid({bvid})",
         )

@@ -2,6 +2,7 @@ import asyncio
 import os
 from pathlib import Path
 import re
+import traceback
 
 import aiofiles
 import httpx
@@ -19,6 +20,21 @@ from biliarchiver.config import BILIBILI_IDENTIFIER_PERFIX
 from biliarchiver.config import config
 from biliarchiver.utils.identifier import human_readable_upper_part_map
 from biliarchiver.i18n import _
+
+# moneky patch
+@staticmethod
+def _dm2ass_factory(width: int, height: int):
+    import functools
+    from danmakuC.bilibili import proto2ass
+    async def dm2ass(protobuf_bytes: bytes) -> bytes:
+        loop = asyncio.get_event_loop()
+        f = functools.partial(proto2ass, protobuf_bytes, width, height, font_size=width / 40, ) # type: ignore
+        print("using none")
+        content = await loop.run_in_executor(None, f) # use default executor (None) instead of bilix._process.SingletonPPE
+        return content.encode('utf-8')
+
+    return dm2ass
+DownloaderBilibili._dm2ass_factory = _dm2ass_factory
 
 
 @raise_api_error
@@ -246,6 +262,8 @@ async def archive_bvid(
                     print(_("出错，其他任务完成后将抛出异常..."))
                     for task in tasks:
                         task.cancel()
+                    await asyncio.sleep(3)
+                    traceback.print_exception(result)
                     raise result
 
             if codec.startswith("hev") and not os.path.exists(
@@ -279,7 +297,7 @@ async def archive_bvid(
                     image=True,
                     subtitle=True,
                 )
-                await asyncio.gather(cor4)
+                await cor4
 
             assert os.path.exists(
                 video_basepath / f"{file_basename}.mp4"

@@ -82,30 +82,15 @@ def auth():
 
 
 @biliarchiver.command(help=click.style(_("运行 API"), fg="cyan"))
-@click.option(
-    "--host",
-    type=str,
-    default="127.0.0.1",
-    show_default=True,
-)
-@click.option(
-    "--port",
-    type=int,
-    default=8000,
-    show_default=True,
-)
-def api(**kwargs):
+def api():
     try:
         import fastapi
-        import uvicorn
     except ImportError:
-        print("Please install fastapi and uvicorn first.")
-        print('pip install "uvicorn[standard]" fastapi')
-        return
-
-    from biliarchiver.rest_api.main import app
-
-    uvicorn.run(app, **kwargs)
+        print("Please fastapi first")
+        print('pip install fastapi')
+    print("------------------------")
+    print("Then, install any ASGI server you like and to run the app manually: (<https://fastapi.tiangolo.com/deployment/manually/>)")
+    print('biliarchiver.rest_api.main:app')
 
 
 if __name__ == "__main__":

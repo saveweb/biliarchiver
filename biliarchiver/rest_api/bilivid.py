@@ -3,10 +3,6 @@ from enum import Enum
 import time
 from typing import Optional
 
-from biliarchiver.cli_tools.bili_archive_bvids import _down
-from biliarchiver.cli_tools.up_command import DEFAULT_COLLECTION
-
-
 class VideoStatus(str, Enum):
     pending = "pending"
     downloading = "downloading"
@@ -37,14 +33,20 @@ class BiliVideo:
         try:
             process = await asyncio.create_subprocess_exec(*cmd)
             retcode = await process.wait()
-        except (KeyboardInterrupt, SystemExit, Exception):
+            process = None
+        except (KeyboardInterrupt, SystemExit, Exception) as e:
             if process:
                 process.terminate()
                 await process.wait()
-                print("download terminated")
+                print("download terminated:", e)
             return -1
         else:
             return retcode
+        finally:
+            if process:
+                process.terminate()
+                await process.wait()
+                print("download terminated: (finally)")
 
     async def up(self) -> int:
         from asyncio import subprocess
@@ -56,11 +58,17 @@ class BiliVideo:
         try:
             process = await subprocess.create_subprocess_exec(*cmd)
             retcode = await process.wait()
-        except (KeyboardInterrupt, SystemExit, Exception):
+            process = None
+        except (KeyboardInterrupt, SystemExit, Exception) as e:
             if process:
                 process.terminate()
                 await process.wait()
-                print("upload terminated")
+                print("upload terminated", e)
             return -1
         else:
             return retcode
+        finally:
+            if process:
+                process.terminate()
+                await process.wait()
+                print("upload terminated: (finally)")

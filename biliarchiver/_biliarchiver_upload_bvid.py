@@ -63,12 +63,8 @@ def _upload_bvid(
 
     # identifier format: BiliBili-{bvid}_p{pid}-{upper_part}
     upper_part = human_readable_upper_part_map(string=bvid, backward=True)
-    OLD_videos_basepath: Path = config.storage_home_dir / "videos" / bvid
     videos_basepath: Path = config.storage_home_dir / "videos" / f"{bvid}-{upper_part}"
 
-    if os.path.exists(OLD_videos_basepath):
-        print(f"检测到旧的视频主目录 {OLD_videos_basepath}，将其重命名为 {videos_basepath}...")
-        os.rename(OLD_videos_basepath, videos_basepath)
 
     if not os.path.exists(videos_basepath):
         raise VideosBasePathNotFoundError(f"{videos_basepath}")

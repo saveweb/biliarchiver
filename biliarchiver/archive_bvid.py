@@ -133,18 +133,9 @@ async def archive_bvid(
         )  # 开个大会员呗，能下 4k 呢。
         assert logined is True, _("请先检查 SESSDATA 是否过期，再将 logined 设置为 True")  # 防误操作
         upper_part = human_readable_upper_part_map(string=bvid, backward=True)
-        OLD_videos_basepath: Path = config.storage_home_dir / "videos" / bvid
         videos_basepath: Path = (
             config.storage_home_dir / "videos" / f"{bvid}-{upper_part}"
         )
-
-        if os.path.exists(OLD_videos_basepath):
-            print(
-                _("检测到旧的视频目录 {}，将其重命名为 {}...").format(
-                    OLD_videos_basepath, videos_basepath
-                )
-            )
-            os.rename(OLD_videos_basepath, videos_basepath)
 
         if os.path.exists(videos_basepath / "_all_downloaded.mark"):
             # print(f"{bvid} 所有分p都已下载过了")

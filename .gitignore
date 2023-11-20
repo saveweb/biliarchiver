@@ -1,12 +1,13 @@
-bvids/
-biliarchiver.home
-config.json
-.venv/
 __pycache__/
-videos/
+.venv/
+.vscode/
 .vscode/settings.json
+biliarchiver.home
 bilibili_archive_dir/
+bvids/
+config.json
 dist/
+videos/
 
-.ia_keys.txt
 .cookies.txt
+.ia_keys.txt

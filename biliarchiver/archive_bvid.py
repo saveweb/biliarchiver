@@ -245,7 +245,11 @@ async def archive_bvid(
             cor3 = download_bilibili_video_detail(
                 d.client, bvid, f"{video_extrapath}/{file_basename}.info.json"
             )
-            coroutines = [cor1, cor2, cor3]
+            cor4 = download_bilibili_video_replies(
+                d.client, video_info.bvid, video_info.aid,
+                f"{video_extrapath}/{file_basename}.replies.json"
+            )
+            coroutines = [cor1, cor2, cor3, cor4]
             tasks = [asyncio.create_task(cor) for cor in coroutines]
             results = await asyncio.gather(*tasks, return_exceptions=True)
             for result, cor in zip(results, coroutines):
@@ -311,8 +315,8 @@ async def archive_bvid(
             await f.write("")
 
 
-async def download_bilibili_video_detail(client, bvid, filename):
-    if os.path.exists(filename):
+async def download_bilibili_video_detail(client, bvid, filepath):
+    if os.path.exists(filepath):
         print(_("{} 的视频详情已存在").format(bvid))
         return
     # url = 'https://api.bilibili.com/x/web-interface/view'
@@ -323,7 +327,32 @@ async def download_bilibili_video_detail(client, bvid, filename):
     r_json = r.json()
     assert r_json["code"] == 0, _("{} 的视频详情获取失败").format(bvid)
 
-    async with aiofiles.open(filename, "w", encoding="utf-8") as f:
+    async with aiofiles.open(filepath, "w", encoding="utf-8") as f:
         # f.write(json.dumps(r.json(), indent=4, ensure_ascii=False))
         await f.write(r.text)
     print(_("{} 的视频详情已保存").format(bvid))
+
+
+async def download_bilibili_video_replies(client, bvid, aid, filepath):
+    """ 仅下载第一页，20 个热评 """
+    if os.path.exists(filepath):
+        print(_("{} 的视频回复已存在").format(bvid))
+        return
+
+    url = "https://api.bilibili.com/x/v2/reply"
+    params = {
+        "type": 1,
+        "oid": aid,
+        "sort": 1, # 0：按时间, 1：按点赞数, 2：按回复数
+        "ps": 20,
+        "pn": 1
+    }
+    r = await req_retry(client, url, params=params, follow_redirects=True)
+    r.raise_for_status()
+    r_json = r.json()
+    assert r_json["code"] == 0, _("{} 的视频回复获取失败").format(bvid)
+
+    async with aiofiles.open(filepath, "w", encoding="utf-8") as f:
+        # f.write(json.dumps(r.json(), indent=4, ensure_ascii=False))
+        await f.write(r.text)
+    print(_("{} 的视频评论已保存").format(bvid))

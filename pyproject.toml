@@ -9,7 +9,7 @@ include = ["biliarchiver/locales/**/*.mo"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-bilix = "0.18.4"
+bilix = "0.18.5"
 internetarchive = "^3.5.0"
 danmakuc = "^0.3.6"
 browser-cookie3 = "^0.19.1"

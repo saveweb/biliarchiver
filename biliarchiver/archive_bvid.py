@@ -76,49 +76,6 @@ async def new_get_video_info(client: httpx.AsyncClient, url: str):
 api.get_video_info = new_get_video_info
 
 
-async def _new_attach_dash_and_durl_from_api(
-    client: httpx.AsyncClient, video_info: api.VideoInfo
-):
-    params = {
-        "cid": video_info.cid,
-        "bvid": video_info.bvid,
-        "qn": 120,  # 如无 dash 资源（少数老视频），fallback 到 4K 超清 durl
-        "fnval": 4048,  # 如 dash 资源可用，请求 dash 格式的全部可用流
-        "fourk": 1,  # 请求 4k 资源
-        "fnver": 0,
-        "platform": "pc",
-        "otype": "json",
-    }
-    dash_response = await req_retry(
-        client,
-        "https://api.bilibili.com/x/player/playurl",
-        params=params,
-        follow_redirects=True,
-    )
-    dash_json = json.loads(dash_response.text)
-    if dash_json["code"] != 0:
-        raise APIResourceError(dash_json["message"], video_info.bvid)
-    dash, other = None, []
-    if "dash" in dash_json["data"]:
-        dash = api.Dash.from_dict(dash_json)
-    if "durl" in dash_json["data"]:
-        for i in dash_json["data"]["durl"]:
-            suffix = re.search(r"\.([a-zA-Z0-9]+)\?", i["url"]).group(1)  # type: ignore
-            other.append(
-                api.Media(
-                    base_url=i["url"],
-                    backup_url=i["backup_url"],
-                    size=i["size"],
-                    suffix=suffix,
-                )
-            )
-    video_info.dash, video_info.other = dash, other
-
-
-# NOTE: 临时修复，等 bilix 发布了 https://github.com/HFrost0/bilix/pull/174 的版本后，删掉这个 patch
-api._attach_dash_and_durl_from_api = _new_attach_dash_and_durl_from_api
-
-
 async def archive_bvid(
     d: DownloaderBilibili,
     bvid: str,

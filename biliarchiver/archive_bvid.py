@@ -245,6 +245,7 @@ async def archive_bvid(
             cor3 = download_bilibili_video_detail(
                 d.client, bvid, f"{video_extrapath}/{file_basename}.info.json"
             )
+            # 下载视频评论。有些视频关闭了评论会获取不到。
             cor4 = download_bilibili_video_replies(
                 d.client, video_info.bvid, video_info.aid,
                 f"{video_extrapath}/{file_basename}.replies.json"
@@ -334,6 +335,16 @@ async def download_bilibili_video_detail(client, bvid, filepath):
 
 
 async def download_bilibili_video_replies(client, bvid, aid, filepath):
+    for i in range(2):
+        try:
+            await _download_bilibili_video_replies(client, bvid, aid, filepath)
+            return True
+        except Exception as e:
+            print(e, "retrying...")
+    
+    print(_("{} 的视频回复获取失败").format(bvid))
+
+async def _download_bilibili_video_replies(client, bvid, aid, filepath):
     """ 仅下载第一页，20 个热评 """
     if os.path.exists(filepath):
         print(_("{} 的视频回复已存在").format(bvid))

@@ -210,6 +210,10 @@
 
     async function archiveVideo() {
         var bvNumber = getBVNumber();
+        if (BASEURL === "") {
+            alert("请先设置存档服务器地址");
+            return;
+        }
         var url = `${BASEURL}/archive/${bvNumber}`;
         console.log("Archive URL:", url);
         showPopup("正在发送存档请求", "#f3d9a6");

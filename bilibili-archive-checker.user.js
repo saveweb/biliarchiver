@@ -13,6 +13,7 @@
     'use strict';
 
     const initialState = unsafeWindow.__INITIAL_STATE__;
+    const BASEURL = ""; // 运行API的地址，不包括 /archive/ 部分
 
     function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
@@ -139,9 +140,20 @@
             copyBV();
         });
 
+        var archiveButton = document.createElement("button");
+        archiveButton.textContent = "Archive Video";
+        archiveButton.style.marginTop = "10px";
+        archiveButton.style.padding = "5px";
+        archiveButton.style.margin = "auto";
+        archiveButton.style.display = "block"; // initially hidden
+        archiveButton.addEventListener("click", function () {
+            archiveVideo();
+        });
+
         popup.appendChild(text);
         popup.appendChild(status);
         popup.appendChild(copyButton);
+        popup.appendChild(archiveButton);
 
         document.body.appendChild(popup);
     }
@@ -194,6 +206,24 @@
         else {
             showPopup("无法获取 BV 号", "#f3d9a6");
         }
+    }
+
+    async function archiveVideo() {
+        var bvNumber = getBVNumber();
+        var url = `${BASEURL}/archive/${bvNumber}`;
+        console.log("Archive URL:", url);
+        showPopup("正在发送存档请求", "#f3d9a6");
+        GM_xmlhttpRequest({
+            method: "PUT",
+            url: url,
+            onload: function (response) {
+                if (response.status === 200) {
+                    showPopup("存档请求已发送", "#bdf8bd");
+                } else {
+                    showPopup("存档请求失败", "#fac7c7");
+                }
+            }
+        });
     }
 
 

@@ -80,6 +80,12 @@ Build English locale if necessary. Refer to the last section for details.
 poetry run biliarchiver --help
 ```
 
+Debug using another workspace:
+
+```sh
+poetry --directory /path/to/workspace run biliarchiver --help
+```
+
 ### Lint
 
 ```sh
@@ -90,7 +96,7 @@ poetry run ruff check .
 
 To generate and build locales, you need a GNU gettext compatible toolchain. You can install `mingw` and use `sh` to enter a bash shell on Windows.
 
-Generate `biliarchiver.pot`:
+Generate or update `biliarchiver.pot`:
 
 ```sh
 find biliarchiver/ -name '*.py' | xargs xgettext -d base -o biliarchiver/locales/biliarchiver.pot

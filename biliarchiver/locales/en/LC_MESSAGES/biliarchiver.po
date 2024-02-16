@@ -33,10 +33,6 @@ msgstr "sess_data cannot be empty"
 msgid "请先检查 SESSDATA 是否过期，再将 logined 设置为 True"
 msgstr "Please check if SESSDATA has expired first, then set logined to True"
 
-#: biliarchiver/archive_bvid.py:127
-msgid "检测到旧的视频目录 {}，将其重命名为 {}..."
-msgstr "Detected old video directory {}, renaming it to {}..."
-
 #: biliarchiver/archive_bvid.py:135
 msgid "{} 所有分p都已下载过了"
 msgstr "All parts of {} have already been downloaded"
@@ -99,6 +95,18 @@ msgstr "Failed to obtain video details of {}"
 msgid "{} 的视频详情已保存"
 msgstr "Video details of {} have been saved"
 
+#: biliarchiver/archive_bvid.py:302 biliarchiver/archive_bvid.py:321
+msgid "{} 的视频回复获取失败"
+msgstr ""
+
+#: biliarchiver/archive_bvid.py:307
+msgid "{} 的视频回复已存在"
+msgstr ""
+
+#: biliarchiver/archive_bvid.py:326
+msgid "{} 的视频评论已保存"
+msgstr ""
+
 #: biliarchiver/cli_tools/biliarchiver.py:48
 msgid "初始化所需目录"
 msgstr "Initialize required directories"
@@ -119,9 +127,25 @@ msgstr "Visit https://archive.org/account/s3.php to obtain the Access Key and Se
 msgid "将它们放在 `config.json` 指定的文件（默认为 `~/.bili_ia_keys.txt`）中，两者由换行符分隔。"
 msgstr "Place them in the file specified by `config.json` (default is `~/.bili_ia_keys.txt`), separated by a newline."
 
+#: biliarchiver/cli_tools/biliarchiver.py:84
+msgid "这只是一个提示信息，需要你手动操作。"
+msgstr "This is just a prompt message; you need to operate manually."
+
+#: biliarchiver/cli_tools/biliarchiver.py:87
+msgid "查看目录下视频信息"
+msgstr "List all videos in the current working directory"
+
+#: biliarchiver/cli_tools/biliarchiver.py:104
+msgid "运行 API"
+msgstr "Start API server"
+
 #: biliarchiver/cli_tools/bili_archive_bvids.py:72
 msgid "ffmpeg 未安装"
 msgstr "ffmpeg is not installed"
+
+#: biliarchiver/cli_tools/bili_archive_bvids.py:80
+msgid "pypi version check disabled"
+msgstr ""
 
 #: biliarchiver/cli_tools/bili_archive_bvids.py:126
 msgid "剩余空间不足 {} GiB"
@@ -228,6 +252,10 @@ msgstr "Minimum free space (GB), exit if exceeded"
 msgid "跳过文件开头 bvid 的个数"
 msgstr "Skip the number of bvids at the beginning of the file"
 
+#: biliarchiver/cli_tools/down_command.py:44
+msgid "禁用 biliarchiver 的 pypi 版本检查"
+msgstr ""
+
 #: biliarchiver/cli_tools/get_command.py:26
 #, python-brace-format
 msgid "正在获取 {sid} 的视频列表……"
@@ -275,13 +303,13 @@ msgstr ""
 "(If the latest video is by a non-primary author of a collaborative video, the UP name may be misidentified, but it "
 "doesn't affect fetching the bvid list)"
 
-#: biliarchiver/cli_tools/get_command.py:116
-msgid "获取第 {} 页 (10 秒...)"
-msgid_plural "获取第 {} 页 (10 秒...)"
-msgstr[0] "Fetching page {} (10 seconds...)"
-msgstr[1] "Fetching pages {} (10 seconds...)"
+#: biliarchiver/cli_tools/get_command.py:125
+msgid "获取第 {} 页"
+msgid_plural "获取第 {} 页"
+msgstr[0] ""
+msgstr[1] ""
 
-#: biliarchiver/cli_tools/get_command.py:123
+#: biliarchiver/cli_tools/get_command.py:132
 msgid "有重复的 bv_id"
 msgstr ""
 
@@ -399,6 +427,9 @@ msgstr "Update an existing item"
 msgid "欲上传至的 collection. (非默认值仅限 collection 管理员使用)"
 msgstr "Collection to upload to. (Non-default values are for collection administrators only)"
 
+msgid "上传后删除视频文件"
+msgstr "Delete video files after upload"
+
 #: biliarchiver/cli_tools/utils.py:19
 msgid "bvid {} 不合法"
 msgstr "bvid {} is invalid"
@@ -452,9 +483,6 @@ msgstr "{} is not the correct local_identifier that starts with {}"
 #: biliarchiver/_biliarchiver_upload_bvid.py:80
 msgid "没有下载完成"
 msgstr "Download not finished"
-
-msgid "上传后删除视频文件"
-msgstr "Delete video files after upload"
 
 msgid "已删除视频文件夹 {}"
 msgstr "Deleted video folder {}"

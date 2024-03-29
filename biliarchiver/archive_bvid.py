@@ -144,13 +144,13 @@ async def archive_bvid(
             os.makedirs(video_extrapath, exist_ok=True)
 
             old_p_name = video_info.pages[video_info.p].p_name
-            old_h1_title = video_info.h1_title
+            old_title = video_info.title
 
-            # 在 d.hierarchy is True 且 h1_title 超长的情况下， bilix 会将 p_name 作为文件名
+            # 在 d.hierarchy is True 且 title 超长的情况下， bilix 会将 p_name 作为文件名
             video_info.pages[
                 video_info.p
             ].p_name = file_basename  # 所以这里覆盖 p_name 为 file_basename
-            video_info.h1_title = "iiiiii" * 50  # 然后假装超长标题
+            video_info.title = "iiiiii" * 50  # 然后假装超长标题
             # 这样 bilix 保存的文件名就是我们想要的了（谁叫 bilix 不支持自定义文件名呢）
             # NOTE: p_name 似乎也不宜过长，否则还是会被 bilix 截断。
             # 但是我们以 {bvid}_p{pid} 作为文件名，这个长度是没问题的。
@@ -258,7 +258,7 @@ async def archive_bvid(
 
             # 还原为了自定义文件名而做的覆盖
             video_info.pages[video_info.p].p_name = old_p_name
-            video_info.h1_title = old_h1_title
+            video_info.title = old_title
 
             # 单 p 下好了
             async with aiofiles.open(

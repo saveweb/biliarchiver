@@ -109,7 +109,7 @@ async def by_up_videos(url_or_mid: str) -> Path:
     bv_ids = []
     pn = 1
     print(ngettext("获取第 {} 页...", "获取第 {} 页...", pn).format(pn))
-    up_name, total_size, bv_ids_page = await api.get_up_info(
+    up_name, total_size, bv_ids_page = await api.get_up_video_info(
         client, mid, pn, ps, order, keyword
     )
     bv_ids += bv_ids_page
@@ -124,7 +124,7 @@ async def by_up_videos(url_or_mid: str) -> Path:
         pn += 1
         print(ngettext("获取第 {} 页", "获取第 {} 页", pn).format(pn))
         await asyncio.sleep(delay)
-        _x, _y, bv_ids_page = await api.get_up_info(client, mid, pn, ps, order, keyword)
+        _x, _y, bv_ids_page = await api.get_up_video_info(client, mid, pn, ps, order, keyword)
         bv_ids += bv_ids_page
 
     print(mid, up_name, total_size)

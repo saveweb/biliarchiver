@@ -3,9 +3,11 @@ from asyncio import Queue
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import List
+import subprocess
+import re
 
 try:
-    from fastapi import FastAPI
+    from fastapi import FastAPI, HTTPException
 except ImportError:
     print("Please install fastapi")
     print("`pip install fastapi`")
@@ -101,6 +103,71 @@ async def delete(vid: str):
             return {"success": True, "vid": vid, "result": "removed", "queue_index": queue_list.index(v)}
 
     return {"success": False, "vid": vid, "status": "not_found"}
+
+@app.get("/archive/user/{userid}")
+@app.post("/archive/user/{userid}")
+async def add_from_user(userid: str):
+    return await add_from_source("user", userid)
+
+@app.get("/archive/favlist/{favlistid}")
+@app.post("/archive/favlist/{favlistid}")
+async def add_from_favlist(favlistid: str):
+    return await add_from_source("favlist", favlistid)
+
+@app.get("/archive/collection/{sid}")
+@app.post("/archive/collection/{sid}")
+async def add_from_collection(sid: str):
+    return await add_from_source("collection", sid)
+
+
+async def add_from_source(source_type: str, source_id: str):
+    cmd_mapping = {
+        "user": ["biliarchiver", "get", "--up-videos", source_id],
+        "favlist": ["biliarchiver", "get", "--favlist", source_id],
+        "collection": ["biliarchiver", "get", "--series", source_id],
+    }
+
+    print(f"Adding {source_type} {source_id} to queue...")
+
+    if source_type not in cmd_mapping:
+        raise HTTPException(status_code=400, detail="Invalid source type")
+
+    cmd = cmd_mapping[source_type]
+    print(f"Running command: {cmd}")
+
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        print(result.stdout)
+        output = result.stdout
+        txt_path = parse_txt_path_from_output(output)
+        print(f"Txt file path: {txt_path}")
+        bvids = read_bvids_from_txt(txt_path)
+        print(f"bvids: {bvids}")
+        for bvid in bvids:
+            video = BiliVideo(bvid, status=VideoStatus.pending)
+            await pending_queue.put(video)
+        return {"success": True, "source_type": source_type, "source_id": source_id, "bvids": bvids}
+    except subprocess.CalledProcessError as e:
+        raise HTTPException(status_code=500, detail=f"Command failed: {e.stderr}")
+
+
+def parse_txt_path_from_output(output: str) -> str:
+    # Use a regular expression that can match both Windows and Linux file paths
+    matches = re.findall(r"\s(([A-Za-z]:)?[\\/].+\.txt)", output)
+    if not matches:
+        raise HTTPException(status_code=500, detail="Failed to parse txt file path from output")
+    # Select the last match
+    return matches[-1][0].strip()
+
+def read_bvids_from_txt(txt_path: str) -> List[str]:
+    try:
+        with open(txt_path, "r") as f:
+            bvids = [line.strip() for line in f if line.strip().startswith("BV")]
+        return bvids
+    except FileNotFoundError:
+        raise HTTPException(status_code=500, detail="Txt file not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading txt file: {str(e)}")
 
 
 async def scheduler():

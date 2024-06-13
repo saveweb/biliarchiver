@@ -107,7 +107,7 @@ async def scheduler():
     while True:
         print("Getting a video URL... If no video URL is printed, the queue is empty.")
         video = await pending_queue.get()
-        print(f"Start donwloading {video}")
+        print(f"Start downloading {video}")
 
         video.status = VideoStatus.downloading
         await other_queue.put(video)

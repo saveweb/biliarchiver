@@ -26,4 +26,5 @@ def read_bvids(bvids: str) -> list[str]:
 def read_bvids_from_txt(txt_path: Union[Path,str]) -> List[str]:
     with open(txt_path, "r", encoding="utf-8") as f:
         bvids = [line.strip() for line in f if line.strip().startswith("BV")]
+    txt_path.unlink(missing_ok=True)
     return bvids

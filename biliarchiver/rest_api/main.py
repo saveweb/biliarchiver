@@ -106,7 +106,7 @@ async def delete(vid: str):
 
     return {"success": False, "vid": vid, "status": "not_found"}
 
-async def source_action(fun, source_type: str, source_id: str, TRUNCATE=20):
+async def source_action(fun, source_id: str, TRUNCATE=20):
     try:
         txt_path = await fun(source_id, truncate=TRUNCATE)
     except Exception as e:
@@ -139,9 +139,8 @@ async def perform_source_action_from_req(source_type: str, source_id: str):
     fun = fun_mapping[source_type]
 
     assert callable(fun)
-    assert isinstance(source_id, str)
 
-    return await source_action(fun, source_type, source_id, TRUNCATE=int(9e99))
+    return await source_action(fun, source_id, TRUNCATE=int(9e99))
 
 async def video_scheduler():
     while True:

@@ -15,7 +15,7 @@ except ImportError:
     raise
 
 
-from biliarchiver.cli_tools.get_command import by_favlist, by_series, by_up_videos
+from biliarchiver.cli_tools.get_command import by_favlist, by_series, by_up_videos, by_season
 from biliarchiver.rest_api.bilivid import BiliVideo, VideoStatus
 from biliarchiver.version import BILI_ARCHIVER_VERSION
 
@@ -133,6 +133,7 @@ async def perform_source_action_from_req(source_type: str, source_id: str):
         "up_videos": by_up_videos,
         "favlist": by_favlist,
         "series": by_series,
+        "season": by_season,
     }
 
     if source_type not in fun_mapping:

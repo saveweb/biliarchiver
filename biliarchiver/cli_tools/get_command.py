@@ -27,7 +27,38 @@ async def by_series(url_or_sid: str, truncate: int = int(1e10)) -> Path:
     client = AsyncClient(**api.dft_client_settings)
     print(_("正在获取 {sid} 的视频列表……").format(sid=sid))
     col_name, up_name, bvids = await api.get_list_info(client, sid)
-    filepath = f"bvids/by-sapce_fav_season/sid-{sid}-{int(time.time())}.txt"
+    filepath = f"bvids/by-sapce_fav_season/seriesid-{sid}-{int(time.time())}.txt"
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    abs_filepath = os.path.abspath(filepath)
+    with open(abs_filepath, "w", encoding="utf-8") as f:
+        for bv_id in bvids:
+            f.write(f"{bv_id}" + "\n")
+    # print(f"已获取 {col_name}（{up_name}）的 {len(bvids)} 个视频")
+    count = len(bvids)
+    print(
+        ngettext(
+            "已获取 {}（{}）的一个视频",
+            "已获取 {}（{}）的 {count} 个视频",
+            count,
+        ).format(col_name, up_name, count=count)
+    )
+    print(_("存储到 {}").format(abs_filepath))
+    return Path(abs_filepath)
+
+
+async def by_season(url_or_sid: str, truncate: int = int(1e10)) -> Path:
+    """
+    truncate: do noting
+    """
+    sid = sid = (
+        re.search(r"sid=(\d+)", url_or_sid).groups()[0]
+        if url_or_sid.startswith("http")
+        else url_or_sid
+    )  # type: ignore
+    client = AsyncClient(**api.dft_client_settings)
+    print(_("正在获取 {sid} 的视频合集……").format(sid=sid))
+    col_name, up_name, bvids = await api.get_collect_info(client, sid)
+    filepath = f"bvids/by-sapce_fav_season/seasonid-{sid}-{int(time.time())}.txt"
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     abs_filepath = os.path.abspath(filepath)
     with open(abs_filepath, "w", encoding="utf-8") as f:

@@ -2,7 +2,7 @@ import asyncio
 from asyncio import Queue
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 import re
 
 try:
@@ -103,22 +103,8 @@ async def delete(vid: str):
 
     return {"success": False, "vid": vid, "status": "not_found"}
 
-@app.get("/archive/user/{userid}")
-@app.post("/archive/user/{userid}")
-async def add_from_user(userid: int):
-    return await add_from_source("user", userid)
-
-@app.get("/archive/favlist/{favlistid}")
-@app.post("/archive/favlist/{favlistid}")
-async def add_from_favlist(favlistid: int):
-    return await add_from_source("favlist", favlistid)
-
-@app.get("/archive/collection/{sid}")
-@app.post("/archive/collection/{sid}")
-async def add_from_collection(sid: int):
-    return await add_from_source("collection", sid)
-
-
+@app.get("/archive/{source_type}/{source_id}")
+@app.post("/archive/{source_type}/{source_id}")
 async def add_from_source(source_type: str, source_id: int):
     from asyncio import subprocess
     # make sure source_id is valid integer
@@ -142,21 +128,44 @@ async def add_from_source(source_type: str, source_id: int):
 
     cmd = cmd_mapping[source_type]
 
+    process: Optional[subprocess.Process] = None
+    txt_path = None
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        print(result.stdout)
-        output = result.stdout
+        process = await subprocess.create_subprocess_exec(*cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = await process.communicate()
+        retcode = await process.wait()
+        process = None
+    except (KeyboardInterrupt, SystemExit, Exception) as e:
+        if process:
+            process.terminate()
+            await process.wait()
+            print("Adding terminated:", e)
+        raise HTTPException(status_code=500, detail="Command failed")
+    else:
+        if retcode != 0:
+            e = stderr.decode()
+            print(e)
+            if "APIParseError" in e:
+                raise HTTPException(status_code=500, detail="Bilibili Login required. Details: " + e)
+            raise HTTPException(status_code=500, detail=f"Command failed: {stderr}")
+        output = stdout.decode()
         txt_path = parse_txt_path_from_output(output)
-        print(f"Txt file path: {txt_path}")
         bvids = read_bvids_from_txt(txt_path)
-        print(f"bvids: {bvids}")
         for bvid in bvids:
             video = BiliVideo(bvid, status=VideoStatus.pending)
             await pending_queue.put(video)
         return {"success": True, "source_type": source_type, "source_id": source_id, "bvids": bvids}
-    except subprocess.CalledProcessError as e:
-        raise HTTPException(status_code=500, detail=f"Command failed: {e.stderr}")
-
+    finally:
+        if process:
+            process.terminate()
+            await process.wait()
+            print("Adding terminated: (finally)")
+        if txt_path:
+            try:
+                import os
+                os.remove(txt_path)
+            except FileNotFoundError:
+                pass
 
 def parse_txt_path_from_output(output: str) -> str:
     # Use a regular expression that can match both Windows and Linux file paths

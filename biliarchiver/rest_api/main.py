@@ -3,7 +3,6 @@ from asyncio import Queue
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import List
-import subprocess
 import re
 
 try:
@@ -121,6 +120,7 @@ async def add_from_collection(sid: int):
 
 
 async def add_from_source(source_type: str, source_id: int):
+    from asyncio import subprocess
     # make sure source_id is valid integer
     try: 
         source_id = int(source_id)

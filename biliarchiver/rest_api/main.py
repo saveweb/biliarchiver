@@ -140,7 +140,7 @@ async def perform_source_action_from_req(source_type: str, source_id: str):
 
     assert callable(fun)
 
-    return await source_action(fun, source_id, TRUNCATE=int(9e99))
+    return await source_action(fun, source_id, TRUNCATE=300)
 
 async def video_scheduler():
     while True:

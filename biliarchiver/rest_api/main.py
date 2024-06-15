@@ -117,9 +117,9 @@ async def source_action(fun, source_type: str, source_id: str, TRUNCATE=20):
 
     bvids = read_bvids_from_txt(txt_path)
 
-    return {"source_type": source_type, "source_id": source_id, "bvids": bvids}
+    return {"success": True, "bvids": bvids}
 
-@app.post("/archive/{source_type}/{source_id}")
+@app.post("/get_bvids_by/{source_type}/{source_id}")
 async def perform_source_action_from_req(source_type: str, source_id: str):
     # make sure source_id is valid integer
     if not source_id.isdecimal():

@@ -15,7 +15,10 @@ from rich import print
 from biliarchiver.i18n import _, ngettext
 
 
-async def by_series(url_or_sid: str) -> Path:
+async def by_series(url_or_sid: str, truncate: int = int(1e10)) -> Path:
+    """
+    truncate: do noting
+    """
     sid = sid = (
         re.search(r"sid=(\d+)", url_or_sid).groups()[0]
         if url_or_sid.startswith("http")
@@ -78,7 +81,7 @@ def by_ranking(rid: int) -> Path:
     return Path(abs_filepath)
 
 
-async def by_up_videos(url_or_mid: str) -> Path:
+async def by_up_videos(url_or_mid: str, truncate: int = int(1e10)) -> Path:
     """频率高了会封"""
 
     if isinstance(url_or_mid, int):
@@ -126,6 +129,10 @@ async def by_up_videos(url_or_mid: str) -> Path:
         await asyncio.sleep(delay)
         _x, _y, bv_ids_page = await api.get_up_video_info(client, mid, pn, ps, order, keyword)
         bv_ids += bv_ids_page
+
+        if len(bv_ids) >= truncate:
+            print("truncate at", truncate)
+            break
 
     print(mid, up_name, total_size)
     await client.aclose()
@@ -212,7 +219,7 @@ def not_got_popular_series() -> list[int]:
     return series_not_got
 
 
-async def by_favlist(url_or_fid: str):
+async def by_favlist(url_or_fid: str, truncate: int = int(1e10)) -> Path:
     if url_or_fid.startswith("http"):
         fid = re.findall(r"fid=(\d+)", url_or_fid)[0]
     else:
@@ -239,6 +246,11 @@ async def by_favlist(url_or_fid: str):
             ),
             end="\r",
         )
+
+        if len(bvids) >= truncate:
+            print("truncate at", truncate)
+            break
+
         await asyncio.sleep(2)
         page_num += 1
     await client.aclose()
@@ -262,6 +274,8 @@ async def by_favlist(url_or_fid: str):
             abs_filepath, count=len(bvids)
         )
     )
+
+    return Path(abs_filepath)
 
 
 async def main(

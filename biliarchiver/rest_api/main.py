@@ -1,17 +1,21 @@
 import asyncio
-from asyncio import Queue
 from contextlib import asynccontextmanager
 from datetime import datetime
+import os
+from pathlib import Path
 from typing import List
 
+from biliarchiver.cli_tools.utils import read_bvids_from_txt
+
 try:
-    from fastapi import FastAPI
+    from fastapi import FastAPI, HTTPException
 except ImportError:
     print("Please install fastapi")
     print("`pip install fastapi`")
     raise
 
 
+from biliarchiver.cli_tools.get_command import by_favlist, by_series, by_up_videos
 from biliarchiver.rest_api.bilivid import BiliVideo, VideoStatus
 from biliarchiver.version import BILI_ARCHIVER_VERSION
 
@@ -19,19 +23,19 @@ from biliarchiver.version import BILI_ARCHIVER_VERSION
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global pending_queue, other_queue
-    pending_queue = BiliQueue()
-    other_queue = BiliQueue(maxsize=250)
+    pending_queue = BiliVideoQueue()
+    other_queue = BiliVideoQueue(maxsize=250)
     print("Loading queue...")
     load_queue()
     print("Queue loaded")
-    asyncio.create_task(scheduler())
+    _video_scheduler = asyncio.create_task(video_scheduler())
     yield
     print("Shutting down...")
     save_queue()
     print("Queue saved")
 
 
-class BiliQueue(Queue):
+class BiliVideoQueue(asyncio.Queue):
     def get_all(self) -> List[BiliVideo]:
         return list(self._queue) # type: ignore
     async def get(self) -> BiliVideo:
@@ -49,8 +53,8 @@ class BiliQueue(Queue):
         ori_video.status = status
         await self.put(ori_video)
 
-pending_queue: BiliQueue = None # type: ignore
-other_queue: BiliQueue = None # type: ignore
+pending_queue: BiliVideoQueue = None # type: ignore
+other_queue: BiliVideoQueue = None # type: ignore
 
 app = FastAPI(lifespan=lifespan)
 
@@ -102,8 +106,43 @@ async def delete(vid: str):
 
     return {"success": False, "vid": vid, "status": "not_found"}
 
+async def source_action(fun, source_id: str, TRUNCATE=20):
+    try:
+        txt_path = await fun(source_id, truncate=TRUNCATE)
+    except Exception as e:
+        print(f"Failed to call {fun}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to call {fun}")
+    if not isinstance(txt_path, Path):
+        raise HTTPException(status_code=500, detail="Failed to get path")
 
-async def scheduler():
+    bvids = read_bvids_from_txt(txt_path)
+
+    return {"success": True, "bvids": bvids}
+
+@app.post("/get_bvids_by/{source_type}/{source_id}")
+async def perform_source_action_from_req(source_type: str, source_id: str):
+    # make sure source_id is valid integer
+    if not source_id.isdecimal():
+        raise HTTPException(status_code=400, detail="Invalid source_id")
+
+    source_id = str(int(source_id))
+
+    fun_mapping = {
+        "up_videos": by_up_videos,
+        "favlist": by_favlist,
+        "series": by_series,
+    }
+
+    if source_type not in fun_mapping:
+        raise HTTPException(status_code=400, detail="Invalid source_type")
+
+    fun = fun_mapping[source_type]
+
+    assert callable(fun)
+
+    return await source_action(fun, source_id, TRUNCATE=int(9e99))
+
+async def video_scheduler():
     while True:
         print("Getting a video URL... If no video URL is printed, the queue is empty.")
         video = await pending_queue.get()

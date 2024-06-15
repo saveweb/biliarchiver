@@ -22,7 +22,7 @@ from biliarchiver.version import BILI_ARCHIVER_VERSION
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global pending_queue, other_queue, _source_action_cor_queue
+    global pending_queue, other_queue
     pending_queue = BiliVideoQueue()
     other_queue = BiliVideoQueue(maxsize=250)
     print("Loading queue...")

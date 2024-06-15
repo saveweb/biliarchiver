@@ -111,7 +111,7 @@ async def source_action(fun, source_id: str, TRUNCATE=20):
         txt_path = await fun(source_id, truncate=TRUNCATE)
     except Exception as e:
         print(f"Failed to call {fun}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to call {fun}")
+        raise HTTPException(status_code=500, detail=f"Failed to call {fun}: {e}")
     if not isinstance(txt_path, Path):
         raise HTTPException(status_code=500, detail="Failed to get path")
 
@@ -120,6 +120,7 @@ async def source_action(fun, source_id: str, TRUNCATE=20):
 
     return {"success": True, "bvids": bvids}
 
+@app.get("/get_bvids_by/{source_type}/{source_id}")
 @app.post("/get_bvids_by/{source_type}/{source_id}")
 async def perform_source_action_from_req(source_type: str, source_id: str):
     # make sure source_id is valid integer

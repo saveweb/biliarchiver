@@ -26,7 +26,7 @@ async def by_series(url_or_sid: str, truncate: int = int(1e10)) -> Path:
     )  # type: ignore
     client = AsyncClient(**api.dft_client_settings)
     print(_("正在获取 {sid} 的视频列表……").format(sid=sid))
-    col_name, up_name, bvids = await api.get_collect_info(client, sid)
+    col_name, up_name, bvids = await api.get_list_info(client, sid)
     filepath = f"bvids/by-sapce_fav_season/sid-{sid}-{int(time.time())}.txt"
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     abs_filepath = os.path.abspath(filepath)

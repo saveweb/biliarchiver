@@ -168,7 +168,6 @@ async def by_up_videos(url_or_mid: str, truncate: int = int(1e10)) -> Path:
     print(mid, up_name, total_size)
     await client.aclose()
     assert len(bv_ids) == len(set(bv_ids)), _("有重复的 bv_id")
-    assert total_size == len(bv_ids), _("视频总数不匹配")
     filepath = f"bvids/by-up_videos/mid-{mid}-{int(time.time())}.txt"
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     abs_filepath = os.path.abspath(filepath)

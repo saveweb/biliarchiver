@@ -313,10 +313,6 @@ msgstr[1] ""
 msgid "有重复的 bv_id"
 msgstr ""
 
-#: biliarchiver/cli_tools/get_command.py:124
-msgid "视频总数不匹配"
-msgstr "Video count mismatch"
-
 #: biliarchiver/cli_tools/get_command.py:228
 msgid "还剩 ~{} 页"
 msgid_plural "还剩 ~{} 页"

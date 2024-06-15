@@ -116,6 +116,7 @@ async def source_action(fun, source_id: str, TRUNCATE=20):
         raise HTTPException(status_code=500, detail="Failed to get path")
 
     bvids = read_bvids_from_txt(txt_path)
+    txt_path.unlink(missing_ok=True)
 
     return {"success": True, "bvids": bvids}
 

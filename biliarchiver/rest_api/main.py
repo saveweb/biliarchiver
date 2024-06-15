@@ -132,7 +132,7 @@ async def source_action(fun, source_type: str, source_id: str):
 
 @app.get("/archive/{source_type}/{source_id}")
 async def query_source_task(source_type: str, source_id: str):
-    action_file = f"tmp/source_{source_type}_{source_id}.action"
+    action_file = Path("tmp") / f"source_{source_type}_{source_id}.action"
     if not os.path.exists(action_file):
         return HTTPException(status_code=404, detail="Action file not found")
     

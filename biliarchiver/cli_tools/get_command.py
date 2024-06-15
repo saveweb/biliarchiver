@@ -17,6 +17,7 @@ from biliarchiver.i18n import _, ngettext
 
 async def by_series(url_or_sid: str, truncate: int = int(1e10)) -> Path:
     """
+    获取视频列表信息
     truncate: do noting
     """
     sid = sid = (
@@ -48,6 +49,7 @@ async def by_series(url_or_sid: str, truncate: int = int(1e10)) -> Path:
 
 async def by_season(url_or_sid: str, truncate: int = int(1e10)) -> Path:
     """
+    获取合集信息
     truncate: do noting
     """
     sid = sid = (
@@ -309,6 +311,7 @@ async def by_favlist(url_or_fid: str, truncate: int = int(1e10)) -> Path:
 
 
 async def main(
+    season: str,
     series: str,
     ranking: str,
     rid: str,
@@ -334,6 +337,8 @@ async def main(
             by_popular_series_one(popular_series_number)
     if series:
         await by_series(series)
+    if season:
+        await by_season(season)
     if favlist:
         await by_favlist(favlist)
 
@@ -359,11 +364,17 @@ class URLorIntParamType(click.ParamType):
     short_help=click.style(_("批量获取 BV 号"), fg="cyan"),
     help=_("请通过 flag 指定至少一种批量获取 BV 号的方式。多个不同组的 flag 同时使用时，将会先后通过不同方式获取。"),
 )
-@optgroup.group(_("合集"))
+@optgroup.group(_("合集或视频列表"))
 @optgroup.option(
     "--series",
     "-s",
-    help=click.style(_("合集或视频列表内视频"), fg="red"),
+    help=click.style(_("视频列表内视频"), fg="red"),
+    type=URLorIntParamType("sid"),
+)
+@optgroup.option(
+    "--season",
+    "-e",
+    help=click.style(_("合集内视频"), fg="red"),
     type=URLorIntParamType("sid"),
 )
 @optgroup.group(_("排行榜"))
@@ -424,6 +435,7 @@ def get(**kwargs):
     if (
         not kwargs["favlist"]
         and not kwargs["series"]
+        and not kwargs["season"]
         and not kwargs["ranking"]
         and not kwargs["up_videos"]
         and not kwargs["popular_precious"]

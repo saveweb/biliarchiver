@@ -126,6 +126,8 @@ async def add_from_source(source_type: str, source_id: int):
         source_id = int(source_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid source id")
+    
+    source_id = str(source_id)
 
     cmd_mapping = {
         "user": ["biliarchiver", "get", "--up-videos", source_id],

@@ -232,15 +232,25 @@ def _upload_bvid(
             print(md)
 
         if filedict:
-            r = item.upload(
-                files=filedict,
-                metadata=md,
-                access_key=access_key,
-                secret_key=secret_key,
-                verbose=True,
-                queue_derive=True,
-                retries=5,
-            )
+            upload_retry = 5
+            while upload_retry > 0:
+                try:
+                    r = item.upload(
+                        files=filedict,
+                        metadata=md,
+                        access_key=access_key,
+                        secret_key=secret_key,
+                        verbose=True,
+                        queue_derive=True,
+                        retries=5,
+                    )
+                    break
+                except Exception as e:
+                    print(e)
+                    upload_retry -= 1
+                    print(f"Upload failed, retrying ({upload_retry}) ...")
+                    time.sleep(30)
+            assert upload_retry > 0, "Upload failed"
 
         tries = 100
         item = get_item(remote_identifier)  # refresh item

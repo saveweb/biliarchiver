@@ -233,7 +233,7 @@ def _upload_bvid(
 
         if filedict:
             upload_retry = 5
-            while upload_retry > 0:
+            while upload_retry >= 0:
                 try:
                     r = item.upload(
                         files=filedict,
@@ -246,11 +246,12 @@ def _upload_bvid(
                     )
                     break
                 except Exception as e:
-                    print(e)
                     upload_retry -= 1
+                    print(e)
+                    if upload_retry < 0:
+                        raise e
                     print(f"Upload failed, retrying ({upload_retry}) ...")
-                    time.sleep(30 * (6 - upload_retry))
-            assert upload_retry > 0, "Upload failed"
+                    time.sleep(min(30 * (6 - upload_retry), 240))
 
         tries = 100
         item = get_item(remote_identifier)  # refresh item

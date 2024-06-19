@@ -249,7 +249,7 @@ def _upload_bvid(
                     print(e)
                     upload_retry -= 1
                     print(f"Upload failed, retrying ({upload_retry}) ...")
-                    time.sleep(30)
+                    time.sleep(30 * (5 - upload_retry))
             assert upload_retry > 0, "Upload failed"
 
         tries = 100

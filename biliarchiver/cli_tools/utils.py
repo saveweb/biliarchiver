@@ -8,10 +8,13 @@ def read_bvids(bvids: str) -> list[str]:
     bvids_list = None
 
     file = Path(bvids)
-    if file.exists() and file.is_file():
-        with open(file, "r", encoding="utf-8") as f:
-            bvids_list = f.read().split()
-    else:
+    try:
+        if file.exists() and file.is_file():
+            with open(file, "r", encoding="utf-8") as f:
+                bvids_list = f.read().split()
+        else:
+            raise Exception("Not a file")
+    except Exception as _:
         bvids_list = bvids.split()
 
     del bvids

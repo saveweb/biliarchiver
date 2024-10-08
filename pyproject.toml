@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "biliarchiver"
-version = "0.1.12"
-description = ""
+version = "0.1.13"
+description = "Archiving tool for Bilibili based on bilix"
 authors = ["yzqzss <yzqzss@yandex.com>"]
 readme = "README.md"
 packages = [{ include = "biliarchiver" }]

@@ -8,14 +8,16 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-08-17 00:03+0800\n"
-"PO-Revision-Date: 2023-08-17 00:05+0800\n"
-"Last-Translator: Neko <overflowcat@gmail.com>\n"
-"Language-Team: English\n"
+"PO-Revision-Date: 2024-10-08 07:23+0000\n"
+"Last-Translator: yzqzss <yzqzss@yandex.com>\n"
+"Language-Team: English <https://toolate.othing.xyz/projects/biliarchiver/"
+"biliarchiver/en/>\n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 5.7.2\n"
 
 #: biliarchiver/archive_bvid.py:30
 msgid "未找到字幕信息"
@@ -44,8 +46,8 @@ msgstr "Failed to get video_info for {}, reason: {}"
 #: biliarchiver/archive_bvid.py:153
 msgid "{} 的 P{} 不存在 (可能视频被 UP 主 / B 站删了)，请报告此问题，我们需要这个样本！"
 msgstr ""
-"P{} of {} does not exist (video might have been deleted by UP master / B site), please report this issue, we need this "
-"sample!"
+"P{} of {} does not exist (video might have been deleted by video uploader or "
+"Bilibili), please report this issue, we need this sample!"
 
 #: biliarchiver/archive_bvid.py:164
 msgid "{}: 已经下载过了"
@@ -81,7 +83,9 @@ msgstr "Download error"
 
 #: biliarchiver/archive_bvid.py:260
 msgid "{}: 视频文件没有被下载？也许是 hevc 对应的 dash 资源不存在，尝试 avc ……"
-msgstr "{}: Video file not downloaded? Maybe the dash resource corresponding to hevc does not exist, trying avc ..."
+msgstr ""
+"{}: Video file not downloaded? Maybe the hevc dash resource does not exist, "
+"trying avc …"
 
 #: biliarchiver/archive_bvid.py:307
 msgid "{} 的视频详情已存在"
@@ -89,7 +93,7 @@ msgstr "Video details of {} already exist"
 
 #: biliarchiver/archive_bvid.py:315
 msgid "{} 的视频详情获取失败"
-msgstr "Failed to obtain video details of {}"
+msgstr "Failed to fetch video details of {}"
 
 #: biliarchiver/archive_bvid.py:320
 msgid "{} 的视频详情已保存"
@@ -97,15 +101,15 @@ msgstr "Video details of {} have been saved"
 
 #: biliarchiver/archive_bvid.py:302 biliarchiver/archive_bvid.py:321
 msgid "{} 的视频回复获取失败"
-msgstr ""
+msgstr "Failed to fetch the video replies os {}"
 
 #: biliarchiver/archive_bvid.py:307
 msgid "{} 的视频回复已存在"
-msgstr ""
+msgstr "The video replies for {} already exists"
 
 #: biliarchiver/archive_bvid.py:326
 msgid "{} 的视频评论已保存"
-msgstr ""
+msgstr "The video replies of {} have been saved"
 
 #: biliarchiver/cli_tools/biliarchiver.py:48
 msgid "初始化所需目录"
@@ -117,7 +121,9 @@ msgstr "Configure account information"
 
 #: biliarchiver/cli_tools/biliarchiver.py:66
 msgid "登录后将哔哩哔哩的 cookies 复制到 `config.json` 指定的文件（默认为 `~/.cookies.txt`）中。"
-msgstr "After logging in, copy the Bilibili cookies to the file specified by `config.json` (default is `~/.cookies.txt`)."
+msgstr ""
+"After logging in, copy the Bilibili cookies to the file specified by `config."
+"json` (default is `~/.cookies.txt`)."
 
 #: biliarchiver/cli_tools/biliarchiver.py:69
 msgid "前往 https://archive.org/account/s3.php 获取 Access Key 和 Secret Key。"
@@ -145,7 +151,7 @@ msgstr "ffmpeg is not installed"
 
 #: biliarchiver/cli_tools/bili_archive_bvids.py:80
 msgid "pypi version check disabled"
-msgstr ""
+msgstr "pypi version check disabled"
 
 #: biliarchiver/cli_tools/bili_archive_bvids.py:126
 msgid "剩余空间不足 {} GiB"
@@ -254,7 +260,7 @@ msgstr "Skip the number of bvids at the beginning of the file"
 
 #: biliarchiver/cli_tools/down_command.py:44
 msgid "禁用 biliarchiver 的 pypi 版本检查"
-msgstr ""
+msgstr "disable pypi version check for biliarchiver"
 
 #: biliarchiver/cli_tools/get_command.py:26
 #, python-brace-format
@@ -306,12 +312,12 @@ msgstr ""
 #: biliarchiver/cli_tools/get_command.py:125
 msgid "获取第 {} 页"
 msgid_plural "获取第 {} 页"
-msgstr[0] ""
+msgstr[0] "Getting page {}"
 msgstr[1] ""
 
 #: biliarchiver/cli_tools/get_command.py:132
 msgid "有重复的 bv_id"
-msgstr ""
+msgstr "Found duplicate bv_id"
 
 #: biliarchiver/cli_tools/get_command.py:228
 msgid "还剩 ~{} 页"
@@ -458,7 +464,7 @@ msgstr ""
 
 #: biliarchiver/_biliarchiver_upload_bvid.py:34
 msgid "{} 的视频还没有下载完成，跳过"
-msgstr "The video of {} has not been downloaded yet, skipping"
+msgstr "The video {} has not been downloaded yet, skipping"
 
 #: biliarchiver/_biliarchiver_upload_bvid.py:36
 msgid "上传 {} 时出错："

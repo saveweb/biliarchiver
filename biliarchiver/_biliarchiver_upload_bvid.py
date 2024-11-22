@@ -5,7 +5,7 @@ import time
 from typing import List
 from urllib.parse import urlparse
 from internetarchive import get_item
-from requests import Response
+from requests import Response, HTTPError
 from rich import print
 from pathlib import Path
 from shutil import rmtree
@@ -287,13 +287,20 @@ def _upload_bvid(
                 print("Removed XML illegal characters from metadata, cleaned metadata:")
                 print(new_md)
 
-            r = item.modify_metadata(
-                metadata=new_md,
-                access_key=access_key,
-                secret_key=secret_key,
-            )
-            assert isinstance(r, Response)
-            r.raise_for_status()
+            try:
+                r = item.modify_metadata(
+                    metadata=new_md,
+                    access_key=access_key,
+                    secret_key=secret_key,
+                )
+                assert isinstance(r, Response)
+                r.raise_for_status()
+            except HTTPError as e:
+                if e.response.status_code == 403:
+                    print(f"403 Forbidden error encountered for {remote_identifier}. No retries will be attempted.")
+                else:
+                    raise e
+
         with open(
             f"{videos_basepath}/{local_identifier}/_uploaded.mark",
             "w",

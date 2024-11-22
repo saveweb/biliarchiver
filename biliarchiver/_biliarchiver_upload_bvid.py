@@ -297,7 +297,35 @@ def _upload_bvid(
                 r.raise_for_status()
             except HTTPError as e:
                 if e.response.status_code == 403:
-                    print(f"403 Forbidden error encountered for {remote_identifier}. No retries will be attempted.")
+                    print(f"403 Forbidden error encountered for {remote_identifier}. Retrying with description as title.")
+                    new_md["description"] = md["title"]
+                    try:
+                        r = item.modify_metadata(
+                            metadata=new_md,
+                            access_key=access_key,
+                            secret_key=secret_key,
+                        )
+                        assert isinstance(r, Response)
+                        r.raise_for_status()
+                    except HTTPError as e:
+                        if e.response.status_code == 403:
+                            print(f"403 Forbidden error encountered again for {remote_identifier}. Retrying with empty description.")
+                            new_md["description"] = ""
+                            try:
+                                r = item.modify_metadata(
+                                    metadata=new_md,
+                                    access_key=access_key,
+                                    secret_key=secret_key,
+                                )
+                                assert isinstance(r, Response)
+                                r.raise_for_status()
+                            except HTTPError as e:
+                                if e.response.status_code == 403:
+                                    print(f"403 Forbidden error encountered again for {remote_identifier}. No more retries will be attempted.")
+                                else:
+                                    raise e
+                        else:
+                            raise e
                 else:
                     raise e
 

@@ -297,7 +297,7 @@ def _upload_bvid(
                 r.raise_for_status()
             except HTTPError as e:
                 if e.response.status_code == 403:
-                    print(f"403 Forbidden error encountered for {remote_identifier}. Retrying with description as title.")
+                    print(f"403 Forbidden error encountered for {remote_identifier}. Retrying with title as description.")
                     new_md["description"] = md["title"]
                     try:
                         r = item.modify_metadata(

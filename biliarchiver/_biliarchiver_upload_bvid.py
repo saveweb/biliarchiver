@@ -302,6 +302,12 @@ def _upload_bvid(
                 assert isinstance(r, Response)
                 r.raise_for_status()
             except HTTPError as e:
+                if e.response.status_code == 400:
+                    print(f"400 Bad Request error encountered for {remote_identifier}. No more retries will be attempted.")
+                    print(f"Error message: {e.response.text}")
+                    if item.metadata.get("uploader") != get_username(access_key=access_key, secret_key=secret_key):
+                        print(f"{remote_identifier} {_('不是你上传的，跳过')} (item.metadata.creator)")
+                        return
                 if e.response.status_code == 403:
                     print(f"403 Forbidden error encountered for {remote_identifier}. Retrying with title as description.")
                     new_md["description"] = md["title"]

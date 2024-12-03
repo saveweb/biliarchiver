@@ -95,24 +95,24 @@ def _upload_bvid(
             )
             continue
         if not os.path.exists(f"{videos_basepath}/{local_identifier}/_downloaded.mark"):
-            print(f"{local_identifier} " + _("没有下载完成"))
+            print(local_identifier, _("没有下载完成"))
             continue
 
         pid = local_identifier.split("_")[-1][1:]
         file_basename = local_identifier[len(BILIBILI_IDENTIFIER_PERFIX) + 1 :]
 
-        print(f"=== {_('开始上传')} {local_identifier} => {remote_identifier} ===")
+        print("=== " + _('开始上传') + f" {local_identifier} => {remote_identifier} ===")
         item = get_item(remote_identifier)
         if item.exists and not update_existing:
-            print(f"item {remote_identifier} {_('已存在')} (item.exists)")
+            print(_("{} 已存在，跳过 (item.exists)").format(remote_identifier))
 
             # check if the user is the same
             if item.metadata.get("uploader") != get_username(access_key=access_key, secret_key=secret_key):
-                print(f"{remote_identifier} {_('不是你上传的，跳过')} (item.metadata.creator)")
+                print(f"{remote_identifier} "+ _('不是你上传的，跳过') + " (item.metadata.uploader)")
                 return
 
             if item.metadata.get("upload-state") == "uploaded":
-                print(f"{remote_identifier} {_('已经上传过了，跳过')} (item.metadata.uploaded)")
+                print(f"{remote_identifier} " + _('已经上传过了，跳过') + " (item.metadata.uploaded)")
                 with open(
                     f"{videos_basepath}/{local_identifier}/_uploaded.mark",
                     "w",
@@ -306,7 +306,7 @@ def _upload_bvid(
                     print(f"400 Bad Request error encountered for {remote_identifier}. No more retries will be attempted.")
                     print(f"Error message: {e.response.text}")
                     if item.metadata.get("uploader") != get_username(access_key=access_key, secret_key=secret_key):
-                        print(f"{remote_identifier} {_('不是你上传的，跳过')} (item.metadata.creator)")
+                        print(_("{} 不是你上传的，跳过 (item.metadata.creator)").format(remote_identifier))
                         return
                 if e.response.status_code == 403:
                     print(f"403 Forbidden error encountered for {remote_identifier}. Retrying with title as description.")
@@ -347,7 +347,7 @@ def _upload_bvid(
             encoding="utf-8",
         ) as f:
             f.write("")
-        print(f"==== {remote_identifier} {_('上传完成')} ====")
+        print(f"==== {remote_identifier} " + _('上传完成') + " ====")
 
     if delete_after_upload and len(local_identifiers) > 0:
         try:

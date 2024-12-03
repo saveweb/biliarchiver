@@ -111,7 +111,7 @@ msginit -i biliarchiver/locales/biliarchiver.pot -o en.po -l en
 Update a language:
 
 ```sh
-pnpx gpt-po sync --po biliarchiver/locales/en/LC_MESSAGES/biliarchiver.po --pot biliarchiver/locales/biliarchiver.pot
+msgmerge -U biliarchiver/locales/en/LC_MESSAGES/biliarchiver.po biliarchiver/locales/biliarchiver.pot
 ```
 
 **(Important)** Build a language:

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-10-08 14:57+0800\n"
+"POT-Creation-Date: 2024-12-03 10:14+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -502,6 +502,30 @@ msgstr ""
 msgid "没有下载完成"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:311
+#: biliarchiver/_biliarchiver_upload_bvid.py:104
+msgid "开始上传"
+msgstr ""
+
+#: biliarchiver/_biliarchiver_upload_bvid.py:107
+msgid "{} 已存在，跳过 (item.exists)"
+msgstr ""
+
+#: biliarchiver/_biliarchiver_upload_bvid.py:111
+msgid "不是你上传的，跳过"
+msgstr ""
+
+#: biliarchiver/_biliarchiver_upload_bvid.py:115
+msgid "已经上传过了，跳过"
+msgstr ""
+
+#: biliarchiver/_biliarchiver_upload_bvid.py:309
+msgid "{} 不是你上传的，跳过 (item.metadata.creator)"
+msgstr ""
+
+#: biliarchiver/_biliarchiver_upload_bvid.py:350
+msgid "上传完成"
+msgstr ""
+
+#: biliarchiver/_biliarchiver_upload_bvid.py:358
 msgid "已删除视频文件夹 {}"
 msgstr ""

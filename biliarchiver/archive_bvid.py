@@ -40,19 +40,30 @@ DownloaderBilibili._dm2ass_factory = _dm2ass_factory
 @raise_api_error
 async def new_get_subtitle_info(client: httpx.AsyncClient, bvid, cid):
     params = {"bvid": bvid, "cid": cid}
-    res = await req_retry(client, "https://api.bilibili.com/x/player/v2", params=params)
+    from bilix.sites.bilibili.api import _add_sign
+    # [patch 1]
+    # 使用 wbi 端点避免字幕投毒
+    await _add_sign(client=client, params=params)
+    res = await req_retry(client, "https://api.bilibili.com/x/player/wbi/v2", params=params)
+
     info = json.loads(res.text)
     if info["code"] == -400:
         raise APIError(_("未找到字幕信息"), params)
 
-    # 这里 monkey patch 一下把返回 lan_doc 改成返回 lan，这样生成的字幕文件名就是 语言代码 而不是 中文名 了
+    # [patch 2]: 把返回 lan_doc 改成返回 lan，这样生成的字幕文件名就是 语言代码 而不是 中文名 了
     # 例如
     # lan_doc: 中文（中国）
     # lang: zh-CN
 
     # return [[f'http:{i["subtitle_url"]}', i['lan_doc']] for i in info['data']['subtitle']['subtitles']]
+    print("subtitle info:", [
+        # [patch 3]: 使用 https
+        [i['id'], i["lan"]]
+        for i in info["data"]["subtitle"]["subtitles"]
+    ])
     return [
-        [f'http:{i["subtitle_url"]}', i["lan"]]
+        # [patch 3]: 使用 https
+        [f'https:{i["subtitle_url"]}', i["lan"]]
         for i in info["data"]["subtitle"]["subtitles"]
     ]
 

@@ -57,7 +57,6 @@ async def new_get_subtitle_info(client: httpx.AsyncClient, bvid, cid):
 
     # return [[f'http:{i["subtitle_url"]}', i['lan_doc']] for i in info['data']['subtitle']['subtitles']]
     print("subtitle info:", [
-        # [patch 3]: 使用 https
         [i['id'], i["lan"]]
         for i in info["data"]["subtitle"]["subtitles"]
     ])

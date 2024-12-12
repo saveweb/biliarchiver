@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-03 10:14+0800\n"
+"POT-Creation-Date: 2024-12-13 00:33+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -118,8 +118,8 @@ msgstr ""
 
 #: biliarchiver/cli_tools/biliarchiver.py:77
 msgid ""
-"登录后将哔哩哔哩的 cookies 复制到 `config.json` 指定的文件（默认为 `~/."
-"cookies.txt`）中。"
+"登录后将哔哩哔哩的 cookies 复制到 `config.json` 指定的文件（默认为 "
+"`~/.cookies.txt`）中。"
 msgstr ""
 
 #: biliarchiver/cli_tools/biliarchiver.py:80
@@ -378,93 +378,93 @@ msgstr ""
 msgid "先在当前工作目录运行 `biliarchiver init` 以初始化配置"
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:46
+#: biliarchiver/archive_bvid.py:51
 msgid "未找到字幕信息"
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:87
+#: biliarchiver/archive_bvid.py:97
 msgid "hierarchy 必须为 True"
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:89
+#: biliarchiver/archive_bvid.py:99
 msgid "sess_data 不能为空"
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:91
+#: biliarchiver/archive_bvid.py:101
 msgid "请先检查 SESSDATA 是否过期，再将 logined 设置为 True"
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:99
+#: biliarchiver/archive_bvid.py:109
 msgid "{} 所有分p都已下载过了"
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:107
+#: biliarchiver/archive_bvid.py:117
 msgid "{} 获取 video_info 失败，原因：{}"
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:117
+#: biliarchiver/archive_bvid.py:127
 msgid ""
 "{} 的 P{} 不存在 (可能视频被 UP 主 / B 站删了)，请报告此问题，我们需要这个样"
 "本！"
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:128
+#: biliarchiver/archive_bvid.py:138
 msgid "{}: 已经下载过了"
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:137
+#: biliarchiver/archive_bvid.py:147
 msgid "{}: {}，删除缓存: {}"
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:140
+#: biliarchiver/archive_bvid.py:150
 msgid "为防出错，清空上次未完成的下载缓存"
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:175
+#: biliarchiver/archive_bvid.py:185
 msgid "没有 dvh、avc 或 hevc 编码的视频"
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:178
+#: biliarchiver/archive_bvid.py:188
 msgid "未解析到 dash 资源，交给 bilix 处理 ..."
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:182
+#: biliarchiver/archive_bvid.py:192
 msgid "未解析到视频资源"
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:215
+#: biliarchiver/archive_bvid.py:225
 msgid "出错，其他任务完成后将抛出异常..."
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:226
+#: biliarchiver/archive_bvid.py:236
 msgid "下载出错"
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:231
+#: biliarchiver/archive_bvid.py:241
 msgid "{}: 视频文件没有被下载？也许是 hevc 对应的 dash 资源不存在，尝试 avc ……"
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:278
+#: biliarchiver/archive_bvid.py:288
 msgid "{} 的视频详情已存在"
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:286
+#: biliarchiver/archive_bvid.py:296
 msgid "{} 的视频详情获取失败"
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:291
+#: biliarchiver/archive_bvid.py:301
 msgid "{} 的视频详情已保存"
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:302 biliarchiver/archive_bvid.py:321
+#: biliarchiver/archive_bvid.py:312 biliarchiver/archive_bvid.py:331
 msgid "{} 的视频回复获取失败"
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:307
+#: biliarchiver/archive_bvid.py:317
 msgid "{} 的视频回复已存在"
 msgstr ""
 
-#: biliarchiver/archive_bvid.py:326
+#: biliarchiver/archive_bvid.py:336
 msgid "{} 的视频评论已保存"
 msgstr ""
 
@@ -514,18 +514,18 @@ msgstr ""
 msgid "不是你上传的，跳过"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:115
+#: biliarchiver/_biliarchiver_upload_bvid.py:116
 msgid "已经上传过了，跳过"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:309
+#: biliarchiver/_biliarchiver_upload_bvid.py:305
 msgid "{} 不是你上传的，跳过 (item.metadata.creator)"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:350
+#: biliarchiver/_biliarchiver_upload_bvid.py:341
 msgid "上传完成"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:358
+#: biliarchiver/_biliarchiver_upload_bvid.py:349
 msgid "已删除视频文件夹 {}"
 msgstr ""

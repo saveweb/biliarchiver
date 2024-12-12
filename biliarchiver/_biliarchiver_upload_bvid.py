@@ -109,7 +109,13 @@ def _upload_bvid(
             # check if the user is the same
             if item.metadata.get("uploader") != get_username(access_key=access_key, secret_key=secret_key):
                 print(f"{remote_identifier} "+ _('不是你上传的，跳过') + " (item.metadata.uploader)")
-                return
+                with open(
+                    f"{videos_basepath}/{local_identifier}/_uploaded.mark",
+                    "w",
+                    encoding="utf-8",
+                ) as f:
+                    f.write("")
+                continue
 
             if item.metadata.get("upload-state") == "uploaded":
                 print(f"{remote_identifier} " + _('已经上传过了，跳过') + " (item.metadata.uploaded)")

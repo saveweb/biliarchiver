@@ -109,22 +109,12 @@ def _upload_bvid(
             # check if the user is the same
             if item.metadata.get("uploader") != get_username(access_key=access_key, secret_key=secret_key):
                 print(f"{remote_identifier} "+ _('不是你上传的，跳过') + " (item.metadata.uploader)")
-                with open(
-                    f"{videos_basepath}/{local_identifier}/_uploaded.mark",
-                    "w",
-                    encoding="utf-8",
-                ) as f:
-                    f.write("")
+                mark_uploaded(videos_basepath, local_identifier)
                 continue
 
             if item.metadata.get("upload-state") == "uploaded":
                 print(f"{remote_identifier} " + _('已经上传过了，跳过') + " (item.metadata.uploaded)")
-                with open(
-                    f"{videos_basepath}/{local_identifier}/_uploaded.mark",
-                    "w",
-                    encoding="utf-8",
-                ) as f:
-                    f.write("")
+                mark_uploaded(videos_basepath, local_identifier)
                 continue
         with open(
             f"{videos_basepath}/{local_identifier}/extra/{file_basename}.info.json",
@@ -347,12 +337,7 @@ def _upload_bvid(
                 else:
                     raise e
 
-        with open(
-            f"{videos_basepath}/{local_identifier}/_uploaded.mark",
-            "w",
-            encoding="utf-8",
-        ) as f:
-            f.write("")
+        mark_uploaded(videos_basepath, local_identifier)
         print(f"==== {remote_identifier} " + _('上传完成') + " ====")
 
     if delete_after_upload and len(local_identifiers) > 0:
@@ -367,6 +352,14 @@ def _upload_bvid(
         except Exception as e:
             print(e)
 
+
+def mark_uploaded(videos_basepath: Path, local_identifier: str):
+    with open(
+        f"{videos_basepath}/{local_identifier}/_uploaded.mark",
+        "w",
+        encoding="utf-8",
+    ) as f:
+        f.write("")
 
 def read_ia_keys(keysfile):
     """Return: tuple(`access_key`, `secret_key`)"""

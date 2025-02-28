@@ -208,7 +208,7 @@ async def archive_bvid(
                         d.part_concurrency = 1
                         d.stream_retry = 0
                         return await d.get_video(url, **kwargs)
-                    raise  # Re-raise other KeyErrors
+                raise  # Re-raise other KeyErrors
 
             cor1 = safe_get_video(
                 d,

@@ -193,27 +193,8 @@ async def archive_bvid(
 
             assert codec is not None
             assert isinstance(quality, (int, str))
-            
-            async def safe_get_video(d, url, **kwargs):
-                try:
-                    return await d.get_video(url, **kwargs)
-                except httpx.HTTPStatusError as e:
-                    if e.response.status_code == 416:
-                        # set single thread
-                        d.part_concurrency = 1
-                        d.stream_retry = 0
-                        return await d.get_video(url, **kwargs)
-                    raise  # Re-raise other HTTP errors
-                except KeyError as e:
-                    # if is Content-Range error, retry with single thread
-                    if "Content-Range" in str(e):
-                        # set single thread
-                        d.part_concurrency = 1
-                        d.stream_retry = 0
-                        return await d.get_video(url, **kwargs)
-                raise  # Re-raise other KeyErrors
 
-            cor1 = safe_get_video(
+            cor1 = d.get_video(
                 d,
                 page.p_url,
                 video_info=video_info,

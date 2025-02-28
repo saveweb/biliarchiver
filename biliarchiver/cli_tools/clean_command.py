@@ -153,7 +153,7 @@ def process_finished_download(video_dir, bvid, collection):
                 bvid,
                 update_existing=False,
                 collection=collection,
-                delete_after_upload=False,
+                delete_after_upload=True,
             )
         except Exception as e:
             error_str = str(e)

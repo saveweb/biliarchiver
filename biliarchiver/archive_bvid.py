@@ -199,7 +199,10 @@ async def archive_bvid(
                     return await d.get_video(url, **kwargs)
                 except httpx.HTTPStatusError as e:
                     if e.response.status_code == 416:
-                        pass  # 416 Range Not Satisfiable，b站bug，单线程能下
+                        # set single thread
+                        d.part_concurrency = 1
+                        d.stream_retry = 0
+                        return await d.get_video(url, **kwargs)
                     raise  # Re-raise other HTTP errors
                 except KeyError as e:
                     # if is Content-Range error, retry with single thread

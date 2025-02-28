@@ -194,7 +194,7 @@ async def archive_bvid(
             assert codec is not None
             assert isinstance(quality, (int, str))
             
-            async def safe_get_video(d, **kwargs):
+            async def safe_get_video(d, url, **kwargs):
                 try:
                     return await d.get_video(url, **kwargs)
                 except httpx.HTTPStatusError as e:

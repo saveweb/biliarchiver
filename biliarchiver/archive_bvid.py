@@ -193,8 +193,17 @@ async def archive_bvid(
 
             assert codec is not None
             assert isinstance(quality, (int, str))
+            
+            async def safe_get_video(d, **kwargs):
+                try:
+                    return await d.get_video(url, **kwargs)
+                except httpx.HTTPStatusError as e:
+                    if e.response.status_code == 416:
+                        pass  # 416 Range Not Satisfiable，b站bug，单线程能下
+                    raise  # Re-raise other HTTP errors
 
-            cor1 = d.get_video(
+            cor1 = safe_get_video(
+                d,
                 page.p_url,
                 video_info=video_info,
                 path=video_basepath,

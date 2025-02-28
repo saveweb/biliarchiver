@@ -118,10 +118,7 @@ async def _down(
                 if isinstance(_task_exception, BaseException):
                     import traceback
                     traceback.print_exc()
-                    print(f"任务 {task} 出错，即将异常退出...")
-                    for task in tasks:
-                        task.cancel()
-                    raise _task_exception
+                    print(f"任务 {task} 出错: {_task_exception}")
                 # print(f'任务 {task} 已完成')
                 tasks.remove(task)
         if not check_free_space():

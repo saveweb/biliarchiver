@@ -26,6 +26,9 @@ from biliarchiver.i18n import _
 @click.option(
     "--collection", "-c", default="opensource_movies", help=_("欲上传至的 collection")
 )
+@click.option(
+    "--list-errors", "-e", is_flag=True, default=False, help=_("列出所有下载错误")
+)
 @click.option("--all", "-a", is_flag=True, default=False, help=_("执行所有清理操作"))
 @click.option(
     "--min-free-space-gb",
@@ -34,12 +37,20 @@ from biliarchiver.i18n import _
     default=10,
     help=_("最小剩余空间 (GB)，少于此值时将中止下载"),
 )
-def clean(try_upload, try_download, clean_locks, collection, all, min_free_space_gb):
+def clean(
+    try_upload,
+    try_download,
+    clean_locks,
+    collection,
+    list_errors,
+    all,
+    min_free_space_gb,
+):
     """清理命令主函数"""
     if all:
         try_upload = try_download = clean_locks = True
 
-    if not any([try_upload, try_download, clean_locks]):
+    if not any([try_upload, try_download, clean_locks, list_errors]):
         print(_("请指定至少一项清理操作，或使用 --all/-a 执行所有清理操作"))
         return
 
@@ -57,7 +68,12 @@ def clean(try_upload, try_download, clean_locks, collection, all, min_free_space
         print(_("视频目录不存在: {}").format(videos_dir))
         return
 
+    # 列出下载错误
+    if list_errors:
+        list_download_errors(videos_dir)
+
     bvids_to_download = []
+    error_bvids = []
 
     for video_dir in videos_dir.iterdir():
         if not video_dir.is_dir():
@@ -80,9 +96,28 @@ def clean(try_upload, try_download, clean_locks, collection, all, min_free_space
                 bvids_to_download.append(bvid)
             continue
 
+        # 检查是否标记为下载错误，如果有就收集但不下载
+        if (video_dir / "_download_error.mark").exists():
+            error_bvids.append(bvid)
+            continue
+
         # 下载完成，检查是否需要上传
         if try_upload:
             process_finished_download(video_dir, bvid, collection)
+
+    # 检查是否有下载错误
+    if error_bvids:
+        print(
+            _("发现 {} 个下载错误的BVID: {}").format(
+                len(error_bvids), ", ".join(error_bvids)
+            )
+        )
+        # 去除下载错误的BVID
+        bvids_to_download = [
+            bvid for bvid in bvids_to_download if bvid not in error_bvids
+        ]
+    else:
+        print(_("没有发现下载错误"))
 
     # 执行下载
     if try_download and bvids_to_download:
@@ -124,6 +159,45 @@ def clean_lock_files():
             total_locks, total_size / (1024 * 1024)
         )
     )
+
+
+def list_download_errors(videos_dir: Path):
+    """列出所有下载错误"""
+    if not videos_dir.exists():
+        print(_("视频目录不存在: {}").format(videos_dir))
+        return
+
+    print(_("列出所有下载错误..."))
+
+    error_count = 0
+    for video_dir in videos_dir.iterdir():
+        if not video_dir.is_dir():
+            continue
+
+        bvid = video_dir.name.split("-")[0] if "-" in video_dir.name else video_dir.name
+
+        # 检查整体下载错误
+        if (video_dir / "_download_error.mark").exists():
+            error_count += 1
+            print(f"\n[{error_count}] {bvid} - " + _("整体下载错误"))
+            with open(video_dir / "_download_error.mark", "r", encoding="utf-8") as f:
+                error_msg = f.read().strip().split("\n")[0]  # 只显示第一行
+                print(f"   {error_msg}")
+
+        # 检查分P下载错误
+        for part_dir in video_dir.iterdir():
+            if part_dir.is_dir() and (part_dir / "_part_error.mark").exists():
+                error_count += 1
+                part_name = part_dir.name
+                print(f"\n[{error_count}] {bvid} - {part_name} - " + _("分P下载错误"))
+                with open(part_dir / "_part_error.mark", "r", encoding="utf-8") as f:
+                    error_msg = f.read().strip().split("\n")[0]  # 只显示第一行
+                    print(f"   {error_msg}")
+
+    if error_count == 0:
+        print(_("没有发现下载错误"))
+    else:
+        print(_("\n共发现 {} 个下载错误").format(error_count))
 
 
 def process_finished_download(video_dir, bvid, collection):

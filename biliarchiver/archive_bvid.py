@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import re
 import traceback
+from datetime import datetime
 
 import aiofiles
 import httpx
@@ -94,194 +95,243 @@ async def archive_bvid(
     semaphore: asyncio.Semaphore,
 ):
     async with semaphore:
-        assert d.hierarchy is True, _("hierarchy 必须为 True")  # 为保持后续目录结构、文件命名的一致性
-        assert d.client.cookies.get("SESSDATA") is not None, _(
-            "sess_data 不能为空"
-        )  # 开个大会员呗，能下 4k 呢。
-        assert logined is True, _("请先检查 SESSDATA 是否过期，再将 logined 设置为 True")  # 防误操作
-        upper_part = human_readable_upper_part_map(string=bvid, backward=True)
-        videos_basepath: Path = (
-            config.storage_home_dir / "videos" / f"{bvid}-{upper_part}"
-        )
-
-        if os.path.exists(videos_basepath / "_all_downloaded.mark"):
-            # print(f"{bvid} 所有分p都已下载过了")
-            print(_("{} 所有分p都已下载过了").format(bvid))
-            return
-
-        url = f"https://www.bilibili.com/video/{bvid}/"
-        # 为了获取 pages，先请求一次
         try:
-            first_video_info = await api.get_video_info(d.client, url)
-        except APIResourceError as e:
-            print(_("{} 获取 video_info 失败，原因：{}").format(bvid, e))
-            return
-
-        os.makedirs(videos_basepath, exist_ok=True)
-
-        pid = 0
-        for page in first_video_info.pages:
-            pid += 1  # pid 从 1 开始
-            if not page.p_url.endswith(f"?p={pid}"):
-                raise NotImplementedError(
-                    _("{} 的 P{} 不存在 (可能视频被 UP 主 / B 站删了)，请报告此问题，我们需要这个样本！").format(
-                        bvid, pid
-                    )
-                )
-
-            file_basename = f"{bvid}_p{pid}"
-            video_basepath = (
-                videos_basepath / f"{BILIBILI_IDENTIFIER_PERFIX}-{file_basename}"
+            assert d.hierarchy is True, _("hierarchy 必须为 True")  # 为保持后续目录结构、文件命名的一致性
+            assert d.client.cookies.get("SESSDATA") is not None, _(
+                "sess_data 不能为空"
+            )  # 开个大会员呗，能下 4k 呢。
+            assert logined is True, _("请先检查 SESSDATA 是否过期，再将 logined 设置为 True")  # 防误操作
+            upper_part = human_readable_upper_part_map(string=bvid, backward=True)
+            videos_basepath: Path = (
+                config.storage_home_dir / "videos" / f"{bvid}-{upper_part}"
             )
-            video_extrapath = video_basepath / "extra"
-            if os.path.exists(f"{video_basepath}/_downloaded.mark"):
-                print(_("{}: 已经下载过了").format(file_basename))
-                continue
 
-            def delete_cache(reason: str = ""):
-                if not os.path.exists(video_basepath):
-                    return
-                _files_in_video_basepath = os.listdir(video_basepath)
-                for _file in _files_in_video_basepath:
-                    if _file.startswith(file_basename):
-                        print(_("{}: {}，删除缓存: {}").format(file_basename, reason, _file))
-                        os.remove(video_basepath / _file)
+            if os.path.exists(videos_basepath / "_download_error.mark"):
+                print(_("{} 之前下载失败，已标记错误").format(bvid))
+                return
 
-            delete_cache(_("为防出错，清空上次未完成的下载缓存"))
-            video_info = await api.get_video_info(d.client, page.p_url)
-            print(f"{file_basename}: {video_info.title}...")
-            os.makedirs(video_basepath, exist_ok=True)
-            os.makedirs(video_extrapath, exist_ok=True)
+            if os.path.exists(videos_basepath / "_all_downloaded.mark"):
+                # print(f"{bvid} 所有分p都已下载过了")
+                print(_("{} 所有分p都已下载过了").format(bvid))
+                return
 
-            old_p_name = video_info.pages[video_info.p].p_name
-            old_title = video_info.title
+            os.makedirs(videos_basepath, exist_ok=True)
 
-            # 在 d.hierarchy is True 且 title 超长的情况下， bilix 会将 p_name 作为文件名
-            video_info.pages[
-                video_info.p
-            ].p_name = file_basename  # 所以这里覆盖 p_name 为 file_basename
-            video_info.title = "iiiiii" * 50  # 然后假装超长标题
-            # 这样 bilix 保存的文件名就是我们想要的了（谁叫 bilix 不支持自定义文件名呢）
-            # NOTE: p_name 似乎也不宜过长，否则还是会被 bilix 截断。
-            # 但是我们以 {bvid}_p{pid} 作为文件名，这个长度是没问题的。
+            url = f"https://www.bilibili.com/video/{bvid}/"
+            # 为了获取 pages，先请求一次
+            try:
+                first_video_info = await api.get_video_info(d.client, url)
+            except APIResourceError as e:
+                print(_("{} 获取 video_info 失败，原因：{}").format(bvid, e))
+                mark_download_error(bvid, f"API错误: {str(e)}")
+                return
 
-            codec = None
-            quality = None
-            if video_info.dash:
-                # 选择编码 dvh->hev->avc
-                # 不选 av0 ，毕竟目前没几个设备能拖得动
-                codec_candidates = ["dvh", "hev", "avc"]
-                for codec_candidate in codec_candidates:
-                    for media in video_info.dash.videos:
-                        if media.codec.startswith(codec_candidate):
-                            codec = media.codec
-                            quality = media.quality
-                            print(f'{file_basename}: "{codec}" "{media.quality}" ...')
-                            break
-                    if codec is not None:
-                        break
-                assert (
-                    codec is not None and quality is not None
-                ), f"{file_basename}: " + _("没有 dvh、avc 或 hevc 编码的视频")
-            elif video_info.other:
-                # print(f"{file_basename}: 未解析到 dash 资源，交给 bilix 处理 ...")
-                print("{file_basename}: " + _("未解析到 dash 资源，交给 bilix 处理 ..."))
-                codec = ""
-                quality = 0
+            pid = 0
+            download_success_count = 0
+            total_parts = len(first_video_info.pages)
+
+            for page in first_video_info.pages:
+                pid += 1  # pid 从 1 开始
+
+                try:
+                    if not page.p_url.endswith(f"?p={pid}"):
+                        raise NotImplementedError(
+                            _("{} 的 P{} 不存在 (可能视频被 UP 主 / B 站删了)，请报告此问题，我们需要这个样本！").format(
+                                bvid, pid
+                            )
+                        )
+
+                    file_basename = f"{bvid}_p{pid}"
+                    video_basepath = (
+                        videos_basepath / f"{BILIBILI_IDENTIFIER_PERFIX}-{file_basename}"
+                    )
+                    video_extrapath = video_basepath / "extra"
+                    
+                    if os.path.exists(f"{video_basepath}/_part_error.mark"):
+                        print(_("{}: 之前下载失败，跳过").format(file_basename))
+                        continue
+                        
+                    if os.path.exists(f"{video_basepath}/_downloaded.mark"):
+                        print(_("{}: 已经下载过了").format(file_basename))
+                        download_success_count += 1
+                        continue
+
+                    def delete_cache(reason: str = ""):
+                        if not os.path.exists(video_basepath):
+                            return
+                        _files_in_video_basepath = os.listdir(video_basepath)
+                        for _file in _files_in_video_basepath:
+                            if _file.startswith(file_basename):
+                                print(_("{}: {}，删除缓存: {}").format(file_basename, reason, _file))
+                                os.remove(video_basepath / _file)
+
+                    delete_cache(_("为防出错，清空上次未完成的下载缓存"))
+                    video_info = await api.get_video_info(d.client, page.p_url)
+                    print(f"{file_basename}: {video_info.title}...")
+                    os.makedirs(video_basepath, exist_ok=True)
+                    os.makedirs(video_extrapath, exist_ok=True)
+
+                    old_p_name = video_info.pages[video_info.p].p_name
+                    old_title = video_info.title
+
+                    # 在 d.hierarchy is True 且 title 超长的情况下， bilix 会将 p_name 作为文件名
+                    video_info.pages[
+                        video_info.p
+                    ].p_name = file_basename  # 所以这里覆盖 p_name 为 file_basename
+                    video_info.title = "iiiiii" * 50  # 然后假装超长标题
+                    # 这样 bilix 保存的文件名就是我们想要的了（谁叫 bilix 不支持自定义文件名呢）
+                    # NOTE: p_name 似乎也不宜过长，否则还是会被 bilix 截断。
+                    # 但是我们以 {bvid}_p{pid} 作为文件名，这个长度是没问题的。
+
+                    codec = None
+                    quality = None
+                    if video_info.dash:
+                        # 选择编码 dvh->hev->avc
+                        # 不选 av0 ，毕竟目前没几个设备能拖得动
+                        codec_candidates = ["dvh", "hev", "avc"]
+                        for codec_candidate in codec_candidates:
+                            for media in video_info.dash.videos:
+                                if media.codec.startswith(codec_candidate):
+                                    codec = media.codec
+                                    quality = media.quality
+                                    print(f'{file_basename}: "{codec}" "{media.quality}" ...')
+                                    break
+                            if codec is not None:
+                                break
+                        assert (
+                            codec is not None and quality is not None
+                        ), f"{file_basename}: " + _("没有 dvh、avc 或 hevc 编码的视频")
+                    elif video_info.other:
+                        # print(f"{file_basename}: 未解析到 dash 资源，交给 bilix 处理 ...")
+                        print("{file_basename}: " + _("未解析到 dash 资源，交给 bilix 处理 ..."))
+                        codec = ""
+                        quality = 0
+                    else:
+                        raise APIError("{file_basename}: " + _("未解析到视频资源"), page.p_url)
+
+                    assert codec is not None
+                    assert isinstance(quality, (int, str))
+
+                    cor1 = d.get_video(
+                        page.p_url,
+                        video_info=video_info,
+                        path=video_basepath,
+                        quality=quality,  # 选择最高画质
+                        codec=codec,  # 编码
+                        # 下载 ass 弹幕(bilix 会自动调用 danmukuC 将 pb 弹幕转为 ass)、封面、字幕
+                        # 弹幕、封面、字幕都会被放进 extra 子目录里，所以需要 d.hierarchy is True
+                        dm=True,
+                        image=True,
+                        subtitle=True,
+                    )
+                    # 下载原始的 pb 弹幕
+                    cor2 = d.get_dm(page.p_url, video_info=video_info, path=video_extrapath)
+                    # 下载视频超详细信息（BV 级别，不是分 P 级别）
+                    cor3 = download_bilibili_video_detail(
+                        d.client, bvid, f"{video_extrapath}/{file_basename}.info.json"
+                    )
+                    # 下载视频评论。有些视频关闭了评论会获取不到。
+                    cor4 = download_bilibili_video_replies(
+                        d.client, video_info.bvid, video_info.aid,
+                        f"{video_extrapath}/{file_basename}.replies.json"
+                    )
+                    coroutines = [cor1, cor2, cor3, cor4]
+                    tasks = [asyncio.create_task(cor) for cor in coroutines]
+                    
+                    try:
+                        results = await asyncio.gather(*tasks, return_exceptions=True)
+                        for result, cor in zip(results, coroutines):
+                            if isinstance(result, Exception):
+                                if hasattr(result, "response") and hasattr(result.response, "status_code") and result.response.status_code == 416:
+                                    print(f"{file_basename}: HTTP 416错误，该条目无法并发，继续下载")
+                                    continue
+                                else:
+                                    print(_("出错，其他任务完成后将抛出异常..."))
+                                    for task in tasks:
+                                        task.cancel()
+                                    await asyncio.sleep(3)
+                                    traceback.print_exception(result)
+                                    raise result
+                    except Exception as e:
+                        print(f"{file_basename}: 下载过程中出错: {str(e)}")
+                        mark_part_error(bvid, pid, f"下载失败: {str(e)}")
+                        continue
+
+                    if codec.startswith("hev") and not os.path.exists(
+                        video_basepath / f"{file_basename}.mp4"
+                    ):
+                        # 如果有下载缓存文件（以 file_basename 开头的文件），说明这个 hevc 的 dash 资源存在，只是可能因为网络之类的原因下载中途失败了
+                        delete_cache(_("下载出错"))
+
+                        # 下载缓存文件都不存在，应该是对应的 dash 资源根本就没有，一些老视频会出现这种情况。
+                        # 换 avc 编码
+                        print(
+                            _("{}: 视频文件没有被下载？也许是 hevc 对应的 dash 资源不存在，尝试 avc ……").format(
+                                file_basename
+                            )
+                        )
+                        assert video_info.dash is not None
+                        for media in video_info.dash.videos:
+                            if media.codec.startswith("avc"):
+                                codec = media.codec
+                                print(f'{file_basename}: "{codec}" "{media.quality}" ...')
+                                break
+                                
+                        try:
+                            cor4 = d.get_video(
+                                page.p_url,
+                                video_info=video_info,
+                                path=video_basepath,
+                                quality=0,  # 选择最高画质
+                                codec=codec,  # 编码
+                                # 下载 ass 弹幕(bilix 会自动调用 danmukuC 将 pb 弹幕转为 ass)、封面、字幕
+                                # 弹幕、封面、字幕都会被放进 extra 子目录里，所以需要 d.hierarchy is True
+                                dm=True,
+                                image=True,
+                                subtitle=True,
+                            )
+                            await cor4
+                        except Exception as e:
+                            print(f"{file_basename}: 使用avc编码下载失败: {str(e)}")
+                            mark_part_error(bvid, pid, f"使用avc编码下载失败: {str(e)}")
+                            continue
+
+                    if not (os.path.exists(video_basepath / f"{file_basename}.mp4") or 
+                            os.path.exists(video_basepath / f"{file_basename}.flv")):
+                        print(f"{file_basename}: 下载后找不到视频文件")
+                        mark_part_error(bvid, pid, "下载后找不到视频文件")
+                        continue
+
+                    # 还原为了自定义文件名而做的覆盖
+                    video_info.pages[video_info.p].p_name = old_p_name
+                    video_info.title = old_title
+
+                    # 单 p 下好了
+                    async with aiofiles.open(
+                        f"{video_basepath}/_downloaded.mark", "w", encoding="utf-8"
+                    ) as f:
+                        await f.write("")
+                    download_success_count += 1
+                    
+                except Exception as e:
+                    print(f"{file_basename}: 处理分P时发生错误: {str(e)}")
+                    traceback.print_exc()
+                    mark_part_error(bvid, pid, f"处理异常: {str(e)}")
+
+            if download_success_count == total_parts:
+                # bv 对应的全部 p 下好了
+                async with aiofiles.open(
+                    f"{videos_basepath}/_all_downloaded.mark", "w", encoding="utf-8"
+                ) as f:
+                    await f.write("")
+                print(_("{} 的全部 {} 个分P下载完成").format(bvid, total_parts))
             else:
-                raise APIError("{file_basename}: " + _("未解析到视频资源"), page.p_url)
-
-            assert codec is not None
-            assert isinstance(quality, (int, str))
-
-            cor1 = d.get_video(
-                page.p_url,
-                video_info=video_info,
-                path=video_basepath,
-                quality=quality,  # 选择最高画质
-                codec=codec,  # 编码
-                # 下载 ass 弹幕(bilix 会自动调用 danmukuC 将 pb 弹幕转为 ass)、封面、字幕
-                # 弹幕、封面、字幕都会被放进 extra 子目录里，所以需要 d.hierarchy is True
-                dm=True,
-                image=True,
-                subtitle=True,
-            )
-            # 下载原始的 pb 弹幕
-            cor2 = d.get_dm(page.p_url, video_info=video_info, path=video_extrapath)
-            # 下载视频超详细信息（BV 级别，不是分 P 级别）
-            cor3 = download_bilibili_video_detail(
-                d.client, bvid, f"{video_extrapath}/{file_basename}.info.json"
-            )
-            # 下载视频评论。有些视频关闭了评论会获取不到。
-            cor4 = download_bilibili_video_replies(
-                d.client, video_info.bvid, video_info.aid,
-                f"{video_extrapath}/{file_basename}.replies.json"
-            )
-            coroutines = [cor1, cor2, cor3, cor4]
-            tasks = [asyncio.create_task(cor) for cor in coroutines]
-            results = await asyncio.gather(*tasks, return_exceptions=True)
-            for result, cor in zip(results, coroutines):
-                if isinstance(result, Exception):
-                    print(_("出错，其他任务完成后将抛出异常..."))
-                    for task in tasks:
-                        task.cancel()
-                    await asyncio.sleep(3)
-                    traceback.print_exception(result)
-                    raise result
-
-            if codec.startswith("hev") and not os.path.exists(
-                video_basepath / f"{file_basename}.mp4"
-            ):
-                # 如果有下载缓存文件（以 file_basename 开头的文件），说明这个 hevc 的 dash 资源存在，只是可能因为网络之类的原因下载中途失败了
-                delete_cache(_("下载出错"))
-
-                # 下载缓存文件都不存在，应该是对应的 dash 资源根本就没有，一些老视频会出现这种情况。
-                # 换 avc 编码
-                print(
-                    _("{}: 视频文件没有被下载？也许是 hevc 对应的 dash 资源不存在，尝试 avc ……").format(
-                        file_basename
-                    )
-                )
-                assert video_info.dash is not None
-                for media in video_info.dash.videos:
-                    if media.codec.startswith("avc"):
-                        codec = media.codec
-                        print(f'{file_basename}: "{codec}" "{media.quality}" ...')
-                        break
-                cor4 = d.get_video(
-                    page.p_url,
-                    video_info=video_info,
-                    path=video_basepath,
-                    quality=0,  # 选择最高画质
-                    codec=codec,  # 编码
-                    # 下载 ass 弹幕(bilix 会自动调用 danmukuC 将 pb 弹幕转为 ass)、封面、字幕
-                    # 弹幕、封面、字幕都会被放进 extra 子目录里，所以需要 d.hierarchy is True
-                    dm=True,
-                    image=True,
-                    subtitle=True,
-                )
-                await cor4
-
-            assert os.path.exists(
-                video_basepath / f"{file_basename}.mp4"
-            ) or os.path.exists(video_basepath / f"{file_basename}.flv")
-
-            # 还原为了自定义文件名而做的覆盖
-            video_info.pages[video_info.p].p_name = old_p_name
-            video_info.title = old_title
-
-            # 单 p 下好了
-            async with aiofiles.open(
-                f"{video_basepath}/_downloaded.mark", "w", encoding="utf-8"
-            ) as f:
-                await f.write("")
-
-        # bv 对应的全部 p 下好了
-        async with aiofiles.open(
-            f"{videos_basepath}/_all_downloaded.mark", "w", encoding="utf-8"
-        ) as f:
-            await f.write("")
-
+                print(_("{} 的 {} 个分P中只有 {} 个成功下载").format(bvid, total_parts, download_success_count))
+                
+        except Exception as e:
+            print(f"下载 {bvid} 时发生严重错误: {str(e)}")
+            traceback.print_exc()
+            mark_download_error(bvid, f"下载过程崩溃: {str(e)}")
 
 async def download_bilibili_video_detail(client, bvid, filepath):
     if os.path.exists(filepath):
@@ -334,3 +384,25 @@ async def _download_bilibili_video_replies(client, bvid, aid, filepath):
         # f.write(json.dumps(r.json(), indent=4, ensure_ascii=False))
         await f.write(r.text)
     print(_("{} 的视频评论已保存").format(bvid))
+
+def mark_download_error(bvid: str, error_msg: str):
+    """标记整个视频的下载错误"""
+    upper_part = human_readable_upper_part_map(string=bvid, backward=True)
+    videos_basepath = config.storage_home_dir / "videos" / f"{bvid}-{upper_part}"
+    
+    videos_basepath.mkdir(parents=True, exist_ok=True)
+    with open(videos_basepath / "_download_error.mark", "w", encoding="utf-8") as f:
+        f.write(f"{error_msg}\n{datetime.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(_("{} 标记为下载错误").format(bvid))
+
+def mark_part_error(bvid: str, pid: int, error_msg: str):
+    """标记单个分P的下载错误"""
+    upper_part = human_readable_upper_part_map(string=bvid, backward=True)
+    videos_basepath = config.storage_home_dir / "videos" / f"{bvid}-{upper_part}"
+    file_basename = f"{bvid}_p{pid}"
+    video_basepath = videos_basepath / f"{BILIBILI_IDENTIFIER_PERFIX}-{file_basename}"
+    
+    video_basepath.mkdir(parents=True, exist_ok=True)
+    with open(video_basepath / "_part_error.mark", "w", encoding="utf-8") as f:
+        f.write(f"{error_msg}\n{datetime.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(_("{} P{} 标记为下载错误").format(bvid, pid))

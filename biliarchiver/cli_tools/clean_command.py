@@ -4,10 +4,8 @@ import asyncio
 from pathlib import Path
 from rich import print
 
-from biliarchiver.config import config
 from biliarchiver._biliarchiver_upload_bvid import upload_bvid
 from biliarchiver.utils.storage import get_free_space
-from biliarchiver.utils.identifier import human_readable_upper_part_map
 from biliarchiver.i18n import _
 
 
@@ -42,6 +40,8 @@ def clean(try_upload, try_download, clean_locks, collection, all, min_free_space
     if not any([try_upload, try_download, clean_locks]):
         print(_("请指定至少一项清理操作，或使用 --all/-a 执行所有清理操作"))
         return
+    
+    from biliarchiver.config import config
 
     # 检查磁盘空间
     free_space_gb = get_free_space(config.storage_home_dir) / (1024 * 1024 * 1024)
@@ -49,7 +49,7 @@ def clean(try_upload, try_download, clean_locks, collection, all, min_free_space
 
     # 清理锁文件
     if clean_locks:
-        clean_lock_files()
+        clean_lock_files(config)
 
     # 处理下载和上传
     videos_dir = config.storage_home_dir / "videos"
@@ -89,10 +89,10 @@ def clean(try_upload, try_download, clean_locks, collection, all, min_free_space
         if free_space_gb < min_free_space_gb:
             print(_("剩余空间不足 {} GB，跳过下载操作").format(min_free_space_gb))
         else:
-            download_videos(bvids_to_download, min_free_space_gb)
+            download_videos(config, bvids_to_download, min_free_space_gb)
 
 
-def clean_lock_files():
+def clean_lock_files(config):
     """清理所有锁文件"""
     lock_dir = config.storage_home_dir / ".locks"
     if not lock_dir.exists():
@@ -165,7 +165,7 @@ def process_finished_download(video_dir, bvid, collection):
                 print(_("上传 {} 时出错: {}").format(bvid, e))
 
 
-def download_videos(bvids, min_free_space_gb):
+def download_videos(config, bvids, min_free_space_gb):
     """尝试下载未完成的视频"""
     if not bvids:
         return

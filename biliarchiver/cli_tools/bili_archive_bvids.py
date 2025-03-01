@@ -112,24 +112,28 @@ async def _down(
     tasks: List[asyncio.Task] = []
 
     def tasks_check():
+        failed_tasks = []
         for task in tasks:
             if task.done():
                 _task_exception = task.exception()
                 if isinstance(_task_exception, BaseException):
                     import traceback
                     traceback.print_exc()
-                    print(f"任务 {task} 出错，即将异常退出...")
-                    for task in tasks:
-                        task.cancel()
-                    raise _task_exception
+                    print(f"任务 {task} 出错，但其他任务将继续执行...")
+                    failed_tasks.append((task, _task_exception))
                 # print(f'任务 {task} 已完成')
                 tasks.remove(task)
+
         if not check_free_space():
             s = _("剩余空间不足 {} GiB").format(min_free_space_gb)
             print(s)
             for task in tasks:
                 task.cancel()
             raise RuntimeError(s)
+
+        if failed_tasks:
+            print(f"完成所有任务，但有 {len(failed_tasks)} 个任务失败")
+            raise failed_tasks[0][1]
 
     for index, bvid in enumerate(bvids_list):
         if index < skip_to:

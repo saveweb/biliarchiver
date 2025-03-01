@@ -34,6 +34,14 @@ def upload_bvid(
     try:
         lock_dir = config.storage_home_dir / ".locks" / bvid
         lock_dir.mkdir(parents=True, exist_ok=True)
+        videos_basepath = (
+            config.storage_home_dir
+            / "videos"
+            / f"{bvid}-{human_readable_upper_part_map(string=bvid, backward=True)}"
+        )
+        if os.path.exists(videos_basepath / "_spam.mark"):
+            print(_("{} 被标记为垃圾内容，跳过").format(bvid))
+            return
         with UploadLock(lock_dir):  # type: ignore
             _upload_bvid(
                 bvid,
@@ -49,6 +57,18 @@ def upload_bvid(
         print(_("{} 的视频还没有下载完成，跳过".format(bvid)))
     except Exception as e:
         print(_("上传 {} 时出错：".format(bvid)))
+        error_msg = str(e)
+        if "appears to be spam" in error_msg:
+            print(_("{} 被标记为垃圾内容，创建标记文件").format(bvid))
+            videos_basepath = (
+                config.storage_home_dir
+                / "videos"
+                / f"{bvid}-{human_readable_upper_part_map(string=bvid, backward=True)}"
+            )
+            if videos_basepath.exists():
+                with open(videos_basepath / "_spam.mark", "w", encoding="utf-8") as f:
+                    f.write(error_msg)
+
         raise e
 
 
@@ -83,6 +103,9 @@ def _upload_bvid(
                     local_identifier, remote_identifier
                 )
             )
+            continue
+        if os.path.exists(f"{videos_basepath}/{local_identifier}/_spam.mark"):
+            print(_("{} 被标记为垃圾内容，跳过").format(local_identifier))
             continue
         if local_identifier.startswith("_"):
             print(_("跳过带 _ 前缀的 local_identifier: {}").format(local_identifier))
@@ -256,6 +279,13 @@ def _upload_bvid(
                         print(f"Upload failed, retrying ({upload_retry}) ...")
                         time.sleep(min(30 * (6 - upload_retry), 240))
                         continue
+                    if "appears to be spam" in str(e):
+                        print(_("{} 被标记为垃圾内容，创建标记文件").format(bvid))
+                        with open(
+                            videos_basepath / "_spam.mark", "w", encoding="utf-8"
+                        ) as f:
+                            f.write(str(e))
+                        raise e
                     else:
                         raise e
         tries = 100

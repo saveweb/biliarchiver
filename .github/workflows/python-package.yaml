@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.9", "3.11", "3.13"]
 
     steps:
     - uses: actions/checkout@v3
@@ -47,6 +47,7 @@ jobs:
         python -m biliarchiver.cli_tools.biliarchiver get --help
         python -m biliarchiver.cli_tools.biliarchiver up --help
         python -m biliarchiver.cli_tools.biliarchiver config --help
+        python -m biliarchiver.cli_tools.biliarchiver clean --help
     # - name: Test with pytest
       # run: |
         # pytest

@@ -223,9 +223,7 @@ async def archive_bvid(
             for result, cor in zip(results, coroutines):
                 if isinstance(result, Exception):
                     print(_("出错，其他任务完成后将抛出异常..."))
-                    for task in tasks:
-                        task.cancel()
-                    await asyncio.sleep(3)
+                    # No need to modify other code since asyncio.gather already waited for all tasks
                     traceback.print_exception(result)
                     raise result
 

@@ -8,8 +8,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-03-01 15:47+0800\n"
-"PO-Revision-Date: 2024-10-08 07:23+0000\n"
-"Last-Translator: yzqzss <yzqzss@yandex.com>\n"
+"PO-Revision-Date: 2025-03-01 08:13+0000\n"
+"Last-Translator: ovler <ovlertheyoung@gmail.com>\n"
 "Language-Team: English <https://toolate.othing.xyz/projects/biliarchiver/"
 "biliarchiver/en/>\n"
 "Language: en\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.7.2\n"
+"X-Generator: Weblate 5.10\n"
 
 #: biliarchiver/cli_tools/conf_command.py:5
 msgid "将传入参数写入配置文件"
@@ -129,7 +129,7 @@ msgid "存储到 {}"
 msgstr "Saved to {}"
 
 #: biliarchiver/cli_tools/get_command.py:61
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "正在获取 {sid} 的视频合集……"
 msgstr "Fetching the video list of {sid}…"
 
@@ -185,7 +185,7 @@ msgstr "Found duplicate bv_id"
 
 #: biliarchiver/cli_tools/get_command.py:178
 msgid "视频总数不匹配"
-msgstr ""
+msgstr "Total number of videos does not match"
 
 #: biliarchiver/cli_tools/get_command.py:283
 msgid "还剩 ~{} 页"
@@ -217,18 +217,16 @@ msgstr ""
 "in sequence."
 
 #: biliarchiver/cli_tools/get_command.py:374
-#, fuzzy
 msgid "合集或视频列表"
-msgstr "Videos in collection or video list"
+msgstr "Collection or video list"
 
 #: biliarchiver/cli_tools/get_command.py:378
-#, fuzzy
 msgid "视频列表内视频"
-msgstr "Videos in collection or video list"
+msgstr "Videos in video list"
 
 #: biliarchiver/cli_tools/get_command.py:384
 msgid "合集内视频"
-msgstr ""
+msgstr "Videos in collection"
 
 #: biliarchiver/cli_tools/get_command.py:387
 msgid "排行榜"
@@ -397,86 +395,85 @@ msgstr "Start API server"
 
 #: biliarchiver/cli_tools/clean_command.py:11
 msgid "清理并尝试修复未完成的任务"
-msgstr ""
+msgstr "Clean up and try to fix unfinished tasks"
 
 #: biliarchiver/cli_tools/clean_command.py:13
 msgid "尝试上传下载完成的视频"
-msgstr ""
+msgstr "Try uploading the downloaded video"
 
 #: biliarchiver/cli_tools/clean_command.py:20
 msgid "尝试继续下载未完成的视频"
-msgstr ""
+msgstr "Try to resume unfinished video download"
 
 #: biliarchiver/cli_tools/clean_command.py:22
 msgid "清理锁文件"
-msgstr ""
+msgstr "Clean up lock files"
 
 #: biliarchiver/cli_tools/clean_command.py:24
 msgid "欲上传至的 collection"
-msgstr ""
+msgstr "Collection to upload to"
 
 #: biliarchiver/cli_tools/clean_command.py:26
 msgid "执行所有清理操作"
-msgstr ""
+msgstr "Perform all cleanup operations"
 
 #: biliarchiver/cli_tools/clean_command.py:32
 msgid "最小剩余空间 (GB)，少于此值时将中止下载"
-msgstr ""
+msgstr "Minimum free space (GB), less than which the download will be aborted"
 
 #: biliarchiver/cli_tools/clean_command.py:40
 msgid "请指定至少一项清理操作，或使用 --all/-a 执行所有清理操作"
 msgstr ""
+"Please specify at least one cleaning operation, or use -- all/- a to perform "
+"all cleaning operations"
 
 #: biliarchiver/cli_tools/clean_command.py:47
 msgid "当前剩余磁盘空间: {:.2f} GB"
-msgstr ""
+msgstr "Current remaining disk space: {:.2f} GB"
 
 #: biliarchiver/cli_tools/clean_command.py:56
 msgid "视频目录不存在: {}"
-msgstr ""
+msgstr "The video directory does not exist: {}"
 
 #: biliarchiver/cli_tools/clean_command.py:78
 msgid "发现未完成下载的视频: {}"
-msgstr ""
+msgstr "Incomplete download found: {}"
 
 #: biliarchiver/cli_tools/clean_command.py:89
-#, fuzzy
 msgid "剩余空间不足 {} GB，跳过下载操作"
-msgstr "Insufficient remaining space {} GiB"
+msgstr "Insufficient {} GB of remaining space, skip download operation"
 
 #: biliarchiver/cli_tools/clean_command.py:98
-#, fuzzy
 msgid "锁文件目录不存在: {}"
-msgstr "Cookies file does not exist: {}"
+msgstr "Lock file directory does not exist: {}"
 
 #: biliarchiver/cli_tools/clean_command.py:122
 msgid "已清理 {} 个锁文件，释放 {:.2f} MiB 空间"
-msgstr ""
+msgstr "Cleared {} lock files, freeing up {:. 2f} MiB space"
 
 #: biliarchiver/cli_tools/clean_command.py:132
 msgid "{} 已被标记为垃圾，跳过"
-msgstr ""
+msgstr "{} has been marked as spam, skip"
 
 #: biliarchiver/cli_tools/clean_command.py:149
 msgid "尝试上传 {}"
-msgstr ""
+msgstr "Attempt to upload {}"
 
 #: biliarchiver/cli_tools/clean_command.py:161
 msgid "{} 被检测为垃圾，标记并跳过"
-msgstr ""
+msgstr "{} has been marked as spam, marked and skipped"
 
 #: biliarchiver/cli_tools/clean_command.py:165
-#, fuzzy
 msgid "上传 {} 时出错: {}"
-msgstr "Error occurred when uploading {}:"
+msgstr "Error uploading {} : {}"
 
 #: biliarchiver/cli_tools/clean_command.py:178
 msgid "尝试继续下载 {} 个未完成的视频"
-msgstr ""
+msgstr "Try to continue downloading {} unfinished videos"
 
 #: biliarchiver/cli_tools/clean_command.py:196
 msgid "下载过程中出错: {}"
-msgstr ""
+msgstr "Error during download: {}"
 
 #: biliarchiver/config.py:33
 msgid "{} 不存在，创建中..."
@@ -495,7 +492,7 @@ msgstr ""
 #: biliarchiver/_biliarchiver_upload_bvid.py:43
 #: biliarchiver/_biliarchiver_upload_bvid.py:108
 msgid "{} 被标记为垃圾内容，跳过"
-msgstr ""
+msgstr "{} is marked as spam and skipped"
 
 #: biliarchiver/_biliarchiver_upload_bvid.py:53
 msgid "已经有一个上传 {} 的进程在运行，跳过"
@@ -520,7 +517,7 @@ msgstr "Error occurred when uploading {}:"
 #: biliarchiver/_biliarchiver_upload_bvid.py:62
 #: biliarchiver/_biliarchiver_upload_bvid.py:283
 msgid "{} 被标记为垃圾内容，创建标记文件"
-msgstr ""
+msgstr "{} is marked as spam, creating a tag file"
 
 #: biliarchiver/_biliarchiver_upload_bvid.py:102
 msgid "{} => {} 已经上传过了(_uploaded.mark)"
@@ -540,27 +537,27 @@ msgstr "Download not finished"
 
 #: biliarchiver/_biliarchiver_upload_bvid.py:127
 msgid "开始上传"
-msgstr ""
+msgstr "Start Upload"
 
 #: biliarchiver/_biliarchiver_upload_bvid.py:130
 msgid "{} 已存在，跳过 (item.exists)"
-msgstr ""
+msgstr "{} already exists, skip (item.exists)"
 
 #: biliarchiver/_biliarchiver_upload_bvid.py:134
 msgid "不是你上传的，跳过"
-msgstr ""
+msgstr "It wasn't uploaded by you, skip it"
 
 #: biliarchiver/_biliarchiver_upload_bvid.py:139
 msgid "已经上传过了，跳过"
-msgstr ""
+msgstr "Already uploaded, skip"
 
 #: biliarchiver/_biliarchiver_upload_bvid.py:335
 msgid "{} 不是你上传的，跳过 (item.metadata.creator)"
-msgstr ""
+msgstr "{} was not uploaded by you, skip (item. metadata. creator)"
 
 #: biliarchiver/_biliarchiver_upload_bvid.py:371
 msgid "上传完成"
-msgstr ""
+msgstr "Upload Complete"
 
 #: biliarchiver/_biliarchiver_upload_bvid.py:379
 msgid "已删除视频文件夹 {}"

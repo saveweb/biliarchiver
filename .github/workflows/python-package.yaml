@@ -47,6 +47,7 @@ jobs:
         python -m biliarchiver.cli_tools.biliarchiver get --help
         python -m biliarchiver.cli_tools.biliarchiver up --help
         python -m biliarchiver.cli_tools.biliarchiver config --help
+        python -m biliarchiver.cli_tools.biliarchiver clean --help
     # - name: Test with pytest
       # run: |
         # pytest

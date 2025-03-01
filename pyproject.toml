@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "biliarchiver"
-version = "0.1.19"
+version = "0.1.20"
 description = "Archiving tool for Bilibili based on bilix"
 authors = ["yzqzss <yzqzss@yandex.com>"]
 readme = "README.md"

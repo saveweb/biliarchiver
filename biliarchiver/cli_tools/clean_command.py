@@ -1,5 +1,6 @@
 import os
 import click
+import shutil
 import asyncio
 from pathlib import Path
 from rich import print
@@ -21,6 +22,9 @@ from biliarchiver.i18n import _
 )
 @click.option("--clean-locks", "-l", is_flag=True, default=False, help=_("清理锁文件"))
 @click.option(
+    "--clean-uploaded", "-cu", is_flag=True, default=False, help=_("清理已上传的视频")
+)
+@click.option(
     "--collection", "-c", default="opensource_movies", help=_("欲上传至的 collection")
 )
 @click.option("--all", "-a", is_flag=True, default=False, help=_("执行所有清理操作"))
@@ -31,19 +35,28 @@ from biliarchiver.i18n import _
     default=10,
     help=_("最小剩余空间 (GB)，少于此值时将中止下载"),
 )
-def clean(try_upload, try_download, clean_locks, collection, all, min_free_space_gb):
+def clean(
+    try_upload,
+    try_download,
+    clean_locks,
+    clean_uploaded,
+    collection,
+    all,
+    min_free_space_gb,
+):
     """清理命令主函数"""
     if all:
-        try_upload = try_download = clean_locks = True
+        try_upload = try_download = clean_locks = clean_uploaded = True
 
-    if not any([try_upload, try_download, clean_locks]):
+    if not any([try_upload, try_download, clean_locks, clean_uploaded]):
         print(_("请指定至少一项清理操作，或使用 --all/-a 执行所有清理操作"))
         return
-    
+
     from biliarchiver.config import config
 
     # 检查磁盘空间
-    free_space_gb = get_free_space(config.storage_home_dir) / (1024 * 1024 * 1024)
+    free_space_before = get_free_space(config.storage_home_dir)
+    free_space_gb = free_space_before / (1024 * 1024 * 1024)
     print(_("当前剩余磁盘空间: {:.2f} GB").format(free_space_gb))
 
     # 清理锁文件
@@ -79,12 +92,33 @@ def clean(try_upload, try_download, clean_locks, collection, all, min_free_space
                 bvids_to_download.append(bvid)
             continue
 
+        # 如果启用了清理已上传视频选项，检查所有分P是否已上传
+        if clean_uploaded:
+            all_parts_uploaded = True
+            for part_dir in video_dir.iterdir():
+                if not part_dir.is_dir():
+                    continue
+                if not (part_dir / "_uploaded.mark").exists():
+                    all_parts_uploaded = False
+                    break
+
+            if all_parts_uploaded and video_dir.exists():
+                print(_("清理已上传的视频: {}").format(bvid))
+                shutil.rmtree(video_dir, ignore_errors=True)
+                continue
+
         # 下载完成，检查是否需要上传
         if try_upload:
             process_finished_download(video_dir, bvid, collection)
 
+    if clean_uploaded or try_upload:
+        free_space_after = get_free_space(config.storage_home_dir)
+        space_freed = free_space_after - free_space_before
+        print(_("共释放 {:.2f} MiB 空间").format(space_freed / (1024 * 1024)))
+
     # 执行下载
     if try_download and bvids_to_download:
+        free_space_gb = get_free_space(config.storage_home_dir) / (1024 * 1024 * 1024)
         if free_space_gb < min_free_space_gb:
             print(_("剩余空间不足 {} GB，跳过下载操作").format(min_free_space_gb))
         else:
@@ -148,6 +182,7 @@ def process_finished_download(video_dir, bvid, collection):
     if has_parts_to_upload:
         print(_("尝试上传 {}").format(bvid))
         from biliarchiver._biliarchiver_upload_bvid import upload_bvid
+
         try:
             upload_bvid(
                 bvid,

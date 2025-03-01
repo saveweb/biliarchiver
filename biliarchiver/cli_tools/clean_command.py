@@ -4,7 +4,6 @@ import asyncio
 from pathlib import Path
 from rich import print
 
-from biliarchiver._biliarchiver_upload_bvid import upload_bvid
 from biliarchiver.utils.storage import get_free_space
 from biliarchiver.i18n import _
 
@@ -148,6 +147,7 @@ def process_finished_download(video_dir, bvid, collection):
 
     if has_parts_to_upload:
         print(_("尝试上传 {}").format(bvid))
+        from biliarchiver._biliarchiver_upload_bvid import upload_bvid
         try:
             upload_bvid(
                 bvid,

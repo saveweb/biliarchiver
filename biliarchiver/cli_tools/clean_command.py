@@ -88,7 +88,7 @@ def clean(try_upload, try_download, clean_locks, collection, all, min_free_space
         if free_space_gb < min_free_space_gb:
             print(_("剩余空间不足 {} GB，跳过下载操作").format(min_free_space_gb))
         else:
-            download_videos(config, bvids_to_download, min_free_space_gb)
+            download_unfinished_videos(config, bvids_to_download, min_free_space_gb)
 
 
 def clean_lock_files(config):
@@ -165,7 +165,7 @@ def process_finished_download(video_dir, bvid, collection):
                 print(_("上传 {} 时出错: {}").format(bvid, e))
 
 
-def download_videos(config, bvids, min_free_space_gb):
+def download_unfinished_videos(config, bvids, min_free_space_gb):
     """尝试下载未完成的视频"""
     if not bvids:
         return

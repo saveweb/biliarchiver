@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-03-01 15:47+0800\n"
-"PO-Revision-Date: 2025-03-01 08:13+0000\n"
+"PO-Revision-Date: 2025-03-04 02:07+0000\n"
 "Last-Translator: ovler <ovlertheyoung@gmail.com>\n"
 "Language-Team: English <https://toolate.othing.xyz/projects/biliarchiver/"
 "biliarchiver/en/>\n"
@@ -177,7 +177,7 @@ msgstr ""
 msgid "获取第 {} 页"
 msgid_plural "获取第 {} 页"
 msgstr[0] "Getting page {}"
-msgstr[1] ""
+msgstr[1] "Getting pages: {}"
 
 #: biliarchiver/cli_tools/get_command.py:176
 msgid "有重复的 bv_id"
@@ -349,7 +349,7 @@ msgstr ""
 
 #: biliarchiver/cli_tools/bili_archive_bvids.py:244
 msgid "已废弃直接运行此命令，请改用 biliarchiver 命令"
-msgstr "This command is deprecated. Use `biliarchiver down` instead."
+msgstr "This command is deprecated. Use `biliarchiver down` instead"
 
 #: biliarchiver/cli_tools/biliarchiver.py:51
 msgid "初始化所需目录"

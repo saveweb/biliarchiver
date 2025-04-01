@@ -40,6 +40,8 @@ biliarchiver down --bvids BVXXXXXXXXX
 
 - This command also accepts a list of BVIDs or path to a file. Details can be found in `biliarchiver down --help`.
 
+<!--
+
 4. Upload videos to Internet Archive:
 
 ```bash
@@ -61,6 +63,11 @@ biliarchiver api
 ```bash
 curl -X PUT -H "Content-Type: application/json" http://127.0.0.1:8000/archive/BVXXXXXX
 ```
+-->
+
+### Warning ⚠️ 
+
+Dumping entire channels into Community Video is abusive and may get your account locked. Talk to the Internet Archive admins first before doing large uploads; it's better to ask for guidence or help first than run afoul of the rules.
 
 ## Develop
 

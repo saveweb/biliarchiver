@@ -95,8 +95,6 @@ async def _down(
         update_cookies_from_file(d.client, config.cookies_file)
     client = Client(cookies=d.client.cookies, headers=d.client.headers)
     logined = is_login(client)
-    if not logined:
-        return
 
     def check_free_space():
         if min_free_space_gb != 0:
@@ -194,7 +192,9 @@ def update_cookies_from_file(client: AsyncClient, cookies_path: Union[str, Path]
     else:
         raise TypeError(f"cookies_path: {type(cookies_path)}")
 
-    assert os.path.exists(cookies_path), _("cookies 文件不存在: {}").format(cookies_path)
+    if not os.path.exists(cookies_path):
+        print(_("cookies 文件不存在: {}").format(cookies_path))
+        return
 
     from http.cookiejar import MozillaCookieJar
 
@@ -223,7 +223,6 @@ def update_cookies_from_file(client: AsyncClient, cookies_path: Union[str, Path]
         if loadded_cookies > 100:
             print(_("吃了过多的 cookies，可能导致 httpx.Client 怠工，响应非常缓慢"))
 
-        assert client.cookies.get("SESSDATA") is not None, "SESSDATA 不存在"
         # print(f'SESS_DATA: {client.cookies.get("SESSDATA")}')
 
 
@@ -234,9 +233,9 @@ def is_login(cilent: Client) -> bool:
     if nav_json["code"] == 0:
         print(_("BiliBili 登录成功，饼干真香。"))
         print(_("NOTICE: 存档过程中请不要在 cookies 的源浏览器访问 B 站，避免 B 站刷新"), end=" ")
-        print(_("cookies 导致我们半路下到的视频全是 480P 的优酷土豆级醇享画质。"))
         return True
     print(_("未登录/SESSDATA无效/过期，你这饼干它保真吗？"))
+    print(_("未登录时下到的视频均为最高 1080P 画质。"))
     return False
 
 

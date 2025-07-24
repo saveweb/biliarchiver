@@ -2,6 +2,7 @@ import os
 import click
 import shutil
 import asyncio
+import httpx
 from pathlib import Path
 from rich import print
 
@@ -35,6 +36,13 @@ from biliarchiver.i18n import _
     default=10,
     help=_("最小剩余空间 (GB)，少于此值时将中止下载"),
 )
+@click.option(
+    "--only-deleted",
+    "-od",
+    is_flag=True,
+    default=False,
+    help=_("仅上传已删除/不可见的视频到 Internet Archive"),
+)
 def clean(
     try_upload,
     try_download,
@@ -43,6 +51,7 @@ def clean(
     collection,
     all,
     min_free_space_gb,
+    only_deleted,
 ):
     """清理命令主函数"""
     if all:
@@ -109,7 +118,7 @@ def clean(
 
         # 下载完成，检查是否需要上传
         if try_upload:
-            process_finished_download(video_dir, bvid, collection)
+            process_finished_download(video_dir, bvid, collection, only_deleted)
 
     if clean_uploaded or try_upload:
         free_space_after = get_free_space(config.storage_home_dir)
@@ -159,12 +168,17 @@ def clean_lock_files(config):
     )
 
 
-def process_finished_download(video_dir, bvid, collection):
+def process_finished_download(video_dir, bvid, collection, only_deleted):
     """处理下载完成的视频目录"""
     # 检查是否有标记为垃圾的文件
     if (video_dir / "_spam.mark").exists():
         print(_("{} 已被标记为垃圾，跳过").format(bvid))
         return
+
+    # 如果设置了只上传删除的视频，检查视频状态
+    if only_deleted:
+        if not check_video_deleted(bvid):
+            return
 
     # 检查是否有分P需要上传
     has_parts_to_upload = False
@@ -233,3 +247,29 @@ def download_unfinished_videos(config, bvids, min_free_space_gb):
         # 清理临时文件
         if temp_file.exists():
             temp_file.unlink()
+
+
+def check_video_deleted(bvid):
+    """检查视频是否已删除或不可见"""
+    try:
+        url = "https://api.bilibili.com/x/web-interface/view"
+        params = {"bvid": bvid}
+        
+        with httpx.Client(follow_redirects=True) as client:
+            response = client.get(url, params=params)
+            response.raise_for_status()
+            
+            r_json = response.json()
+            code = r_json.get("code", 0)
+            
+            # code != 0 表示视频有问题（删除、不可见等）
+            if code != 0:
+                message = r_json.get("message", "未知错误")
+                print(_("检测到 {} 已删除/不可见: {} (code: {})").format(bvid, message, code))
+                return True
+            else:
+                return False
+                
+    except Exception as e:
+        print(_("检查 {} 状态时出错: {}，默认为可见").format(bvid, e))
+        return False

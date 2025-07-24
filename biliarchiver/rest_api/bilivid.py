@@ -2,6 +2,7 @@ import asyncio
 from enum import Enum
 import time
 from typing import Optional
+from biliarchiver.utils.avbv import av2bv, bv2av
 
 class VideoStatus(str, Enum):
     pending = "pending"
@@ -13,7 +14,11 @@ class VideoStatus(str, Enum):
 
 class BiliVideo:
     def __init__(self, bvid: str, status: VideoStatus):
-        if not bvid.startswith("BV"):
+        if bvid.startswith("av"):
+            bvid = av2bv(int(bvid[2:]))
+        elif bvid.isdecimal():
+            bvid = av2bv(int(bvid))
+        elif not bvid.startswith("BV"):
             bvid = "BV" + bvid
         self.added_time = int(time.time())
         self.bvid = bvid

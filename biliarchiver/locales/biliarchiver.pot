@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-01 15:47+0800\n"
+"POT-Creation-Date: 2025-07-30 15:36+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -366,84 +366,108 @@ msgstr ""
 msgid "运行 API"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:11
+#: biliarchiver/cli_tools/clean_command.py:13
 msgid "清理并尝试修复未完成的任务"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:13
+#: biliarchiver/cli_tools/clean_command.py:15
 msgid "尝试上传下载完成的视频"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:20
+#: biliarchiver/cli_tools/clean_command.py:22
 msgid "尝试继续下载未完成的视频"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:22
+#: biliarchiver/cli_tools/clean_command.py:24
 msgid "清理锁文件"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:24
+#: biliarchiver/cli_tools/clean_command.py:26
+msgid "清理已上传的视频"
+msgstr ""
+
+#: biliarchiver/cli_tools/clean_command.py:29
 msgid "欲上传至的 collection"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:26
+#: biliarchiver/cli_tools/clean_command.py:31
 msgid "执行所有清理操作"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:32
+#: biliarchiver/cli_tools/clean_command.py:37
 msgid "最小剩余空间 (GB)，少于此值时将中止下载"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:40
+#: biliarchiver/cli_tools/clean_command.py:44
+msgid "仅上传已删除/不可见的视频到 Internet Archive"
+msgstr ""
+
+#: biliarchiver/cli_tools/clean_command.py:61
 msgid "请指定至少一项清理操作，或使用 --all/-a 执行所有清理操作"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:47
+#: biliarchiver/cli_tools/clean_command.py:69
 msgid "当前剩余磁盘空间: {:.2f} GB"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:56
+#: biliarchiver/cli_tools/clean_command.py:78
 msgid "视频目录不存在: {}"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:78
+#: biliarchiver/cli_tools/clean_command.py:100
 msgid "发现未完成下载的视频: {}"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:89
-msgid "剩余空间不足 {} GB，跳过下载操作"
+#: biliarchiver/cli_tools/clean_command.py:115
+msgid "清理已上传的视频: {}"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:98
-msgid "锁文件目录不存在: {}"
-msgstr ""
-
-#: biliarchiver/cli_tools/clean_command.py:122
-msgid "已清理 {} 个锁文件，释放 {:.2f} MiB 空间"
+#: biliarchiver/cli_tools/clean_command.py:126
+msgid "共释放 {:.2f} MiB 空间"
 msgstr ""
 
 #: biliarchiver/cli_tools/clean_command.py:132
-msgid "{} 已被标记为垃圾，跳过"
+msgid "剩余空间不足 {} GB，跳过下载操作"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:149
-msgid "尝试上传 {}"
-msgstr ""
-
-#: biliarchiver/cli_tools/clean_command.py:161
-msgid "{} 被检测为垃圾，标记并跳过"
+#: biliarchiver/cli_tools/clean_command.py:141
+msgid "锁文件目录不存在: {}"
 msgstr ""
 
 #: biliarchiver/cli_tools/clean_command.py:165
+msgid "已清理 {} 个锁文件，释放 {:.2f} MiB 空间"
+msgstr ""
+
+#: biliarchiver/cli_tools/clean_command.py:175
+msgid "{} 已被标记为垃圾，跳过"
+msgstr ""
+
+#: biliarchiver/cli_tools/clean_command.py:197
+msgid "尝试上传 {}"
+msgstr ""
+
+#: biliarchiver/cli_tools/clean_command.py:210
+msgid "{} 被检测为垃圾，标记并跳过"
+msgstr ""
+
+#: biliarchiver/cli_tools/clean_command.py:214
 msgid "上传 {} 时出错: {}"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:178
+#: biliarchiver/cli_tools/clean_command.py:227
 msgid "尝试继续下载 {} 个未完成的视频"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:196
+#: biliarchiver/cli_tools/clean_command.py:245
 msgid "下载过程中出错: {}"
+msgstr ""
+
+#: biliarchiver/cli_tools/clean_command.py:268
+msgid "检测到 {} 已删除/不可见: {} (code: {})"
+msgstr ""
+
+#: biliarchiver/cli_tools/clean_command.py:274
+msgid "检查 {} 状态时出错: {}，默认为可见"
 msgstr ""
 
 #: biliarchiver/config.py:33

@@ -208,7 +208,7 @@ def update_cookies_from_file(client: AsyncClient, cookies_path: Union[str, Path]
             # only load bilibili cookies
             if "bilibili.com" not in cookie.domain:
                 continue
-            if cookie.name in loadded_keys:
+            if cookie.name in loadded_keys or cookie.name in client.cookies:
                 print(_("跳过重复的 cookies"), end="")
                 print(f": {cookie.name}")
                 # httpx 不能处理不同域名的同名 cookies，只好硬去重了

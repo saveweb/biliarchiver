@@ -407,7 +407,7 @@ msgid "请指定至少一项清理操作，或使用 --all/-a 执行所有清理
 msgstr ""
 
 #: biliarchiver/cli_tools/clean_command.py:69
-msgid "当前剩余磁盘空间: {:.2f} GB"
+msgid "当前剩余磁盘空间: {} GB"
 msgstr ""
 
 #: biliarchiver/cli_tools/clean_command.py:78
@@ -423,7 +423,7 @@ msgid "清理已上传的视频: {}"
 msgstr ""
 
 #: biliarchiver/cli_tools/clean_command.py:126
-msgid "共释放 {:.2f} MiB 空间"
+msgid "共释放 {} MiB 空间"
 msgstr ""
 
 #: biliarchiver/cli_tools/clean_command.py:132
@@ -435,7 +435,7 @@ msgid "锁文件目录不存在: {}"
 msgstr ""
 
 #: biliarchiver/cli_tools/clean_command.py:165
-msgid "已清理 {} 个锁文件，释放 {:.2f} MiB 空间"
+msgid "已清理 {} 个锁文件，释放 {} MiB 空间"
 msgstr ""
 
 #: biliarchiver/cli_tools/clean_command.py:175

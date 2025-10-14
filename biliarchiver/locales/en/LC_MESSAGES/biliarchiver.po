@@ -436,8 +436,8 @@ msgstr ""
 "all cleaning operations"
 
 #: biliarchiver/cli_tools/clean_command.py:69
-msgid "当前剩余磁盘空间: {:.2f} GB"
-msgstr "Current remaining disk space: {:.2f} GB"
+msgid "当前剩余磁盘空间: {} GB"
+msgstr "Current remaining disk space: {} GB"
 
 #: biliarchiver/cli_tools/clean_command.py:78
 msgid "视频目录不存在: {}"
@@ -453,8 +453,8 @@ msgstr ""
 
 #: biliarchiver/cli_tools/clean_command.py:126
 #, fuzzy
-msgid "共释放 {:.2f} MiB 空间"
-msgstr "Cleaned up {} lock files, freeing {:.2f} MiB of space"
+msgid "共释放 {} MiB 空间"
+msgstr "Cleaned up {} lock files, freeing {} MiB of space"
 
 #: biliarchiver/cli_tools/clean_command.py:132
 msgid "剩余空间不足 {} GB，跳过下载操作"
@@ -465,8 +465,8 @@ msgid "锁文件目录不存在: {}"
 msgstr "Lock file directory does not exist: {}"
 
 #: biliarchiver/cli_tools/clean_command.py:165
-msgid "已清理 {} 个锁文件，释放 {:.2f} MiB 空间"
-msgstr "Cleaned up {} lock files, freeing {:.2f} MiB of space"
+msgid "已清理 {} 个锁文件，释放 {} MiB 空间"
+msgstr "Cleaned up {} lock files, freeing {} MiB of space"
 
 #: biliarchiver/cli_tools/clean_command.py:175
 msgid "{} 已被标记为垃圾，跳过"

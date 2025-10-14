@@ -66,7 +66,7 @@ def clean(
     # 检查磁盘空间
     free_space_before = get_free_space(config.storage_home_dir)
     free_space_gb = free_space_before / (1024 * 1024 * 1024)
-    print(_("当前剩余磁盘空间: {:.2f} GB").format(free_space_gb))
+    print(_("当前剩余磁盘空间: {} GB").format(f"{free_space_gb:.2f}"))
 
     # 清理锁文件
     if clean_locks:
@@ -123,7 +123,7 @@ def clean(
     if clean_uploaded or try_upload:
         free_space_after = get_free_space(config.storage_home_dir)
         space_freed = free_space_after - free_space_before
-        print(_("共释放 {:.2f} MiB 空间").format(space_freed / (1024 * 1024)))
+        print(_("共释放 {} MiB 空间").format(f"{space_freed / (1024 * 1024):.2f}"))
 
     # 执行下载
     if try_download and bvids_to_download:
@@ -162,8 +162,8 @@ def clean_lock_files(config):
                     pass
 
     print(
-        _("已清理 {} 个锁文件，释放 {:.2f} MiB 空间").format(
-            total_locks, total_size / (1024 * 1024)
+        _("已清理 {} 个锁文件，释放 {} MiB 空间").format(
+            total_locks, f"{total_size / (1024 * 1024):.2f}"
         )
     )
 

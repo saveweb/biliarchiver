@@ -81,6 +81,14 @@ async def add(vid: str):
     return {"success": True, "vid": vid}
 
 
+@app.put("/download/{vid}")
+@app.post("/download/{vid}")
+async def add_download_only(vid: str):
+    video = BiliVideo(vid, status=VideoStatus.pending, download_only=True)
+    await pending_queue.put(video)
+    return {"success": True, "vid": vid}
+
+
 @app.get("/archive")
 async def get_all():
     all_item = get_all_items()
@@ -167,6 +175,11 @@ async def video_scheduler():
         if not downloaded:
             await other_queue.change_status(video, VideoStatus.failed)
             print(f"Failed to download {video}")
+            continue
+
+        if video.download_only:
+            await other_queue.change_status(video, VideoStatus.finished)
+            print(f"Finished (download only) {video}")
             continue
 
         print(f"Start uploading {video}")

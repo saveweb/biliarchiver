@@ -13,7 +13,7 @@ class VideoStatus(str, Enum):
 
 
 class BiliVideo:
-    def __init__(self, bvid: str, status: VideoStatus):
+    def __init__(self, bvid: str, status: VideoStatus, download_only: bool = False):
         if bvid.startswith("av"):
             bvid = av2bv(int(bvid[2:]))
         elif bvid.isdecimal():
@@ -23,16 +23,17 @@ class BiliVideo:
         self.added_time = int(time.time())
         self.bvid = bvid
         self.status = status
+        self.download_only = download_only if isinstance(download_only, bool) else download_only == "True"
 
 
     def __str__(self) -> str:
-        return "\t".join([self.bvid, self.status])
+        return "\t".join([self.bvid, self.status, str(self.download_only)])
 
     async def down(self):
         from asyncio import subprocess
         from shlex import quote
 
-        cmd = ["biliarchiver", "down" ,"-i", quote(self.bvid), "-s", "--disable-version-check"]
+        cmd = ["biliarchiver", "down", "-i", quote(self.bvid), "-s", "--disable-version-check"]
 
         process: Optional[subprocess.Process] = None
         try:
@@ -57,7 +58,7 @@ class BiliVideo:
         from asyncio import subprocess
         from shlex import quote
 
-        cmd = ["biliarchiver", "up" ,"-i", quote(self.bvid), "-d"]
+        cmd = ["biliarchiver", "up", "-i", quote(self.bvid), "-d"]
 
         process: Optional[subprocess.Process] = None
         try:

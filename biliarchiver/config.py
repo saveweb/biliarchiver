@@ -73,4 +73,22 @@ class _Config(metaclass=singleton):
             raise DirNotInitializedError()
 
 
-config = _Config()
+class _LazyConfig:
+    _instance: "_Config | None" = None
+
+    def _get(self):
+        if self._instance is None:
+            self._instance = _Config()
+        return self._instance
+
+    def __getattr__(self, name):
+        return getattr(self._get(), name)
+
+    def __setattr__(self, name, value):
+        if name == "_instance":
+            super().__setattr__(name, value)
+        else:
+            setattr(self._get(), name, value)
+
+
+config = _LazyConfig()

@@ -130,8 +130,6 @@ async def by_up_videos(url_or_mid: str, truncate: int = int(1e10)) -> Path:
 
     client = AsyncClient(**api.dft_client_settings)
 
-    from biliarchiver.config import config
-
     if config.cookies_file.exists():
         from biliarchiver.cli_tools.bili_archive_bvids import update_cookies_from_file
         update_cookies_from_file(client, config.cookies_file)

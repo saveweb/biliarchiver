@@ -26,6 +26,7 @@ class _Config(metaclass=singleton):
     storage_home_dir: Path = Path("bilibili_archive_dir/").expanduser()
     ia_key_file: Path = Path("~/.bili_ia_keys.txt").expanduser()
     cookies_file: Path = Path("~/.cookies.txt").expanduser()
+    bilibili_api_proxy: str = ""
 
     def __init__(self):
         self.is_right_pwd()
@@ -43,6 +44,12 @@ class _Config(metaclass=singleton):
         self.storage_home_dir: Path = Path(config_file["storage_home_dir"]).expanduser()
         self.ia_key_file: Path = Path(config_file["ia_key_file"]).expanduser()
         self.cookies_file: Path = Path(config_file["cookies_file"]).expanduser()
+        self.bilibili_api_proxy: str = config_file.get("bilibili_api_proxy", "")
+
+    def bilibili_api_base(self) -> str:
+        if self.bilibili_api_proxy:
+            return self.bilibili_api_proxy.rstrip("/")
+        return "https://api.bilibili.com"
 
     def save(self):
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
@@ -54,6 +61,7 @@ class _Config(metaclass=singleton):
                     "storage_home_dir": str(self.storage_home_dir),
                     "ia_key_file": str(self.ia_key_file),
                     "cookies_file": str(self.cookies_file),
+                    "bilibili_api_proxy": self.bilibili_api_proxy,
                 },
                 f,
                 ensure_ascii=False,

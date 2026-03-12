@@ -12,6 +12,7 @@ from click_option_group import optgroup
 from httpx import AsyncClient
 from rich import print
 
+from biliarchiver.config import config
 from biliarchiver.i18n import _, ngettext
 
 
@@ -80,7 +81,7 @@ async def by_season(url_or_sid: str, truncate: int = int(1e10)) -> Path:
 
 
 def by_ranking(rid: int) -> Path:
-    bilibili_ranking_api = "https://api.bilibili.com/x/web-interface/ranking/v2"
+    bilibili_ranking_api = config.bilibili_api_base() + "/x/web-interface/ranking/v2"
     bilibili_ranking_params = {"rid": rid, "type": "all"}
 
     r = requests.get(bilibili_ranking_api, params=bilibili_ranking_params)
@@ -192,7 +193,7 @@ async def by_up_videos(url_or_mid: str, truncate: int = int(1e10)) -> Path:
 
 
 def by_popular_precious():
-    API_URL = "https://api.bilibili.com/x/web-interface/popular/precious"
+    API_URL = config.bilibili_api_base() + "/x/web-interface/popular/precious"
     r = requests.get(API_URL)
     r.raise_for_status()
     popular_precious_json = json.loads(r.text)
@@ -215,7 +216,7 @@ def by_popular_precious():
 
 
 def by_popular_series_one(number: int):
-    API_URL = "https://api.bilibili.com/x/web-interface/popular/series/one"
+    API_URL = config.bilibili_api_base() + "/x/web-interface/popular/series/one"
     params = {"number": number}
     r = requests.get(API_URL, params=params)
     r.raise_for_status()
@@ -239,7 +240,7 @@ def by_popular_series_one(number: int):
 
 
 def not_got_popular_series() -> list[int]:
-    API_URL = "http://api.bilibili.com/x/web-interface/popular/series/list"
+    API_URL = config.bilibili_api_base() + "/x/web-interface/popular/series/list"
     got_series = []
     os.makedirs("bvids/by-popular_series", exist_ok=True)
     for filename in os.listdir("bvids/by-popular_series"):

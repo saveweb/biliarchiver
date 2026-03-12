@@ -8,6 +8,11 @@ from rich import print
 
 from biliarchiver.utils.storage import get_free_space
 from biliarchiver.i18n import _
+from biliarchiver.config import config
+from biliarchiver.cli_tools.bili_archive_bvids import check_ia_item_exist
+
+# from biliarchiver.config import BILIBILI_IDENTIFIER_PERFIX
+from biliarchiver.utils.identifier import human_readable_upper_part_map
 
 
 @click.command(help=click.style(_("清理并尝试修复未完成的任务"), fg="cyan"))
@@ -79,7 +84,9 @@ def clean(
         return
 
     bvids_to_download = []
+    videos_to_process = []  # 收集需要处理的视频信息
 
+    # 第一遍扫描，收集所有需要处理的视频
     for video_dir in videos_dir.iterdir():
         if not video_dir.is_dir():
             continue
@@ -100,6 +107,26 @@ def clean(
                 print(_("发现未完成下载的视频: {}").format(bvid))
                 bvids_to_download.append(bvid)
             continue
+        # 检查是否只有 _all_downloaded.mark 文件（说明下载有问题或内容为空）
+        video_dir_contents = list(video_dir.iterdir())
+        if len(video_dir_contents) == 1 and video_dir_contents[0].name == "_all_downloaded.mark":
+            continue
+        # 收集已下载完成的视频信息
+        videos_to_process.append({"video_dir": video_dir, "bvid": bvid})
+
+    # 批量并发检查B站视频状态
+    if videos_to_process and (clean_uploaded or (try_upload and only_deleted)):
+        print(_("正在批量检查 {} 个视频的B站状态...").format(len(videos_to_process)))
+        bvid_status_map = batch_check_bilibili_status(
+            [v["bvid"] for v in videos_to_process]
+        )
+    else:
+        bvid_status_map = {}
+
+    # 第二遍处理，根据检查结果执行相应操作
+    for video_info in videos_to_process:
+        video_dir = video_info["video_dir"]
+        bvid = video_info["bvid"]
 
         # 如果启用了清理已上传视频选项，检查所有分P是否已上传
         if clean_uploaded:
@@ -116,9 +143,42 @@ def clean(
                 shutil.rmtree(video_dir, ignore_errors=True)
                 continue
 
+            # 只有当视频被删除时才检查IA
+            if not (video_dir / "_uploaded.mark").exists():
+                video_deleted = bvid_status_map.get(bvid, False)
+                if video_deleted:
+                    try:
+                        # remote_identifier = f"{config.BILIBILI_IDENTIFIER_PERFIX}-{bvid}"
+                        upper_part = human_readable_upper_part_map(
+                            string=bvid, backward=True
+                        )
+                        remote_identifier = f"BiliBili-{bvid}_p1-{upper_part}"
+                        if check_ia_item_exist(remote_identifier):
+                            print(
+                                _("{} 已存在于 IA，标记并清理").format(
+                                    remote_identifier
+                                )
+                            )
+                            with open(
+                                video_dir / "_uploaded.mark", "w", encoding="utf-8"
+                            ) as f:
+                                f.write(remote_identifier)
+                            shutil.rmtree(video_dir, ignore_errors=True)
+                            continue
+                    except Exception as e:
+                        print(_("检查 {} 在 IA 上的状态时出错: {}").format(bvid, e))
+
         # 下载完成，检查是否需要上传
         if try_upload:
-            process_finished_download(video_dir, bvid, collection, only_deleted)
+            # 如果设置了only_deleted，使用批量检查的结果
+            if only_deleted:
+                video_deleted = bvid_status_map.get(bvid, False)
+                if video_deleted:
+                    process_finished_download(
+                        video_dir, bvid, collection, only_deleted=False
+                    )  # 已经检查过删除状态
+            else:
+                process_finished_download(video_dir, bvid, collection, only_deleted)
 
     if clean_uploaded or try_upload:
         free_space_after = get_free_space(config.storage_home_dir)
@@ -251,25 +311,75 @@ def download_unfinished_videos(config, bvids, min_free_space_gb):
 
 def check_video_deleted(bvid):
     """检查视频是否已删除或不可见"""
-    try:
-        url = "https://api.bilibili.com/x/web-interface/view"
-        params = {"bvid": bvid}
-        
-        with httpx.Client(follow_redirects=True) as client:
-            response = client.get(url, params=params)
-            response.raise_for_status()
-            
-            r_json = response.json()
-            code = r_json.get("code", 0)
-            
-            # code != 0 表示视频有问题（删除、不可见等）
-            if code != 0:
-                message = r_json.get("message", "未知错误")
-                print(_("检测到 {} 已删除/不可见: {} (code: {})").format(bvid, message, code))
-                return True
-            else:
-                return False
-                
-    except Exception as e:
-        print(_("检查 {} 状态时出错: {}，默认为可见").format(bvid, e))
-        return False
+    result = batch_check_bilibili_status([bvid])
+    return result.get(bvid, False)
+
+
+def batch_check_bilibili_status(bvids: list) -> dict:
+    """批量检查B站视频状态，每批最多50个
+
+    Args:
+        bvids: BVID列表
+
+    Returns:
+        dict: {bvid: is_deleted} 映射，True表示视频已删除/不可见
+    """
+    from biliarchiver.utils.avbv import bv2av
+
+    BATCH_SIZE = 50
+    result_map = {}
+
+    # 建立 aid -> bvid 反向映射
+    aid_to_bvid = {}
+    for bvid in bvids:
+        try:
+            aid = bv2av(bvid)
+            aid_to_bvid[aid] = bvid
+        except Exception as e:
+            print(_("转换 {} 为 AID 时出错: {}，跳过").format(bvid, e))
+            result_map[bvid] = False
+
+    aids = list(aid_to_bvid.keys())
+
+    with httpx.Client(follow_redirects=True, timeout=15.0) as client:
+        for i in range(0, len(aids), BATCH_SIZE):
+            batch_aids = aids[i:i + BATCH_SIZE]
+            resources = ",".join(f"{aid}:2" for aid in batch_aids)
+            try:
+                response = client.get(
+                    config.bilibili_api_base() + "/medialist/" + "gateway/base" + "/resource/" + "infos",
+                    params={"resources": resources},
+                )
+                response.raise_for_status()
+                r_json = response.json()
+                if r_json.get("code") != 0:
+                    raise ValueError(r_json.get("message", "未知错误"))
+
+                for item in r_json.get("data") or []:
+                    aid = item.get("id")
+                    bvid = aid_to_bvid.get(aid)
+                    if bvid is None:
+                        continue
+                    is_deleted = (
+                        item.get("title") == "已失效视频"
+                        and bool(item.get("pages"))
+                        and item["pages"][0].get("title") != "已失效视频"
+                    )
+                    if is_deleted:
+                        print(_("检测到 {} 已删除/不可见").format(bvid))
+                    result_map[bvid] = is_deleted
+
+            except Exception as e:
+                print(_("批量检查视频状态时出错: {}，该批次默认为可见").format(e))
+                for aid in batch_aids:
+                    bvid = aid_to_bvid[aid]
+                    result_map.setdefault(bvid, False)
+
+    deleted_count = sum(1 for is_deleted in result_map.values() if is_deleted)
+    print(
+        _("批量检查完成：{} 个视频中有 {} 个已删除/不可见").format(
+            len(bvids), deleted_count
+        )
+    )
+
+    return result_map

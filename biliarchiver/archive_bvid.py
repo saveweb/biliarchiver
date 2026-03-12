@@ -2,7 +2,9 @@ import asyncio
 import os
 from pathlib import Path
 import re
+import string
 import traceback
+from typing import cast
 
 import aiofiles
 import httpx
@@ -93,6 +95,9 @@ async def archive_bvid(
     logined: bool = False,
     semaphore: asyncio.Semaphore,
 ):
+    def get_codec_version(codec: str) -> tuple[int, ...]:
+        return tuple(int("".join(char for char in ver if char in string.hexdigits), base=16) for ver in codec.split("."))
+
     async with semaphore:
         assert d.hierarchy is True, _("hierarchy 必须为 True")  # 为保持后续目录结构、文件命名的一致性
         assert d.client.cookies.get("SESSDATA") is not None, _(
@@ -168,21 +173,55 @@ async def archive_bvid(
             codec = None
             quality = None
             if video_info.dash:
-                # 选择编码 dvh->hev->avc
-                # 不选 av0 ，毕竟目前没几个设备能拖得动
-                codec_candidates = ["dvh", "hev", "avc"]
-                for codec_candidate in codec_candidates:
-                    for media in video_info.dash.videos:
-                        if media.codec.startswith(codec_candidate):
-                            codec = media.codec
-                            quality = media.quality
-                            print(f'{file_basename}: "{codec}" "{media.quality}" ...')
-                            break
-                    if codec is not None:
-                        break
-                assert (
-                    codec is not None and quality is not None
-                ), f"{file_basename}: " + _("没有 dvh、avc 或 hevc 编码的视频")
+                assert video_info.dash.videos, "Dash video streams not found"
+                assert all(media.codec and media.quality_id and media.bandwidth for media in video_info.dash.videos), (
+                    "All video streams must have codec, quality, and bandwidth information"
+                )
+
+                high_quality_codec_candidates = {"dvh", "hvc"}
+                all_codecs = {cast(str, media.codec)[:3] for media in video_info.dash.videos}
+                known_codecs = high_quality_codec_candidates.union({"avc", "hev", "av0"})
+                assert all_codecs.issubset(known_codecs), f"Unknown codecs found: {all_codecs - known_codecs}"
+
+                # First sort by quality, then codec preference, then bandwidth.
+                sorted_videos = sorted(
+                    [media for media in video_info.dash.videos if media.codec and media.quality_id and media.bandwidth],
+                    key=lambda m: (
+                        m.quality_id,
+                        cast(str, m.codec)[:3] in high_quality_codec_candidates,
+                        m.bandwidth,
+                    ),
+                    reverse=True,
+                )
+
+                if not sorted_videos:
+                    raise APIError(f"{file_basename}: " + _("没有可用的 dash 视频"), page.p_url)
+
+                # Get the properties of the best video after the initial sort.
+                top_candidate = sorted_videos[0]
+                target_codec_prefix = cast(str, top_candidate.codec)[:3]
+                target_quality = top_candidate.quality_id
+
+                # Filter videos to only those with the same quality and codec type.
+                candidates = [
+                    m
+                    for m in sorted_videos
+                    if m.quality_id == target_quality and cast(str, m.codec)[:3] == target_codec_prefix
+                ]
+
+                # Second sort by full codec version.
+                final_candidates = sorted(
+                    candidates,
+                    key=lambda m: get_codec_version(cast(str, m.codec)),
+                    reverse=True,
+                )
+
+                best_video = final_candidates[0]
+                codec = best_video.codec
+                quality = best_video.quality_id
+                assert codec is not None and quality is not None, f"{file_basename}: " + _("无法确定最佳视频编码与画质")
+
+                print(f'{file_basename}: "{codec}" "{best_video.quality}" ...')
             elif video_info.other:
                 # print(f"{file_basename}: 未解析到 dash 资源，交给 bilix 处理 ...")
                 print("{file_basename}: " + _("未解析到 dash 资源，交给 bilix 处理 ..."))

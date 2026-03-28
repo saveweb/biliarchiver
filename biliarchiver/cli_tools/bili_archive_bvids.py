@@ -228,7 +228,7 @@ def update_cookies_from_file(client: AsyncClient, cookies_path: Union[str, Path]
 
 
 def is_login(cilent: Client) -> bool:
-    r = cilent.get(config.bilibili_api_base() + "/x/member/web/account")
+    r = cilent.get("https://api.bilibili.com/x/member/web/account")
     r.raise_for_status()
     nav_json = r.json()
     if nav_json["code"] == 0:

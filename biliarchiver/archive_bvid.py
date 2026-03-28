@@ -44,7 +44,7 @@ async def new_get_subtitle_info(client: httpx.AsyncClient, bvid, cid):
     # [patch 1]
     # 使用 wbi 端点避免字幕投毒
     await _add_sign(client=client, params=params)
-    res = await req_retry(client, config.bilibili_api_base() + "/x/player/wbi/v2", params=params)
+    res = await req_retry(client, "https://api.bilibili.com/x/player/wbi/v2", params=params)
 
     info = json.loads(res.text)
     if info["code"] == -400:
@@ -286,7 +286,7 @@ async def download_bilibili_video_detail(client, bvid, filepath):
         print(_("{} 的视频详情已存在").format(bvid))
         return
     # url = 'https://api.bilibili.com/x/web-interface/view'
-    url = config.bilibili_api_base() + "/x/web-interface/view/detail"  # 超详细 API（BV 级别，不是分 P 级别）
+    url = "https://api.bilibili.com/x/web-interface/view/detail"  # 超详细 API（BV 级别，不是分 P 级别）
     params = {"bvid": bvid}
     r = await req_retry(client, url, params=params, follow_redirects=True)
     r.raise_for_status()
@@ -315,7 +315,7 @@ async def _download_bilibili_video_replies(client, bvid, aid, filepath):
         print(_("{} 的视频回复已存在").format(bvid))
         return
 
-    url = config.bilibili_api_base() + "/x/v2/reply"
+    url = "https://api.bilibili.com/x/v2/reply"
     params = {
         "type": 1,
         "oid": aid,

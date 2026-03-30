@@ -153,12 +153,13 @@ def clean(
                             string=bvid, backward=True
                         )
                         remote_identifier = f"BiliBili-{bvid}_p1-{upper_part}"
-                        if check_ia_item_exist(remote_identifier):
-                            print(
-                                _("{} 已存在于 IA，标记并清理").format(
-                                    remote_identifier
+                        with httpx.Client(timeout=15.0) as client:
+                            if check_ia_item_exist(client, remote_identifier):
+                                print(
+                                    _("{} 已存在于 IA，标记并清理").format(
+                                        remote_identifier
+                                    )
                                 )
-                            )
                             with open(
                                 video_dir / "_uploaded.mark", "w", encoding="utf-8"
                             ) as f:

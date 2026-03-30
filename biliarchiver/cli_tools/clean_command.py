@@ -48,6 +48,12 @@ from biliarchiver.utils.identifier import human_readable_upper_part_map
     default=False,
     help=_("仅上传已删除/不可见的视频到 Internet Archive"),
 )
+@click.option(
+    "--retry-spam",
+    is_flag=True,
+    default=False,
+    help=_("尝试重新上传之前被标记为垃圾视频的项"),
+)
 def clean(
     try_upload,
     try_download,
@@ -57,6 +63,7 @@ def clean(
     all,
     min_free_space_gb,
     only_deleted,
+    retry_spam,
 ):
     """清理命令主函数"""
     if all:
@@ -176,10 +183,10 @@ def clean(
                 video_deleted = bvid_status_map.get(bvid, False)
                 if video_deleted:
                     process_finished_download(
-                        video_dir, bvid, collection, only_deleted=False
+                        video_dir, bvid, collection, only_deleted=False, retry_spam=retry_spam
                     )  # 已经检查过删除状态
             else:
-                process_finished_download(video_dir, bvid, collection, only_deleted)
+                process_finished_download(video_dir, bvid, collection, only_deleted, retry_spam=retry_spam)
 
     if clean_uploaded or try_upload:
         free_space_after = get_free_space(config.storage_home_dir)
@@ -229,15 +236,18 @@ def clean_lock_files(config):
     )
 
 
-def process_finished_download(video_dir, bvid, collection, only_deleted):
+def process_finished_download(video_dir, bvid, collection, only_deleted, retry_spam=False):
     """处理下载完成的视频目录"""
-    # 尝试重新上传被标记为垃圾的视频
     if (video_dir / "_spam.mark").exists():
-        print(_("{} 之前被标记为垃圾，尝试重新上传").format(bvid))
-        try:
-            (video_dir / "_spam.mark").unlink()
-        except:
-            pass
+        if retry_spam:
+            print(_("{} 之前被标记为垃圾，开启了 --retry-spam 标志，尝试重新上传").format(bvid))
+            try:
+                (video_dir / "_spam.mark").unlink()
+            except:
+                pass
+        else:
+            print(_("{} 被标记为垃圾内容，跳过。若要强制重试请使用 --retry-spam。").format(bvid))
+            return
 
     # 如果设置了只上传删除的视频，检查视频状态
     if only_deleted:
@@ -270,8 +280,9 @@ def process_finished_download(video_dir, bvid, collection, only_deleted):
             )
         except Exception as e:
             error_str = str(e)
-            if "appears to be spam" in error_str:
-                print(_("{} 被检测为垃圾，标记并跳过").format(bvid))
+            is_rate_limit = any(kw in error_str.lower() for kw in ["slow down", "rate limit", "429 client error", "503 server error"])
+            if "appears to be spam" in error_str and not is_rate_limit:
+                print(_("{} 被检测为真正垃圾内容，标记并跳过").format(bvid))
                 with open(video_dir / "_spam.mark", "w", encoding="utf-8") as f:
                     f.write(error_str)
             else:

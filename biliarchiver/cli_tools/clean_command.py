@@ -230,10 +230,13 @@ def clean_lock_files(config):
 
 def process_finished_download(video_dir, bvid, collection, only_deleted):
     """处理下载完成的视频目录"""
-    # 检查是否有标记为垃圾的文件
+    # 尝试重新上传被标记为垃圾的视频
     if (video_dir / "_spam.mark").exists():
-        print(_("{} 已被标记为垃圾，跳过").format(bvid))
-        return
+        print(_("{} 之前被标记为垃圾，尝试重新上传").format(bvid))
+        try:
+            (video_dir / "_spam.mark").unlink()
+        except:
+            pass
 
     # 如果设置了只上传删除的视频，检查视频状态
     if only_deleted:
@@ -272,6 +275,10 @@ def process_finished_download(video_dir, bvid, collection, only_deleted):
                     f.write(error_str)
             else:
                 print(_("上传 {} 时出错: {}").format(bvid, e))
+
+        import time
+        print(_("等待 60 秒以避免请求过频..."))
+        time.sleep(60)
 
 
 def download_unfinished_videos(config, bvids, min_free_space_gb):

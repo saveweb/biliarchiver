@@ -344,6 +344,7 @@ def batch_check_bilibili_status(bvids: list) -> dict:
         dict: {bvid: is_deleted} 映射，True表示视频已删除/不可见
     """
     from biliarchiver.utils.avbv import bv2av
+    from concurrent.futures import ThreadPoolExecutor, as_completed
 
     BATCH_SIZE = 50
     result_map = {}
@@ -360,10 +361,12 @@ def batch_check_bilibili_status(bvids: list) -> dict:
 
     aids = list(aid_to_bvid.keys())
 
-    with httpx.Client(follow_redirects=True, timeout=15.0) as client:
-        for i in range(0, len(aids), BATCH_SIZE):
-            batch_aids = aids[i:i + BATCH_SIZE]
-            resources = ",".join(f"{aid}:2" for aid in batch_aids)
+    max_workers = 16 if config.bilibili_api_proxy else 1
+
+    def fetch_batch(batch_aids):
+        resources = ",".join(f"{aid}:2" for aid in batch_aids)
+        batch_results = {}
+        with httpx.Client(follow_redirects=True, timeout=15.0) as client:
             try:
                 response = client.get(
                     config.bilibili_api_base() + "/medialist/" + "gateway/base" + "/resource/" + "infos",
@@ -386,13 +389,25 @@ def batch_check_bilibili_status(bvids: list) -> dict:
                     )
                     if is_deleted:
                         print(_("检测到 {} 已删除/不可见").format(bvid))
-                    result_map[bvid] = is_deleted
+                    batch_results[bvid] = is_deleted
 
             except Exception as e:
                 print(_("批量检查视频状态时出错: {}，该批次默认为可见").format(e))
-                for aid in batch_aids:
-                    bvid = aid_to_bvid[aid]
-                    result_map.setdefault(bvid, False)
+                pass
+                
+        return batch_aids, batch_results
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = []
+        for i in range(0, len(aids), BATCH_SIZE):
+            batch_aids = aids[i:i + BATCH_SIZE]
+            futures.append(executor.submit(fetch_batch, batch_aids))
+
+        for future in as_completed(futures):
+            batch_aids, batch_results = future.result()
+            for aid in batch_aids:
+                bvid = aid_to_bvid[aid]
+                result_map[bvid] = batch_results.get(bvid, False)
 
     deleted_count = sum(1 for is_deleted in result_map.values() if is_deleted)
     print(

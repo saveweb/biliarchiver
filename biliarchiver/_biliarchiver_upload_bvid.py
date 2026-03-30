@@ -58,7 +58,8 @@ def upload_bvid(
     except Exception as e:
         print(_("上传 {} 时出错：".format(bvid)))
         error_msg = str(e)
-        if "appears to be spam" in error_msg:
+        is_rate_limit = any(kw in error_msg.lower() for kw in ["slow down", "rate limit", "429 client error", "503 server error"])
+        if "appears to be spam" in error_msg and not is_rate_limit:
             print(_("{} 被标记为垃圾内容，创建标记文件").format(bvid))
             videos_basepath = (
                 config.storage_home_dir
@@ -271,15 +272,17 @@ def _upload_bvid(
                     )
                     break
                 except Exception as e:
-                    if "EOF" in str(e) or "SSL" in str(e):
+                    error_msg_lower = str(e).lower()
+                    is_rate_limit = any(kw in error_msg_lower for kw in ["slow down", "rate limit", "429 client error", "503 server error"])
+                    if "EOF" in error_msg_lower or "ssl" in error_msg_lower or is_rate_limit:
                         upload_retry -= 1
                         print(e)
                         if upload_retry < 0:
                             raise e
-                        print(f"Upload failed, retrying ({upload_retry}) ...")
-                        time.sleep(min(30 * (6 - upload_retry), 240))
+                        print(f"Upload failed (network or rate limit), retrying ({upload_retry}) ...")
+                        time.sleep(min(60 * (6 - upload_retry), 300))
                         continue
-                    if "appears to be spam" in str(e):
+                    if "appears to be spam" in str(e) and not is_rate_limit:
                         print(_("{} 被标记为垃圾内容，创建标记文件").format(bvid))
                         with open(
                             videos_basepath / "_spam.mark", "w", encoding="utf-8"

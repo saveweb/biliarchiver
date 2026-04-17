@@ -167,12 +167,12 @@ def clean(
                                         remote_identifier
                                     )
                                 )
-                            with open(
-                                video_dir / "_uploaded.mark", "w", encoding="utf-8"
-                            ) as f:
-                                f.write(remote_identifier)
-                            shutil.rmtree(video_dir, ignore_errors=True)
-                            continue
+                                with open(
+                                    video_dir / "_uploaded.mark", "w", encoding="utf-8"
+                                ) as f:
+                                    f.write(remote_identifier)
+                                shutil.rmtree(video_dir, ignore_errors=True)
+                                continue
                     except Exception as e:
                         print(_("检查 {} 在 IA 上的状态时出错: {}").format(bvid, e))
 

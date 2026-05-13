@@ -12,6 +12,7 @@ from shutil import rmtree
 from biliarchiver.i18n import _
 
 from biliarchiver.exception import (
+    RequestRateLimitedError,
     VideosBasePathNotFoundError,
     VideosNotFinishedDownloadError,
 )
@@ -55,10 +56,22 @@ def upload_bvid(
         print(_("没有找到 {} 对应的文件夹。可能是因已存在 IA item 而跳过了下载，或者你传入了错误的 bvid".format(bvid)))
     except VideosNotFinishedDownloadError:
         print(_("{} 的视频还没有下载完成，跳过".format(bvid)))
+    except RequestRateLimitedError:
+        print(_("上传 {} 时遇到请求过频，停止本次上传").format(bvid))
+        raise
     except Exception as e:
         print(_("上传 {} 时出错：".format(bvid)))
         error_msg = str(e)
-        is_rate_limit = any(kw in error_msg.lower() for kw in ["slow down", "rate limit", "429 client error", "503 server error"])
+        is_rate_limit = any(
+            kw in error_msg.lower()
+            for kw in [
+                "slow down",
+                "rate limit",
+                "reduce your request rate",
+                "429 client error",
+                "503 server error",
+            ]
+        )
         if "appears to be spam" in error_msg and not is_rate_limit:
             print(_("{} 被标记为垃圾内容，创建标记文件").format(bvid))
             videos_basepath = (
@@ -273,7 +286,19 @@ def _upload_bvid(
                     break
                 except Exception as e:
                     error_msg_lower = str(e).lower()
-                    is_rate_limit = any(kw in error_msg_lower for kw in ["slow down", "rate limit", "429 client error", "503 server error"])
+                    if "please reduce your request rate" in error_msg_lower:
+                        print(e)
+                        raise RequestRateLimitedError(str(e))
+                    is_rate_limit = any(
+                        kw in error_msg_lower
+                        for kw in [
+                            "slow down",
+                            "rate limit",
+                            "reduce your request rate",
+                            "429 client error",
+                            "503 server error",
+                        ]
+                    )
                     if "EOF" in error_msg_lower or "ssl" in error_msg_lower or is_rate_limit:
                         upload_retry -= 1
                         print(e)

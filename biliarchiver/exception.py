@@ -17,6 +17,10 @@ class VideosNotFinishedDownloadError(FileNotFoundError):
         return f"Videos not finished download: {self.path}"
 
 
+class RequestRateLimitedError(Exception):
+    pass
+
+
 class VersionOutdatedError(Exception):
     def __init__(self, version):
         self.version = version

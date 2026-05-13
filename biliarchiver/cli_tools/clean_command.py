@@ -182,11 +182,21 @@ def clean(
             if only_deleted:
                 video_deleted = bvid_status_map.get(bvid, False)
                 if video_deleted:
-                    process_finished_download(
-                        video_dir, bvid, collection, only_deleted=False, retry_spam=retry_spam
+                    should_stop = process_finished_download(
+                        video_dir,
+                        bvid,
+                        collection,
+                        only_deleted=False,
+                        retry_spam=retry_spam,
                     )  # 已经检查过删除状态
+                    if should_stop:
+                        return
             else:
-                process_finished_download(video_dir, bvid, collection, only_deleted, retry_spam=retry_spam)
+                should_stop = process_finished_download(
+                    video_dir, bvid, collection, only_deleted, retry_spam=retry_spam
+                )
+                if should_stop:
+                    return
 
     if clean_uploaded or try_upload:
         free_space_after = get_free_space(config.storage_home_dir)
@@ -270,6 +280,7 @@ def process_finished_download(video_dir, bvid, collection, only_deleted, retry_s
     if has_parts_to_upload:
         print(_("尝试上传 {}").format(bvid))
         from biliarchiver._biliarchiver_upload_bvid import upload_bvid
+        from biliarchiver.exception import RequestRateLimitedError
 
         try:
             upload_bvid(
@@ -278,9 +289,25 @@ def process_finished_download(video_dir, bvid, collection, only_deleted, retry_s
                 collection=collection,
                 delete_after_upload=True,
             )
+        except RequestRateLimitedError as e:
+            print(
+                _("遇到 Internet Archive 请求过频，停止本次 clean 上传任务: {}").format(
+                    e
+                )
+            )
+            return True
         except Exception as e:
             error_str = str(e)
-            is_rate_limit = any(kw in error_str.lower() for kw in ["slow down", "rate limit", "429 client error", "503 server error"])
+            is_rate_limit = any(
+                kw in error_str.lower()
+                for kw in [
+                    "slow down",
+                    "rate limit",
+                    "reduce your request rate",
+                    "429 client error",
+                    "503 server error",
+                ]
+            )
             if "appears to be spam" in error_str and not is_rate_limit:
                 print(_("{} 被检测为真正垃圾内容，标记并跳过").format(bvid))
                 with open(video_dir / "_spam.mark", "w", encoding="utf-8") as f:
@@ -291,6 +318,8 @@ def process_finished_download(video_dir, bvid, collection, only_deleted, retry_s
         import time
         print(_("等待 60 秒以避免请求过频..."))
         time.sleep(60)
+
+    return False
 
 
 def download_unfinished_videos(config, bvids, min_free_space_gb):

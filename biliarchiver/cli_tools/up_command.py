@@ -67,6 +67,7 @@ def up(
 ):
     from biliarchiver._biliarchiver_upload_bvid import upload_bvid
     from biliarchiver.config import config
+    from biliarchiver.exception import RequestRateLimitedError
 
     ids = []
 
@@ -80,9 +81,13 @@ def up(
         ids = read_bvids(bvids)
 
     for id in ids:
-        upload_bvid(
-            id,
-            update_existing=update_existing,
-            collection=collection,
-            delete_after_upload=delete_after_upload,
-        )
+        try:
+            upload_bvid(
+                id,
+                update_existing=update_existing,
+                collection=collection,
+                delete_after_upload=delete_after_upload,
+            )
+        except RequestRateLimitedError as e:
+            print(_("遇到 Internet Archive 请求过频，停止本次上传任务: {}").format(e))
+            return

@@ -13,6 +13,7 @@ from biliarchiver.i18n import _
 
 from biliarchiver.exception import (
     RequestRateLimitedError,
+    UploadTemporarilyUnavailableError,
     VideosBasePathNotFoundError,
     VideosNotFinishedDownloadError,
 )
@@ -58,6 +59,9 @@ def upload_bvid(
         print(_("{} 的视频还没有下载完成，跳过".format(bvid)))
     except RequestRateLimitedError:
         print(_("上传 {} 时遇到请求过频，停止本次上传").format(bvid))
+        raise
+    except UploadTemporarilyUnavailableError:
+        print(_("上传 {} 时遇到临时上传失败，停止本次上传").format(bvid))
         raise
     except Exception as e:
         print(_("上传 {} 时出错：".format(bvid)))
@@ -289,6 +293,18 @@ def _upload_bvid(
                     if "please reduce your request rate" in error_msg_lower:
                         print(e)
                         raise RequestRateLimitedError(str(e))
+                    if "error uploading" in error_msg_lower:
+                        upload_retry -= 1
+                        print(e)
+                        if upload_retry < 0:
+                            raise UploadTemporarilyUnavailableError(str(e))
+                        print(
+                            _("临时上传失败，等待 300 秒后重试（剩余 {} 次）...").format(
+                                upload_retry
+                            )
+                        )
+                        time.sleep(300)
+                        continue
                     is_rate_limit = any(
                         kw in error_msg_lower
                         for kw in [
@@ -299,12 +315,18 @@ def _upload_bvid(
                             "503 server error",
                         ]
                     )
-                    if "EOF" in error_msg_lower or "ssl" in error_msg_lower or is_rate_limit:
+                    if (
+                        "eof" in error_msg_lower
+                        or "ssl" in error_msg_lower
+                        or is_rate_limit
+                    ):
                         upload_retry -= 1
                         print(e)
                         if upload_retry < 0:
-                            raise e
-                        print(f"Upload failed (network or rate limit), retrying ({upload_retry}) ...")
+                            raise UploadTemporarilyUnavailableError(str(e))
+                        print(
+                            f"Upload failed (network or rate limit), retrying ({upload_retry}) ..."
+                        )
                         time.sleep(min(60 * (6 - upload_retry), 300))
                         continue
                     if "appears to be spam" in str(e) and not is_rate_limit:

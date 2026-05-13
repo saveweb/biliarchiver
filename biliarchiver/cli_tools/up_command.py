@@ -67,7 +67,10 @@ def up(
 ):
     from biliarchiver._biliarchiver_upload_bvid import upload_bvid
     from biliarchiver.config import config
-    from biliarchiver.exception import RequestRateLimitedError
+    from biliarchiver.exception import (
+        RequestRateLimitedError,
+        UploadTemporarilyUnavailableError,
+    )
 
     ids = []
 
@@ -90,4 +93,9 @@ def up(
             )
         except RequestRateLimitedError as e:
             print(_("遇到 Internet Archive 请求过频，停止本次上传任务: {}").format(e))
+            return
+        except UploadTemporarilyUnavailableError as e:
+            print(
+                _("遇到 Internet Archive 临时上传失败，停止本次上传任务: {}").format(e)
+            )
             return

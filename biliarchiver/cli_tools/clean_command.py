@@ -280,7 +280,10 @@ def process_finished_download(video_dir, bvid, collection, only_deleted, retry_s
     if has_parts_to_upload:
         print(_("尝试上传 {}").format(bvid))
         from biliarchiver._biliarchiver_upload_bvid import upload_bvid
-        from biliarchiver.exception import RequestRateLimitedError
+        from biliarchiver.exception import (
+            RequestRateLimitedError,
+            UploadTemporarilyUnavailableError,
+        )
 
         try:
             upload_bvid(
@@ -292,6 +295,13 @@ def process_finished_download(video_dir, bvid, collection, only_deleted, retry_s
         except RequestRateLimitedError as e:
             print(
                 _("遇到 Internet Archive 请求过频，停止本次 clean 上传任务: {}").format(
+                    e
+                )
+            )
+            return True
+        except UploadTemporarilyUnavailableError as e:
+            print(
+                _("遇到 Internet Archive 临时上传失败，停止本次 clean 上传任务: {}").format(
                     e
                 )
             )

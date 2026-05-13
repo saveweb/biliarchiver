@@ -21,6 +21,10 @@ class RequestRateLimitedError(Exception):
     pass
 
 
+class UploadTemporarilyUnavailableError(Exception):
+    pass
+
+
 class VersionOutdatedError(Exception):
     def __init__(self, version):
         self.version = version

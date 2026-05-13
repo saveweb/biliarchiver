@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-13 13:50+0800\n"
+"POT-Creation-Date: 2026-05-13 13:56+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -102,8 +102,12 @@ msgstr ""
 msgid "上传后删除视频文件"
 msgstr ""
 
-#: biliarchiver/cli_tools/up_command.py:92
+#: biliarchiver/cli_tools/up_command.py:95
 msgid "遇到 Internet Archive 请求过频，停止本次上传任务: {}"
+msgstr ""
+
+#: biliarchiver/cli_tools/up_command.py:99
+msgid "遇到 Internet Archive 临时上传失败，停止本次上传任务: {}"
 msgstr ""
 
 #: biliarchiver/cli_tools/get_command.py:30
@@ -470,43 +474,47 @@ msgstr ""
 msgid "尝试上传 {}"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:294
+#: biliarchiver/cli_tools/clean_command.py:297
 msgid "遇到 Internet Archive 请求过频，停止本次 clean 上传任务: {}"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:312
+#: biliarchiver/cli_tools/clean_command.py:304
+msgid "遇到 Internet Archive 临时上传失败，停止本次 clean 上传任务: {}"
+msgstr ""
+
+#: biliarchiver/cli_tools/clean_command.py:322
 msgid "{} 被检测为真正垃圾内容，标记并跳过"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:316
+#: biliarchiver/cli_tools/clean_command.py:326
 msgid "上传 {} 时出错: {}"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:319
+#: biliarchiver/cli_tools/clean_command.py:329
 msgid "等待 60 秒以避免请求过频..."
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:335
+#: biliarchiver/cli_tools/clean_command.py:345
 msgid "尝试继续下载 {} 个未完成的视频"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:353
+#: biliarchiver/cli_tools/clean_command.py:363
 msgid "下载过程中出错: {}"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:388
+#: biliarchiver/cli_tools/clean_command.py:398
 msgid "转换 {} 为 AID 时出错: {}，跳过"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:420
+#: biliarchiver/cli_tools/clean_command.py:430
 msgid "检测到 {} 已删除/不可见"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:424
+#: biliarchiver/cli_tools/clean_command.py:434
 msgid "批量检查视频状态时出错: {}，该批次默认为可见"
 msgstr ""
 
-#: biliarchiver/cli_tools/clean_command.py:443
+#: biliarchiver/cli_tools/clean_command.py:453
 msgid "批量检查完成：{} 个视频中有 {} 个已删除/不可见"
 msgstr ""
 
@@ -514,87 +522,95 @@ msgstr ""
 msgid "{} 不存在，创建中..."
 msgstr ""
 
-#: biliarchiver/exception.py:29
+#: biliarchiver/exception.py:33
 msgid "请更新 biliarchiver。当前版本已过期："
 msgstr ""
 
-#: biliarchiver/exception.py:37
+#: biliarchiver/exception.py:41
 msgid "先在当前工作目录运行 `biliarchiver init` 以初始化配置"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:44
-#: biliarchiver/_biliarchiver_upload_bvid.py:122
+#: biliarchiver/_biliarchiver_upload_bvid.py:45
+#: biliarchiver/_biliarchiver_upload_bvid.py:126
 msgid "{} 被标记为垃圾内容，跳过"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:54
+#: biliarchiver/_biliarchiver_upload_bvid.py:55
 msgid "已经有一个上传 {} 的进程在运行，跳过"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:56
+#: biliarchiver/_biliarchiver_upload_bvid.py:57
 msgid ""
 "没有找到 {} 对应的文件夹。可能是因已存在 IA item 而跳过了下载，或者你传入了错"
 "误的 bvid"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:58
+#: biliarchiver/_biliarchiver_upload_bvid.py:59
 msgid "{} 的视频还没有下载完成，跳过"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:60
+#: biliarchiver/_biliarchiver_upload_bvid.py:61
 msgid "上传 {} 时遇到请求过频，停止本次上传"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:63
+#: biliarchiver/_biliarchiver_upload_bvid.py:64
+msgid "上传 {} 时遇到临时上传失败，停止本次上传"
+msgstr ""
+
+#: biliarchiver/_biliarchiver_upload_bvid.py:67
 msgid "上传 {} 时出错："
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:76
-#: biliarchiver/_biliarchiver_upload_bvid.py:311
+#: biliarchiver/_biliarchiver_upload_bvid.py:80
+#: biliarchiver/_biliarchiver_upload_bvid.py:333
 msgid "{} 被标记为垃圾内容，创建标记文件"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:116
+#: biliarchiver/_biliarchiver_upload_bvid.py:120
 msgid "{} => {} 已经上传过了(_uploaded.mark)"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:125
+#: biliarchiver/_biliarchiver_upload_bvid.py:129
 msgid "跳过带 _ 前缀的 local_identifier: {}"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:129
+#: biliarchiver/_biliarchiver_upload_bvid.py:133
 msgid "{} 不是以 {} 开头的正确 local_identifier"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:135
+#: biliarchiver/_biliarchiver_upload_bvid.py:139
 msgid "没有下载完成"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:141
+#: biliarchiver/_biliarchiver_upload_bvid.py:145
 msgid "开始上传"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:144
+#: biliarchiver/_biliarchiver_upload_bvid.py:148
 msgid "{} 已存在，跳过 (item.exists)"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:148
+#: biliarchiver/_biliarchiver_upload_bvid.py:152
 msgid "不是你上传的，跳过"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:153
+#: biliarchiver/_biliarchiver_upload_bvid.py:157
 msgid "已经上传过了，跳过"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:363
+#: biliarchiver/_biliarchiver_upload_bvid.py:302
+msgid "临时上传失败，等待 300 秒后重试（剩余 {} 次）..."
+msgstr ""
+
+#: biliarchiver/_biliarchiver_upload_bvid.py:385
 msgid "{} 不是你上传的，跳过 (item.metadata.creator)"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:399
+#: biliarchiver/_biliarchiver_upload_bvid.py:421
 msgid "上传完成"
 msgstr ""
 
-#: biliarchiver/_biliarchiver_upload_bvid.py:407
+#: biliarchiver/_biliarchiver_upload_bvid.py:429
 msgid "已删除视频文件夹 {}"
 msgstr ""
 

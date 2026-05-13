@@ -131,6 +131,7 @@ def clean(
         bvid_status_map = {}
 
     # 第二遍处理，根据检查结果执行相应操作
+    stop_after_summary = False
     for video_info in videos_to_process:
         video_dir = video_info["video_dir"]
         bvid = video_info["bvid"]
@@ -190,18 +191,23 @@ def clean(
                         retry_spam=retry_spam,
                     )  # 已经检查过删除状态
                     if should_stop:
-                        return
+                        stop_after_summary = True
+                        break
             else:
                 should_stop = process_finished_download(
                     video_dir, bvid, collection, only_deleted, retry_spam=retry_spam
                 )
                 if should_stop:
-                    return
+                    stop_after_summary = True
+                    break
 
     if clean_uploaded or try_upload:
         free_space_after = get_free_space(config.storage_home_dir)
         space_freed = free_space_after - free_space_before
         print(_("共释放 {} MiB 空间").format(f"{space_freed / (1024 * 1024):.2f}"))
+
+    if stop_after_summary:
+        return
 
     # 执行下载
     if try_download and bvids_to_download:

@@ -1,4 +1,5 @@
 import os
+import random
 import click
 import shutil
 import asyncio
@@ -129,6 +130,8 @@ def clean(
         )
     else:
         bvid_status_map = {}
+
+    random.shuffle(videos_to_process)
 
     # 第二遍处理，根据检查结果执行相应操作
     stop_after_summary = False

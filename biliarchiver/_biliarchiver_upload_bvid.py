@@ -1,5 +1,6 @@
 import json
 import os
+import random
 from pathlib import Path, PurePath
 import time
 from typing import List
@@ -24,6 +25,47 @@ from biliarchiver.utils.dirLock import UploadLock, AlreadyRunningError
 from biliarchiver.utils.xml_chars import xml_chars_legalize
 from biliarchiver.version import BILI_ARCHIVER_VERSION
 from biliarchiver.i18n import _
+
+SPAM_ERROR_TEXT = "appears to be spam"
+SPAM_COUNT_MARK = "_spam_count.mark"
+SPAM_MARK_THRESHOLD = 3
+RATE_LIMIT_KEYWORDS = [
+    "slow down",
+    "rate limit",
+    "reduce your request rate",
+    "429 client error",
+    "503 server error",
+]
+
+
+def is_rate_limit_error(error_msg: str) -> bool:
+    error_msg_lower = error_msg.lower()
+    return any(kw in error_msg_lower for kw in RATE_LIMIT_KEYWORDS)
+
+
+def record_spam_error(videos_basepath: Path, error_msg: str) -> int:
+    count_path = videos_basepath / SPAM_COUNT_MARK
+    try:
+        count = int(count_path.read_text(encoding="utf-8").strip() or "0")
+    except (OSError, ValueError):
+        count = 0
+
+    count += 1
+    count_path.write_text(str(count), encoding="utf-8")
+    print(_("{} 第 {} 次返回 spam 提示").format(videos_basepath.name, count))
+
+    if count > SPAM_MARK_THRESHOLD:
+        print(_("{} 被多次标记为垃圾内容，创建标记文件").format(videos_basepath.name))
+        (videos_basepath / "_spam.mark").write_text(error_msg, encoding="utf-8")
+
+    return count
+
+
+def clear_spam_error_count(videos_basepath: Path):
+    try:
+        (videos_basepath / SPAM_COUNT_MARK).unlink()
+    except FileNotFoundError:
+        pass
 
 
 def upload_bvid(
@@ -66,26 +108,18 @@ def upload_bvid(
     except Exception as e:
         print(_("上传 {} 时出错：".format(bvid)))
         error_msg = str(e)
-        is_rate_limit = any(
-            kw in error_msg.lower()
-            for kw in [
-                "slow down",
-                "rate limit",
-                "reduce your request rate",
-                "429 client error",
-                "503 server error",
-            ]
+        videos_basepath = (
+            config.storage_home_dir
+            / "videos"
+            / f"{bvid}-{human_readable_upper_part_map(string=bvid, backward=True)}"
         )
-        if "appears to be spam" in error_msg and not is_rate_limit:
+        if (
+            SPAM_ERROR_TEXT in error_msg
+            and not is_rate_limit_error(error_msg)
+            and videos_basepath.exists()
+        ):
             print(_("{} 被标记为垃圾内容，创建标记文件").format(bvid))
-            videos_basepath = (
-                config.storage_home_dir
-                / "videos"
-                / f"{bvid}-{human_readable_upper_part_map(string=bvid, backward=True)}"
-            )
-            if videos_basepath.exists():
-                with open(videos_basepath / "_spam.mark", "w", encoding="utf-8") as f:
-                    f.write(error_msg)
+            (videos_basepath / "_spam.mark").write_text(error_msg, encoding="utf-8")
 
         raise e
 
@@ -110,6 +144,7 @@ def _upload_bvid(
         raise VideosNotFinishedDownloadError(f"{videos_basepath}")
 
     local_identifiers = [f.name for f in videos_basepath.iterdir() if f.is_dir()]
+    random.shuffle(local_identifiers)
     for local_identifier in local_identifiers:
         remote_identifier = f"{local_identifier}-{upper_part}"
         if (
@@ -187,6 +222,10 @@ def _upload_bvid(
                 if not os.path.isfile(file):
                     continue
                 filedict[filename] = file
+
+        filedict_items = list(filedict.items())
+        random.shuffle(filedict_items)
+        filedict = dict(filedict_items)
 
         assert (f"{file_basename}.mp4" in filedict) or (
             f"{file_basename}.flv" in filedict
@@ -289,7 +328,13 @@ def _upload_bvid(
                     )
                     break
                 except Exception as e:
-                    error_msg_lower = str(e).lower()
+                    error_msg = str(e)
+                    error_msg_lower = error_msg.lower()
+                    is_rate_limit = is_rate_limit_error(error_msg)
+                    if SPAM_ERROR_TEXT in error_msg:
+                        spam_count = record_spam_error(videos_basepath, error_msg)
+                        if spam_count > SPAM_MARK_THRESHOLD:
+                            raise e
                     if "please reduce your request rate" in error_msg_lower:
                         print(e)
                         raise RequestRateLimitedError(str(e))
@@ -305,16 +350,6 @@ def _upload_bvid(
                         )
                         time.sleep(300)
                         continue
-                    is_rate_limit = any(
-                        kw in error_msg_lower
-                        for kw in [
-                            "slow down",
-                            "rate limit",
-                            "reduce your request rate",
-                            "429 client error",
-                            "503 server error",
-                        ]
-                    )
                     if (
                         "eof" in error_msg_lower
                         or "ssl" in error_msg_lower
@@ -329,12 +364,9 @@ def _upload_bvid(
                         )
                         time.sleep(min(60 * (6 - upload_retry), 300))
                         continue
-                    if "appears to be spam" in str(e) and not is_rate_limit:
+                    if SPAM_ERROR_TEXT in str(e) and not is_rate_limit:
                         print(_("{} 被标记为垃圾内容，创建标记文件").format(bvid))
-                        with open(
-                            videos_basepath / "_spam.mark", "w", encoding="utf-8"
-                        ) as f:
-                            f.write(str(e))
+                        (videos_basepath / "_spam.mark").write_text(str(e), encoding="utf-8")
                         raise e
                     else:
                         raise e
@@ -419,6 +451,8 @@ def _upload_bvid(
 
         mark_uploaded(videos_basepath, local_identifier)
         print(f"==== {remote_identifier} " + _('上传完成') + " ====")
+
+    clear_spam_error_count(videos_basepath)
 
     if delete_after_upload and len(local_identifiers) > 0:
         try:

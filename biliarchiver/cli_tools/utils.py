@@ -14,7 +14,7 @@ def read_bvids(bvids: str) -> list[str]:
                 bvids_list = f.read().split()
         else:
             raise Exception("Not a file")
-    except Exception as _:
+    except Exception:
         bvids_list = bvids.split()
 
     del bvids

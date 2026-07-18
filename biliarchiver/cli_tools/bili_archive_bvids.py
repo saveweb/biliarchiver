@@ -168,11 +168,11 @@ async def _down(
         await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         tasks_check()
 
+    d.progress.stop()
+    print("DONE")
     if failed_tasks:
         print(f"完成所有任务，但有 {len(failed_tasks)} 个任务失败")
         raise failed_tasks[0][1]
-
-    print("DONE")
 
 
 def update_cookies_from_browser(client: AsyncClient, browser: str):

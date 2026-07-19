@@ -169,10 +169,10 @@ async def _down(
         tasks_check()
 
     d.progress.stop()
-    print("DONE")
     if failed_tasks:
-        print(f"完成所有任务，但有 {len(failed_tasks)} 个任务失败")
-        raise failed_tasks[0][1]
+        print(_("完成所有任务，但有 {} 个任务失败").format(len(failed_tasks)))
+    else:
+        print(_("完成所有任务"))
 
 
 def update_cookies_from_browser(client: AsyncClient, browser: str):

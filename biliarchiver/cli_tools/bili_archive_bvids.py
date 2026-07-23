@@ -110,9 +110,9 @@ async def _down(
     d.progress.start()
     sem = asyncio.Semaphore(config.video_concurrency)
     tasks: List[asyncio.Task] = []
+    failed_tasks: list[tuple[asyncio.Task, BaseException]] = []
 
     def tasks_check():
-        failed_tasks = []
         for task in tasks:
             if task.done():
                 _task_exception = task.exception()
@@ -131,9 +131,6 @@ async def _down(
                 task.cancel()
             raise RuntimeError(s)
 
-        if failed_tasks:
-            print(f"完成所有任务，但有 {len(failed_tasks)} 个任务失败")
-            raise failed_tasks[0][1]
 
     for index, bvid in enumerate(bvids_list):
         if index < skip_to:
@@ -171,7 +168,11 @@ async def _down(
         await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         tasks_check()
 
-    print("DONE")
+    d.progress.stop()
+    if failed_tasks:
+        print(_("完成所有任务，但有 {} 个任务失败").format(len(failed_tasks)))
+    else:
+        print(_("完成所有任务"))
 
 
 def update_cookies_from_browser(client: AsyncClient, browser: str):

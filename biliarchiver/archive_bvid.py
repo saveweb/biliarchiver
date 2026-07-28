@@ -95,10 +95,10 @@ async def archive_bvid(
 ):
     async with semaphore:
         assert d.hierarchy is True, _("hierarchy 必须为 True")  # 为保持后续目录结构、文件命名的一致性
-        assert d.client.cookies.get("SESSDATA") is not None, _(
-            "sess_data 不能为空"
-        )  # 开个大会员呗，能下 4k 呢。
-        assert logined is True, _("请先检查 SESSDATA 是否过期，再将 logined 设置为 True")  # 防误操作
+        if d.client.cookies.get("SESSDATA") is None:
+            print(_("未登录，SESSDATA 为空"))  # 开个大会员呗，能下 4k 呢。
+        else:
+            assert logined is True, _(message="请先检查 SESSDATA 是否过期，再将 logined 设置为 True")  # 防误操作
         upper_part = human_readable_upper_part_map(string=bvid, backward=True)
         videos_basepath: Path = (
             config.storage_home_dir / "videos" / f"{bvid}-{upper_part}"
